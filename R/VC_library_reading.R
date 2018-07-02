@@ -67,6 +67,10 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
         loadPackages <- raw_input_parser(as.list(match.call()), varnames_to_exclude = c('loadPackages', 'lib.location', 'dry.run', 'quietly', 'packNameVersionList', 'skipDependencies', 'appendLibPaths'))
     }
 
+    if (length(loadPackages) == 1 && strtrim(names(loadPackages), 2) == 'c(') {
+        stop('Please make sure that you call `library_VC(loadPackages = c(xx = yy))` when you would like to use a named character vector.\nAlternatively, remove the vector elements and call `library_VC(xx = yy)` directly.')
+    }
+
     # If still other libraries are set as active libraries, reset the library to just 1 lib for the build in functions (= `.Library`).
     if (!all(grepl(normPath(lib.location), normPath(.libPaths())) | grepl(normPath(.Library), normPath(.libPaths())))) {.libPaths(.Library); cat('\nExtra libraries were found. Those are excluded from .libPaths().\n\n')}
 

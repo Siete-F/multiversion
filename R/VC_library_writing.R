@@ -16,7 +16,6 @@
 #' @export
 #'
 install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_library_location(), add_to_VC_library = TRUE) {
-    # installPackages
 
     if (any(names(installPackages) != '')) stop('Please provide a vector of names no name-version combinations.')
     if (length(installPackages) == 0) return()
@@ -74,14 +73,21 @@ install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_libr
 
 # -------------- install.packages [TARBALL] --------------
 
+#' This function can try to install a tarball based on the tarball location and it's dependencies.
+#'
+#' @param dependencies Provide the dependencies like a package version combination: c(dplyr = '>= 0.5', data.table = '', R6 = '0.1.1')
+#'
+#' @note Hopefully I will be able to implement a method to run this function in a new R instance clear of loaded packages.
+#'       `install.packages_VC_tarball_with_Rscript` is a sketch to reach meet that wish.
 #' @export
 #'
-install.packages_VC_tarball <- function(packagePath, dependencies, lib.location = R_VC_library_location()) {
-    # dependencies must be defined like so:
-    # c(dplyr = '>= 0.5', data.table = '', R6 = '0.1.1')
-    if (!exists('library_VC')) stop('please also source the functions `library_VC` and its associates.')
+install.packages_VC_tarball <- function(packagePath, dependencies, lib.location = R_VC_library_location(), parse_dependencies = FALSE) {
 
     install.location <- defaultTempInstallPath(lib.location)
+
+    if (parse_dependencies) {
+        dependencies <- cleanupDependencyList(dependencies)
+    }
 
     currentLibs <- .libPaths()
     .libPaths(.Library)
@@ -122,6 +128,21 @@ install.packages_VC_tarball <- function(packagePath, dependencies, lib.location 
 
     cat('\nResetting your loaded packages.\n')
     invisible(library_VC(currentlyLoaded, lib.location = lib.location, quietly = TRUE))
+}
+
+
+#' This function can try to install a tarball using a sepparate Rscipt R instance. This saves you from the hasle to prepare your Rstudio environment to match the one that the tarball requires (incl. dependencies).
+#' It will run a script provided the tarball location and it's dependencies. That script will load `RVClibrary` and call `install.packages_VC_tarball` directly.
+#'
+#' @param packagePath Provide the complete path to the tarball file.
+#' @param dependencies Provide the dependencies of this tarball like a package version combination: c(dplyr = '>= 0.5', data.table = '', R6 = '0.1.1').
+#'
+#' @export
+#'
+install.packages_VC_tarball_with_Rscript <- function(packagePath, dependencies, lib.location = R_VC_library_location()) {
+    script_location <- normPath('./Scripts/install.packages_VC_tarball_script.R')
+    Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
+    system(sprintf('"%s" "%s" "%s"', Rscript_dir, script_location, packagePath, printPackageList(dependencies, do_return = TRUE)))
 }
 
 
@@ -207,6 +228,7 @@ detachAll <- function(dryRun = FALSE, packageList = names(sessionInfo()$otherPkg
 
 # ------------- [install.packages] helper functions --------------
 
+#'
 tryLoadPackages_VC <- function(packages, lib.location) {
     # tries to load packages and returns a vector with all failed load attempts ('yet to be installed' packages)
     loadedPackages <- c()
@@ -227,6 +249,8 @@ tryLoadPackages_VC <- function(packages, lib.location) {
 }
 
 
+#' Minor wrapper to reset libraries to the provided state.
+#'
 reset.libPaths <- function(currentLibs) {
     .libPaths(currentLibs)
     cat('The libraries are reset.\n')
@@ -279,9 +303,10 @@ dependencies <- function(packageName, lib.location = R_VC_library_location()) {
 #   ------------------- dependsOnMe -------------------
 
 
-printPackageList <- function(x) {
+printPackageList <- function(x, do_return = FALSE) {
     if (!is.null(x)) {x <- x[!is.na(x)]} else {return(cat('\n'))}
-    cat(gsub(pat = '\\s\\(\\)', rep = '', sprintf('%s\n', paste(paste(names(x), paste0("(", x, ")")), collapse = '   '))))
+    str <- gsub(pat = '\\s\\(\\)', rep = '', sprintf('%s\n', paste(paste(names(x), paste0("(", x, ")")), collapse = '   ')))
+    if (do_return) {return(gsub('   ', ', ', str))} else {cat(str)}
 }
 
 
