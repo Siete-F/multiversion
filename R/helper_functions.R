@@ -153,6 +153,17 @@ add_package_VC_libPaths <- function(packNameVersion, lib.location) {
 }
 
 
+#' Loads `devtools` version 1.13.1 and all it's dependencies.
+#' During the library call, `appendLibPaths` is TRUE, making sure that some devtools functionallity
+#' (like running tests) in child R instances will still know how to load it's libraries.
+#'
+#' @export
+#'
+loadDevtools <- function() {
+    library_VC( c(digest = '0.6.9', R6 = '2.2.1', testthat = '1.0.2', stringi = '1.1.5', Rcpp = '0.12.11', backports = '1.1.0', roxygen2 = '6.0.1', RMySQL = '', devtools = '1.13.1'), appendLibPaths = TRUE)
+}
+
+
 #' Will uniquify the named character vector with package versions to remain the highest functions. (for now only used for printing)
 #'
 #' @param packNameVersion provide a packageNameVersion list like so: `printExampleLibCall(c(dplyr = '0.5.0', R6 = '', R6 = 0.5))`

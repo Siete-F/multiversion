@@ -285,13 +285,6 @@ printPackageList <- function(x) {
 }
 
 
-#' @export
-#'
-loadDevtools <- function() {
-    library_VC( c(digest = '0.6.9', R6 = '2.2.1', testthat = '1.0.2', stringi = '1.1.5', Rcpp = '0.12.11', backports = '1.1.0', roxygen2 = '6.0.1', RMySQL = '', devtools = '1.13.1'), appendLibPaths = TRUE)
-}
-
-
 #' Use to print all available packages in the VC_library with all their versions including their dependencies.
 #' @export
 #'
