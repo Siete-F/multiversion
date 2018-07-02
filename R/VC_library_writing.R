@@ -13,6 +13,8 @@
 #' @param add_to_VC_library If set to TRUE {default}, the installed package(s) is moved to the final destination automatically.
 #' Otherwise it is necessary to run `convert_to_VC_library()` manually after the installation into the temporary folder finished.
 #'
+#' @export
+#'
 install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_library_location(), add_to_VC_library = TRUE) {
     # installPackages
 
@@ -72,6 +74,8 @@ install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_libr
 
 # -------------- install.packages [TARBALL] --------------
 
+#' @export
+#'
 install.packages_VC_tarball <- function(packagePath, dependencies, lib.location = R_VC_library_location()) {
     # dependencies must be defined like so:
     # c(dplyr = '>= 0.5', data.table = '', R6 = '0.1.1')
@@ -121,8 +125,10 @@ install.packages_VC_tarball <- function(packagePath, dependencies, lib.location 
 }
 
 
-# -------- convert  temp_lib  to  lib_VC ---------
+# -------- convert  temp_library  to  VC_library ---------
 
+#' @export
+#'
 convert_to_VC_library <- function(normalLibrary = defaultTempInstallPath(), VC_library_location = R_VC_library_location()) {
     # create parallel package library from ordinary library
     # lib1/BH/DESCRIPTION   becomes  lib2/BH/1.60.0-2/BH/DESCRIPTION
@@ -155,8 +161,10 @@ convert_to_VC_library <- function(normalLibrary = defaultTempInstallPath(), VC_l
 
 # ============== DETATCH/ATTACH NAMESPACE ==============
 
+#' @export
+#'
 detachAll <- function(dryRun = FALSE, packageList = names(sessionInfo()$otherPkgs)) {
-    currentPackageAndVersions <- getLoadedVersion(packageList)
+    currentPackageAndVersions <- loadedPackageVersion(packageList)
 
     if (is.null(packageList)) {
         cat('No packages are loaded, nothing to detach.\n')
@@ -227,7 +235,13 @@ reset.libPaths <- function(currentLibs) {
 
 # ---------------- additional functions -----------------
 
+#' @export
+#'
 dependencies <- function(packageName, lib.location = R_VC_library_location()) {
+
+    # Featuring direct call like: `dependencies(dplyr)`
+    packageName = as.character(substitute(packageName))
+
     if (!is.null(names(packageName))) stop('please only provide the name of the package. all versions will be shown')
     if (!nzchar(packageName, keepNA = TRUE)) return(invisible())
 
@@ -250,12 +264,12 @@ dependencies <- function(packageName, lib.location = R_VC_library_location()) {
             dependingPackages <- cleanupDependencyList(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pat = ',,', rep = ','))
         }
 
-        cat(sprintf('package: %s version %s requires ', packageName, packVersion))
-        if (file.exists(overrideFile)) {cat('(shadowed) ')}
-        cat('dependencies: '); printPackageList(dependingPackages[1:3])
+        cat(sprintf('%23s : %-8s ', packageName, packVersion))
+        if (file.exists(overrideFile)) {cat('(shadowed)| ')} else {cat('          | ')}
+        printPackageList(dependingPackages[1:3])
         if (length(dependingPackages) > 3) {
             for (index in 2: ceiling(length(dependingPackages)/3)) {
-                cat(strrep(' ', 64)); printPackageList(dependingPackages[(((index-1)*3):(index*3-1))+1])
+                cat(strrep(' ', 43), '... '); printPackageList(dependingPackages[(((index-1)*3):(index*3-1))+1])
             }
         }
     }
@@ -263,19 +277,39 @@ dependencies <- function(packageName, lib.location = R_VC_library_location()) {
 
 
 #   ------------------- dependsOnMe -------------------
+
+
 printPackageList <- function(x) {
     if (!is.null(x)) {x <- x[!is.na(x)]} else {return(cat('\n'))}
-    cat(gsub(pat = '\\s\\(\\)', rep = '', sprintf('%s\n', paste(paste(names(x), paste0("(", x, ")")), collapse = ', '))))
+    cat(gsub(pat = '\\s\\(\\)', rep = '', sprintf('%s\n', paste(paste(names(x), paste0("(", x, ")")), collapse = '   '))))
 }
 
 
+#' @export
+#'
 loadDevtools <- function() {
     library_VC( c(digest = '0.6.9', R6 = '2.2.1', testthat = '1.0.2', stringi = '1.1.5', Rcpp = '0.12.11', backports = '1.1.0', roxygen2 = '6.0.1', RMySQL = '', devtools = '1.13.1'), appendLibPaths = TRUE)
 }
 
 
-dependsOnMe <- function(checkMyDeps, lib.location = R_VC_library_location()) {
-    if (is.null(names(checkMyDeps))) {checkMyDeps <- setNames('> 0.0.0', checkMyDeps);cat('The latest version,\n')}
+#' Use to print all available packages in the VC_library with all their versions including their dependencies.
+#' @export
+#'
+installed.packages_VC <- function() {
+    dependsOnMe(all)
+}
+
+
+#' Shows the dependencies of a certain function.
+#' @export
+#'
+dependsOnMe <- function(..., checkMyDeps = NULL, lib.location = R_VC_library_location()) {
+
+    if (is.null(checkMyDeps)) {
+        checkMyDeps <- raw_input_parser(as.list(match.call()), varnames_to_exclude = c('lib.location', 'checkMyDeps'))
+    }
+
+    if (is.null(names(checkMyDeps))) {checkMyDeps <- setNames('> 0.0.0', checkMyDeps); cat('The latest version,\n')}
 
     # check if input package is realistic. if no version is selected (no name value pair is provided) the oldest version is used.
     if (!names(checkMyDeps) == 'all') checkMyDeps <- setNames(getCorrectVersion(checkMyDeps, lib.location, pick.last = TRUE), names(checkMyDeps))
@@ -320,12 +354,12 @@ dependsOnMe <- function(checkMyDeps, lib.location = R_VC_library_location()) {
             }
 
             if (valid) {
-                cat(sprintf('package: %15s version %7s requires ', packageName, packVersion))
-                if (file.exists(overrideFile)) {cat('(shadowed) ')}
-                cat('dependencies: '); printPackageList(dependingPackages[1:3])
+                cat(sprintf('%23s : %-8s ', packageName, packVersion))
+                if (file.exists(overrideFile)) {cat('(shadowed)| ')} else {cat('          | ')}
+                printPackageList(dependingPackages[1:3])
                 if (length(dependingPackages) > 3) {
                     for (index in 2: ceiling(length(dependingPackages)/3)) {
-                        cat(strrep(' ', 64)); printPackageList(dependingPackages[(((index-1)*3):(index*3-1))+1])
+                        cat(strrep(' ', 45), '... '); printPackageList(dependingPackages[(((index-1)*3):(index*3-1))+1])
                     }
                 }
             }

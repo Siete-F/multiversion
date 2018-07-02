@@ -7,6 +7,8 @@
 #'
 #' @param lib.location By default the default library path obtained with `R_VC_library_location()`.
 #'
+#' @export
+#'
 defaultTempInstallPath <- function(lib.location = R_VC_library_location()) {
     install.location <- gsub(normalizePath(paste0(lib.location, '/TEMP_install_location'), winslash = '/', mustWork = FALSE), pat = '/$', rep = '')
     dir.create(install.location, showWarnings = FALSE)
@@ -20,6 +22,8 @@ defaultTempInstallPath <- function(lib.location = R_VC_library_location()) {
 #'
 #' @param install.location By default the default temporary directory path obtained with `defaultTempInstallPath()`.
 #'
+#' @export
+#'
 clearTempInstallFolder <- function(install.location = defaultTempInstallPath()) {
     return(unlink(install.location, recursive = TRUE, force = TRUE))
 }
@@ -30,6 +34,8 @@ clearTempInstallFolder <- function(install.location = defaultTempInstallPath()) 
 #'
 #' @param set_session_path (optional) If no environment variable has been set to indicate the library it's location
 #' You can call this function setting the environment variable which will last for this session only.
+#'
+#' @export
 #'
 R_VC_library_location <- function(set_session_path = NULL) {
     # If input is provided, set that value as library location.
@@ -126,6 +132,11 @@ strRemain <- function(patA, patB, str) {
 }
 
 
+#' This short-hand function normalizes the path and makes sure only forward slashes are used.
+#' Other slashes are not usable in `grepl` statements directly for example, the '\\' is parsed to '\' before being used as regex.
+#'
+#' @param path The path which needs to be normalized. Will make `C:/PROGRA~1/R/R-33~1.1/library` into `C:/Program Files/R/R-3.3.1/library`.
+#'
 normPath <- function(path) {
     return(gsub('\\\\', '/', normalizePath(path)))
 }
@@ -178,6 +189,9 @@ printExampleLibCall <- function(packNameVersion) {
 }
 
 
+#'
+#' @export
+#'
 detachIfExisting <- function(packageNames) {
 
     # if not prefixed with 'package:', add it. (not all have prefix 'package:', if it is different, you can check with search() and provide it.)

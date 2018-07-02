@@ -52,11 +52,14 @@
 #' @param dry.run {FALSE} Will make it perform a dry run. It will check all dependencies and if `appendLibPaths` it will add
 #' their paths to `.libPaths` but it will not load those packages. If the paths are added this way, you should be able to just call the located packages with `library(...)`
 #' @param quietly {FALSE} Indicates if the loading must happen silently. No messages and warnings will be shown if TRUE.
-#' @param packNameVersionList {c()} See main description. Should be left blank.
-#' @param skipDependencies {c()} See main description. Should be left blank.
 #' @param appendLibPaths {FALSE} If TRUE, the path to every package that is loaded will be appended to `.libPath(...)`. That configured path is the location where `library()` will look for packages.
 #'
-library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_location(), dry.run = FALSE, quietly = FALSE, packNameVersionList = c(), skipDependencies = c(), appendLibPaths = FALSE) {
+#' @param packNameVersionList {c()} See main description. Should be left blank.
+#' @param skipDependencies {c()} See main description. Should be left blank.
+#'
+#' @export
+#'
+library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_location(), dry.run = FALSE, quietly = FALSE, appendLibPaths = FALSE, packNameVersionList = c(), skipDependencies = c()) {
 
     # If `loadPackages` is not provided, make use of the ... input via `match.call()`.
     # It will list all input names and values from which I will use all but the ones excluded.
@@ -103,8 +106,11 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
 
         # recusively load dependencies
         # The skipDependencies is necessary for `dry.run=TRUE`. With `dry.run=FALSE` the dependency is loaded and skipped in the next itteration.
-        packNameVersionList <- library_VC(loadPackages = dependingPackages, lib.location = lib.location,
-                                          packNameVersionList = packNameVersionList, skipDependencies = c(names(packNameVersionList), skipDependencies), dry.run = TRUE)
+        packNameVersionList <- library_VC(loadPackages        = dependingPackages,
+                                          lib.location        = lib.location,
+                                          packNameVersionList = packNameVersionList,
+                                          skipDependencies    = c( names(packNameVersionList), skipDependencies ),
+                                          dry.run             = TRUE)
 
         packNameVersionList <- append(packNameVersionList, setNames(packVersion, iPackage))
 
@@ -128,7 +134,10 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
         }
     }
 
-    if (!dry.run && !quietly) printExampleLibCall(packNameVersionList)
+    # if not quietly, and at top level of stack, show an example library call.
+    if (!quietly && length(sys.calls()) == 1) {
+        printExampleLibCall(packNameVersionList)
+    }
 
     return(if(quietly) {invisible(packNameVersionList)} else {packNameVersionList})
 }

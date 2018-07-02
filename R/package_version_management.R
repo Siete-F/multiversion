@@ -7,6 +7,8 @@
 #' @param packageName The name of the package for which all versions must be returned.
 #' @param lib.location {R_VC_library_location()} The folder containing the structure where this package his versions need to be checked.
 #'
+#' @export
+#'
 availablePackageVersions <- function(packageName, lib.location = R_VC_library_location()) {
     if (is.na(packageName) || length(packageName) == 0 || nchar(packageName) == 0) {stop('The package name cannot be empty.')}
 
@@ -130,9 +132,11 @@ getCorrectVersion <- function(packVersion, lib.location, verbose = TRUE, pick.la
 #'
 #' @param packageName The package name to check.
 #'
+#' @export
+#'
 checkIfBasePackage <- function(packageName) {
     # Featuring direct call like: `checkIfBasePackage(stats)`
-    # This can't be used interactively, when providing a variable with a name. It will use the var name as name.
+    # This can't be used interactively, when providing a variable with a name it would use the var name as name.
     # packageName = as.character(substitute(packageName))
 
     basePackages <- list.dirs(.Library, full.names = FALSE, recursive = FALSE)
@@ -142,9 +146,11 @@ checkIfBasePackage <- function(packageName) {
 
 #' Check the versions of an already loaded package.
 #'
-#' @param packageName The name of the package for which you would like to know the version.
+#' @param packageName The name or a vector of names of the packages for which to obtain the version.
 #'
-getLoadedVersion <- function(packageName) {
+#' @export
+#'
+loadedPackageVersion <- function(packageName) {
     # determines the versions of the loaded packages given
     version <- c()
     for (iPackage in packageName) {
@@ -157,6 +163,8 @@ getLoadedVersion <- function(packageName) {
 #' Check if an package belongs to the standard R packages
 #'
 #' @param packageName The package name to check.
+#'
+#' @export
 #'
 getOnlineDependencies <- function(packageName){
     packList <- available.packages()
