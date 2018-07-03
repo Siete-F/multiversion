@@ -8,7 +8,7 @@ if (!file.exists(packagePath)) {
 }
 
 if (!require(RVClibrary)) {
-    stop("Please install this single tarball manually using somthing like: `install.packages('M:/.../RVClibrary.targz', type = 'source', repos = NULL)`")
+    stop("\nPlease install this single tarball manually using something like:\n `install.packages('M:/.../RVClibrary_0.1.0.tar.gz', lib = Sys.getenv('R_LIBS_USER'), type = 'source', repos = NULL)`\n\n")
 }
 
 install.packages_VC_tarball(packagePath, dependencies, parse_dependencies = TRUE)

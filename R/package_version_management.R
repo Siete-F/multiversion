@@ -5,7 +5,7 @@
 #' If no name is provided, an error is returned.
 #'
 #' @param packageName The name of the package for which all versions must be returned.
-#' @param lib.location {R_VC_library_location()} The folder containing the structure where this package his versions need to be checked.
+#' @param lib.location [\code{R_VC_library_location()}] The folder containing the structure where this package his versions need to be checked.
 #'
 #' @export
 #'
@@ -17,20 +17,24 @@ availablePackageVersions <- function(packageName, lib.location = R_VC_library_lo
 }
 
 
-#' Obtains the correct version based on the version instruction provided.
+#' Choose version based on the version indication, and available versions.
+#'
+#' Obtains the correct version based on the version instruction provided (e.g. \code{>= 0.5}), the package name and it's available versions.
 #' If no compatible version is found between the available versions a suitable error is thrown.
-#' All different version indications (including a version without `>` indicator or an empty str input like '',
-#' which is 'auto determine') should be handled in this function.
+#' All different version indications should be handled in this function, including:
+#' 1. a version with \code{>} or \code{>=} indicator
+#' 2. a version without \code{>}, so just a version e.g. \code{'0.5.0'} (most specific)
+#' 3. a zero length char e.g. \code{''} (auto determine)
 #'
 #'
-#' @param packVersion A single named version with package name and it's version like `c(dplyr = '>= 0.4.0')`.
-#' @param versionList A list of available versions for this package to choose from. It is the list to choose from and check availability. Created with `availablePackageVersions`.
-#' @param packageName {''} It is used for clear error handling. It should be the package name it is trying to load so we can mention it when crashing.
-#' @param pick.last {FALSE} If a version like `>= 0.5` is given and multiple versions exist, a choice needs to be made.
-#' By default it will take the first higher version (when it exists, just `0.5`, which is often the case).
-#' This because this is most likely to not change the behaviour of the code. Picking the latest version is most
-#' compatible with matching other packages their dependencies (e.g. if a later package depends on this package but asks for `> 0.6`, it will crash).
-#' The downside of this is that an update could be a major one, going from `0.5` to `2.0`, where allot of things can change and code is likely to not work anymore.
+#' @param packVersion A single named version with package name and it's version like \code{c(dplyr = '>= 0.4.0')}.
+#' @param versionList A list of available versions for this package to choose from. It is the list to choose from and check availability. Created with \code{availablePackageVersions}.
+#' @param packageName [\code{''}] It is used for clear error handling. It should be the package name it is trying to load so we can mention it when crashing.
+#' @param pick.last [\code{FALSE}] If a version like \code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
+#' By default it will take the same or first higher version (when it exists, just \code{0.5}, which is often the case).
+#' This because this is most likely to not change the behaviour of the code. Alternatively, picking the latest version is most
+#' likely to be accepted by other packages their dependencies (e.g. if a package that is loaded later on depends on this package but asks for \code{> 0.6}, it will crash).
+#' The downside of this is that an update could be a major one, going from \code{0.5} to \code{2.0}, where allot of things can change and code is likely to not work anymore.
 #'
 chooseVersion <- function(packVersion, versionList, packageName = '', pick.last = FALSE) {
 
@@ -60,7 +64,9 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
 
             } else {
                 stop(paste0('There is more then one version of the package "', packageName,
-                            '", please define one of the following versions specifically:\n', paste0(versionList, collapse = ',  ')))
+                            '", please define one of the following versions specifically:\n', paste0(versionList, collapse = ',  '),
+                            '\nAlternatively, create or update a `vc_override_dependencies.txt` file, located in the version folder\n',
+                            'containing an alternative set of dependencies (normaly more specific).\nExample content: "R6 (>= 2.1.2), Rcpp (>= 0.12.3), tibble (>= 1.2)"\n'))
             }
         } else if (length(versionList) < 1) {
             stop(paste0('There is no package "', packageName, '" installed (yet). (requested version: "', packVersion, '")'))
@@ -78,10 +84,10 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
         stop(sprintf('The requested version "%s" for package "%s" is not installed.', packVersion, packageName))
     }
 
-    # Decide on the version after the (>=, >) coice is made.
-    # It might not seem logical, but I take the oldest version by default when >= x.x is requested.
-    # It is way more likely that the version that was indicated when the package was build is precisely the desired version.
-    # A more in depth retoric can be found in the documentation of the `pick.last` variable of this function.
+    # Decide on the version after the (>=, >) coice is made and multiple choices remain.
+    # This should only be the case when `>` or `>=` scenarios are dealt with.
+    # Other scenarios should be checked (stopped) above.
+    # For more details on this choice, read the instruction for the `pick.last` parameter.
     index <- ifelse(pick.last, length(decidedVersion), 1)
     myChoice <- sort(numeric_version(decidedVersion))[index]
 
@@ -89,17 +95,19 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
 }
 
 
-#' Obtains the correct version based on the version instruction provided. It will print which version is chosen if `verbose = TRUE`.
+#' Choose correct package version, and print decission.
+#'
+#' Obtains the correct version based on the version instruction provided (e.g. \code{>= 0.5}). It will print which version is chosen if `verbose = TRUE`.
 #' if no compatible version is found between the available versions, the function 'chooseVersion' will return an error to notify you.
 #'
-#' @param packVersion A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.4.0', ggplot = '')`).
+#' @param packVersion A named character vector with package names and their version indication (e.g. \code{c(dplyr = '>= 0.4.0', ggplot = '')}).
 #' @param lib.location The location of the R_VC_library folder.
-#' @param verbose {TRUE} if TRUE, it will print the choices it makes. If the session is not interactive, or verbose = FALSE, nothing will be printed.
-#' @param pick.last {FALSE} If a version like `>= 0.5` is given and multiple versions exist, a choice needs to be made.
-#' By default it will take the first higher version (when it exists, just `0.5`, which is often the case).
+#' @param verbose [\code{TRUE}] if TRUE, it will print the choices it makes. If the session is not interactive, or verbose = FALSE, nothing will be printed.
+#' @param pick.last [\code{FALSE}] If a version like\code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
+#' By default it will take the first higher version (when it exists, just\code{0.5}, which is often the case).
 #' This because this is most likely to not change the behaviour of the code. Picking the latest version is most
-#' compatible with matching other packages their dependencies (e.g. if a later package depends on this package but asks for `> 0.6`, it will crash).
-#' The downside of this is that an update could be a major one, going from `0.5` to `2.0`, where allot of things can change and code is likely to not work anymore.
+#' compatible with matching other packages their dependencies (e.g. if a later package depends on this package but asks for\code{> 0.6}, it will crash).
+#' The downside of this is that an update could be a major one, going from\code{0.5} to\code{2.0}, where allot of things can change and code is likely to not work anymore.
 #'
 getCorrectVersion <- function(packVersion, lib.location, verbose = TRUE, pick.last = FALSE) {
     packageName <- names(packVersion)
@@ -128,7 +136,7 @@ getCorrectVersion <- function(packVersion, lib.location, verbose = TRUE, pick.la
 }
 
 
-#' Check if an package belongs to the standard R packages
+#' Check if a package belongs to the standard R (base) packages.
 #'
 #' @param packageName The package name to check.
 #'

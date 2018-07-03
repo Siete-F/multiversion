@@ -1,39 +1,45 @@
 # ============== PATHS ==============
 
 
-#' Indicates the default directory for initially installing a package before it is `converted` to the final VC library structure (see: `convert_to_VC_library()`).
-#' This folder can be cleaned up using `cleanTempInstallFolder()` after installing the package succeeded.
+#' Temporary directory location.
+#'
+#' Indicates the default directory for initially installing a package before it is 'converted' to the final VC library structure (see: \code{convert_to_VC_library()}).
+#' This folder can be cleaned up using \code{cleanTempInstallFolder()} after installing the package succeeded.
 #' This is not done automatically but won't influence the installation of other packages.
 #'
-#' @param lib.location By default the default library path obtained with `R_VC_library_location()`.
+#' @param lib.location By default the default library path obtained with \code{R_VC_library_location()}.
 #'
 #' @export
 #'
-defaultTempInstallPath <- function(lib.location = R_VC_library_location()) {
+R_VC_temp_lib_location <- function(lib.location = R_VC_library_location()) {
     install.location <- gsub(normalizePath(paste0(lib.location, '/TEMP_install_location'), winslash = '/', mustWork = FALSE), pat = '/$', rep = '')
     dir.create(install.location, showWarnings = FALSE)
     return(install.location)
 }
 
 
-#' The temporary installation folder (indicated by `defaultTempInstallPath()`) is used to install the package before moving ('converting') it to the final location.
-#' This function removes this temporary folder. Make sure that all installed packages that are desired to keep are converted.
-#' You can run the `convert_to_VC_library()` once again to make sure this is the case.
+#' Clear the temp install folder.
 #'
-#' @param install.location By default the default temporary directory path obtained with `defaultTempInstallPath()`.
+#' The temporary installation folder (indicated by \code{R_VC_temp_lib_location()}) is used to install the package before moving ('converting') it to the final location.
+#' This function removes this temporary folder. Make sure that all installed packages that are desired to keep are converted.
+#' You can run the \code{convert_to_VC_library()} once again to make sure this is the case.
+#'
+#' @param install.location By default the default temporary directory path obtained with `R_VC_temp_lib_location()`.
 #'
 #' @export
 #'
-clearTempInstallFolder <- function(install.location = defaultTempInstallPath()) {
+clearTempInstallFolder <- function(install.location = R_VC_temp_lib_location()) {
     return(unlink(install.location, recursive = TRUE, force = TRUE))
 }
 
 
-#' This function will look for the environment variable `R_VC_library_location` indicating the R_VC_library location.
-#' Alternatively you can provide a path for this session only using `R_VC_library_location(YourPath)`.
+#' The R_VC_library location.
 #'
-#' @param set_session_path (optional) If no environment variable has been set to indicate the library it's location
-#' You can call this function setting the environment variable which will last for this session only.
+#' This function will look for the environment variable \code{R_VC_LIBRARY_LOCATION} indicating the R_VC_library location.
+#' Alternatively you can provide a path for this session only using \code{R_VC_library_location(yourPath)}.
+#'
+#' @param set_session_path (optional) If no environment variable has been set to indicate the library location,
+#' You can call this function and let it set the environment variable for this session only.
 #'
 #' @export
 #'
@@ -61,14 +67,16 @@ R_VC_library_location <- function(set_session_path = NULL) {
 
 # ============== INPUT PARSERS ==============
 
-#'  converts input like `library_VC(hoi = 3.4, hai = '>= 7.9.2', FIETS)`
-#'  to a named character vector like `c(hoi = '3.4', hai = '>= 7.9.2', FIETS = '')` which is compatible with all code that follows.
+#' Parse direct unquoted input to package name/version vector.
 #'
-#'  Must be called like raw_input_parser(as.list(match.call()), c('named_param1', 'named_param2', 'named_param3')).
-#'  It will return all (name) value pairs if values are available excluding the named parameters provided in the second argument.
+#' Converts input like \code{library_VC(hoi = 3.4, hai = '>= 7.9.2', FIETS)} \cr
+#' to a named character vector like \code{c(hoi = '3.4', hai = '>= 7.9.2', FIETS = '')} which is compatible with all code that follows. \cr
+#' \cr
+#' Must be called like \code{raw_input_parser(as.list(match.call()), c('named_param1', 'named_param2', 'named_param3'))}. \cr
+#' It will return all (name) value pairs if values are available excluding the named parameters provided in the second argument. \cr
 #'
-#'  @param arguments The `as.list(match.call())` list returned from the calling function. It creates a list of all provided arguments.
-#'  @param varnames_to_exclude A character vector with var names to exclude. Normally the remaining variable names after the `n`
+#' @param arguments The \code{as.list(match.call())} list returned from the calling function. It creates a list of all provided arguments.
+#' @param varnames_to_exclude A character vector with var names to exclude. Normally the remaining variable names after the `n`
 #'
 raw_input_parser = function(arguments, varnames_to_exclude) {
     arguments[1] <- NULL
@@ -87,16 +95,14 @@ raw_input_parser = function(arguments, varnames_to_exclude) {
 }
 
 
-#' Parses a string shaped like:
+#' Parse single string to named character vector.
 #'
-#'    assertthat (>= 0.1), R6 (>= 2.1.2), Rcpp (>= 0.12.3), tibble (>= 1.2), magrittr (>= 1.5), lazyeval (>= 0.2.0), DBI (>= 0.4.1)
-#'
-#' to match the normal package name/version layout like:
-#'
-#'    assertthat          R6         Rcpp      tibble    magrittr     lazyeval          DBI
-#'      ">= 0.1"  ">= 2.1.2"  ">= 0.12.3"    ">= 1.2"    ">= 1.5"   ">= 0.2.0"   ">= 0.4.1"
-#'
-#' Used by `getOnlineDependencies()` to interpret the by CRAN provided dependencies,
+#' Parses a string shaped like: \cr
+#' \code{   assertthat (>= 0.1), R6 (>= 2.1.2), Rcpp (>= 0.12.3), tibble (>= 1.2), magrittr (>= 1.5), lazyeval (>= 0.2.0), DBI (>= 0.4.1)} \cr
+#' to match the normal package name/version layout like: \cr
+#' \code{   assertthat          R6         Rcpp      tibble    magrittr     lazyeval          DBI} \cr
+#' \code{     ">= 0.1"  ">= 2.1.2"  ">= 0.12.3"    ">= 1.2"    ">= 1.5"   ">= 0.2.0"   ">= 0.4.1"} \cr \cr
+#' Used by \code{getOnlineDependencies()} to interpret the by CRAN provided dependencies,
 #' used to parse the 'vc_override_dependencies.txt' files and the dependencies mentioned in the 'DESCRIPTION' files of the installed packages.
 #'
 #' @param deps A string of format X to convert to a named character vector Y.
@@ -132,6 +138,8 @@ strRemain <- function(patA, patB, str) {
 }
 
 
+#' Normalize path with backslashes.
+#'
 #' This short-hand function normalizes the path and makes sure only forward slashes are used.
 #' Other slashes are not usable in `grepl` statements directly for example, the '\\' is parsed to '\' before being used as regex.
 #'
@@ -142,6 +150,8 @@ normPath <- function(path) {
 }
 
 
+#' Append all package locations to `.libPaths()`.
+#'
 #' Adds the path of the package that is specified (and likely loaded before) to the `.libPaths`.
 #'
 #' @param packNameVersion A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.05', ggplot = '')`).
@@ -153,9 +163,10 @@ add_package_VC_libPaths <- function(packNameVersion, lib.location) {
 }
 
 
-#' Loads `devtools` version 1.13.1 and all it's dependencies.
+#' Loads `devtools` version 1.13.1 and it's dependencies.
+#'
 #' During the library call, `appendLibPaths` is TRUE, making sure that some devtools functionallity
-#' (like running tests) in child R instances will still know how to load it's libraries.
+#' (like running tests) in child R instances will still work and know where to load their libraries from.
 #'
 #' @export
 #'
@@ -164,6 +175,8 @@ loadDevtools <- function() {
 }
 
 
+#' Create unique list of highest package versions.
+#'
 #' Will uniquify the named character vector with package versions to remain the highest functions. (for now only used for printing)
 #'
 #' @param packNameVersion provide a packageNameVersion list like so: `printExampleLibCall(c(dplyr = '0.5.0', R6 = '', R6 = 0.5))`
@@ -183,7 +196,9 @@ unique_highest_package_versions <- function(packNameVersion, return_as_df = FALS
 }
 
 
-#' Prints the library call that you can use based on a name/version list input.
+#' Print example \code{library_VC} call.
+#'
+#' Prints the library call that you can use based on a name/version input vector.
 #'
 #' @param packNameVersion A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.4.0', ggplot = '')`).
 #'
@@ -200,6 +215,9 @@ printExampleLibCall <- function(packNameVersion) {
 }
 
 
+#' Detach package if it exists.
+#'
+#' @param packageNames A vector of package names which need to be detached. Silently ignores when the package is not loaded.
 #'
 #' @export
 #'

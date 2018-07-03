@@ -1,65 +1,67 @@
 
 # ============== MAIN FUNCTIONALITY ==============
 
+#' Load package from R_VC_library
+#'
 #' Two ways of package/versions input are accepted:
-#' 1: just provide them directly (the `...` input). All not recognized named variables
-#'    will be interpreted like package names or package name/version combination. `library_VC(DBI = '0.5', assertthat = '', R6 = '')`
-#' 2: provide the `loadPackages` input in the following way: `library_VC(loadPackages = c(DBI = '0.5', assertthat = '', R6 = ''))`
-#'
-#' If an empty string e.g. `dplyr = ''` is specified, one of two things will happen:
+#' 1: just provide them directly (the \code{...} input). All not recognized named variables
+#'    will be interpreted like package names or package name/version combination. \code{library_VC(DBI = '0.5', assertthat = '', R6 = '')}
+#' 2: provide the \code{loadPackages} input in the following way: \code{library_VC(loadPackages = c(DBI = '0.5', assertthat = '', R6 = ''))} \cr
+#' \cr
+#' If an empty string e.g. \code{dplyr = ''} is specified, one of two things will happen:
 #' - if one version is available, this one is used.
-#' - if more are available, in interactive mode, it will ask the user to make a decission, or if `interactive()` is FALSE, it will return an error.
-#'
-#' if >= or > is used, as in `dplyr = '>= 2.5'`, it will list the options and take the first one.
+#' - if more are available, in interactive mode, it will ask the user to make a decission, or if \code{interactive()} is FALSE, it will return an error. \cr
+#' \cr
+#' if >= or > is used, as in \code{dplyr = '>= 2.5'}, it will list the options and take the first one.
 #' If another version is desired, please define it in the input list of packages to load
 #' before the package that depends on it is loaded.
-#'
-#' Dependencies are checked and then loaded by recursively running this function with `dry.run = TRUE`.
-#' This makes that dependencies are not loaded automatically, but are added to the namespace and accesible by its caller.
-#'
+#' \cr
+#' Dependencies are checked and then loaded by recursively running this function with \code{dry.run = TRUE}.
+#' This makes that dependencies are not loaded automatically, but are added to the namespace and accesible by its caller. \cr
+#' \cr
 #' The inputs packNameVersionList [list of named versions] and skipDependencies [list of names] can be
-#' left blank in general. These are used by other functionallity like `tryLoadPackages_VC()` and `install.packages_VC`
-#' dry.run will show the packages that will be used and will crash when no option is feasable (not installed or not compliant packages).
-#'
+#' left blank in general. These are used by other functionallity like \code{tryLoadPackages_VC()} and \code{install.packages_VC}
+#' \code{dry.run} will show the packages that will be used and will crash when no option is feasable (not installed or not compliant packages). \cr
+#' \cr
 #' If content of a package is directly called (like databasequiries in the DTF shiny app), but is also a dependency of
 #' another package (e.g. datatransfer), it still needs to be loaded directly, because it will not be loaded automatically by the main package.
-#' The namespace will be attached though, but not loaded. therefore it is not necessary to keep the .libPaths on the dependency packages.
-#'
-#' In other words, dependencies are remembered, but not loaded. So all strings are released (figurely speaking), but the dependency is there.
-#'
+#' The namespace will be attached though, but not loaded. therefore it is not necessary to keep the .libPaths on the dependency packages. \cr
+#' \cr
+#' In other words, dependencies are remembered, but not loaded. So all strings are released (figurely speaking), but the dependency is there. \cr
+#' \cr
 #' "strings" can stay attached (as in, the .libPaths can be appended) when using 'appendLibPaths = TRUE'.
 #' Afterwards, the normal library function can be used to load the not yet loaded but attached package.
-#' This is more or less the same as doing the following:
-#' ----
+#' This is more or less the same as doing the following: \cr
+#' \code{
 #' library_VC(c(dplyr = '0.5.0'), dry.run = TRUE, appendLibPaths = TRUE)
-#' library(dplyr)
-#' ----
-#' `dry.run` skips the loading step, and `appendLibPaths` adds the paths of dplyr and it's dependencies to `.libPaths`, which make a `library` call work.
+#' library(dplyr)} \cr
+#' \cr
+#' \code{dry.run} skips the loading step, and \code{appendLibPaths} adds the paths of dplyr and it's dependencies to \code{.libPaths}, which make a \code{library} call work. \cr
+#' \cr
+#' One reason to use \code{appendLibPaths = TRUE} is to make these packages accessible by a new 'child' R session. This is the case if \code{devtools::test()} is run
+#' by using \code{cntrl} + \code{shift} + \code{T} in Rstudio. When running it directly, it will use the currently loaded libraries. \cr
 #'
-#' One reason to use `appendLibPaths = TRUE` is to make these packages accessible by a new 'child' R session. This is the case if
-#' `devtools::test()` is run by using `cntrl` + `shift` + `T` in Rstudio. When running it directly, it will use the currently loaded libraries.
-#'
-#' ERRORS:
-#' If you receive the error `cannot unload ... ` It means that it tries to load a package, but another version is already loaded.
+#' @details ERRORS: \cr If you receive the error "\code{cannot unload ...}" It means that it tries to load a package, but another version is already loaded.
 #' To unload this other (older) version, it may not be a dependency of other packages, if it is, you will receive this error.
-#' The only workaround (when using this in R studio) is to close your Rstudio session, rename (or remove) the folder `RVClibrary\.Rproj.user\...\sources\prop` and start Rstudio again.
-#' At the `...` there should be a hash used in the current session e.g. `\F3B1663E\` and the project `RVClibrary` might be any Rstudio project. After this,
+#' The only workaround (when using this in R studio) is to close your Rstudio session, rename (or remove) the folder "\code{RVClibrary/.Rproj.user/.../sources/prop}" and start Rstudio again.
+#' At the \code{...} there should be a hash used in the current session e.g. \code{/F3B1663E/} and the project \code{RVClibrary} might be any Rstudio project. After this,
 #' the packages should be unloaded and you should be able to load a new batch of packages.
 #'
-#' @param ... All packages and their versions you would like to load e.g. `library_VC(DBI = '0.5', assertthat = '', R6 = '', quietly = TRUE)`. Other params like `quietly` will be ignored.
-#' @param loadPackages {NULL} Supports providing a named character vector of packages and their versions in the shape that is supported by all other functions in this package. e.g. `c(DBI = '0.5', assertthat = '', R6 = '')`
-#' @param lib.location {R_VC_library_location()} The folder containing a structure where this package must be loaded from.
-#' @param dry.run {FALSE} Will make it perform a dry run. It will check all dependencies and if `appendLibPaths` it will add
-#' their paths to `.libPaths` but it will not load those packages. If the paths are added this way, you should be able to just call the located packages with `library(...)`
-#' @param quietly {FALSE} Indicates if the loading must happen silently. No messages and warnings will be shown if TRUE.
-#' @param appendLibPaths {FALSE} If TRUE, the path to every package that is loaded will be appended to `.libPath(...)`. That configured path is the location where `library()` will look for packages.
+#' @param ... All packages and their versions you would like to load e.g. \code{library_VC(DBI = '0.5', assertthat = '', R6 = '', quietly = TRUE)}. Other params like \code{quietly} will be ignored.
+#' @param loadPackages Supports providing a named character vector of packages and their versions in the shape that is supported by all other functions in this package. e.g. \code{c(DBI = '0.5', assertthat = '', R6 = '')}
+#' @param lib.location The folder containing a structure where this package must load packages from. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.
+#' @param dry.run Will make it perform a dry run. It will check all dependencies and if \code{appendLibPaths} it will add
+#' their paths to \code{.libPaths} but it will not load those packages. If the paths are added this way, you should be able to just call the located packages with \code{library(...)}
+#' @param quietly  Indicates if the loading must happen silently. No messages and warnings will be shown if TRUE.
+#' @param appendLibPaths  If TRUE, the path to every package that is loaded will be appended to \code{.libPath(...)}. That configured path is the location where \code{library()} will look for packages.
+#' @param pick.last Changes the way a decision is made. In the scenario where a dependency of \code{>} or \code{>=} is defined, multiple versions may be available to choose from. By default, the lowest compliant version is chosen. Setting this to TRUE will choose the highest version.
 #'
-#' @param packNameVersionList {c()} See main description. Should be left blank.
-#' @param skipDependencies {c()} See main description. Should be left blank.
+#' @param packNameVersionList See main description. Should be left blank.
+#' @param skipDependencies See main description. Should be left blank.
 #'
 #' @export
 #'
-library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_location(), dry.run = FALSE, quietly = FALSE, appendLibPaths = FALSE, packNameVersionList = c(), skipDependencies = c()) {
+library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_location(), dry.run = FALSE, quietly = FALSE, appendLibPaths = FALSE, pick.last = FALSE, packNameVersionList = c(), skipDependencies = c()) {
 
     # If `loadPackages` is not provided, make use of the ... input via `match.call()`.
     # It will list all input names and values from which I will use all but the ones excluded.
@@ -72,7 +74,7 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
     }
 
     # If still other libraries are set as active libraries, reset the library to just 1 lib for the build in functions (= `.Library`).
-    if (!all(grepl(normPath(lib.location), normPath(.libPaths())) | grepl(normPath(.Library), normPath(.libPaths())))) {.libPaths(.Library); cat('\nExtra libraries were found. Those are excluded from .libPaths().\n\n')}
+    if (!all(grepl(normPath(lib.location), normPath(.libPaths())) | grepl(normPath(.Library), normPath(.libPaths())))) {.libPaths(.Library); cat('\nlibrary_VC: Extra libraries were found. Those are excluded from .libPaths().\n\n')}
 
     # check if the package version that is provided is a correct version (this catches a wrong input like `c(dplyr = '0.5.0', databasequeries')`  )
     if (!is.na(loadPackages) && length(loadPackages)!=0 &&
@@ -83,7 +85,7 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
     for (iPackage in unique(names(loadPackages))) {
 
         # if already loaded in previous recursive iteration where dry.run was TRUE (appended to skipDependencies)
-        if (iPackage %in% skipDependencies) {next}
+        if (iPackage %in% c(skipDependencies, 'RVClibrary')) {next}
 
         # if base package, simply load and continue
         if (checkIfBasePackage(iPackage)) {
@@ -91,7 +93,7 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
             next
         }
 
-        packVersion <- getCorrectVersion(loadPackages[iPackage], lib.location)
+        packVersion <- getCorrectVersion(loadPackages[iPackage], lib.location, pick.last = pick.last)
 
         package.location <- paste(lib.location, iPackage, packVersion, sep = '/')
 
