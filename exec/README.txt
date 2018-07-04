@@ -1,0 +1,1 @@
+This folder is called `exec`. Content of this folder is accessible when the package is installed. See install tarball function.

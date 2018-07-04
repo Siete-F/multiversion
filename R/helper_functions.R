@@ -162,6 +162,25 @@ add_package_VC_libPaths <- function(packNameVersion, lib.location) {
     .libPaths(c(.Library, paste(lib.location, names(packNameVersion), packNameVersion, sep = '/')))
 }
 
+#' Exclude not relevant search paths.
+#'
+#' Excludes all .libPaths other then those needed for library_VC().
+#'
+#' @param lib.location The folder which contains the R_VC_library structure. All directories in .libPaths containing this path will be kept.
+#' By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} to find this directory.
+#' @param dry.run If TRUE, will return the paths that would remain after cleaning up the .libPaths() list.
+#'
+#' @export
+#'
+remove_undesired_libPaths <- function(lib.location = R_VC_library_location(), dry.run = FALSE) {
+    correct_paths <- grepl(normPath(lib.location), normPath(.libPaths())) | normPath(.Library) == normPath(.libPaths())
+    if (dry.run) {
+        cat(sprintf('The following paths will be excluded:\n - "%s"\n\n', paste(collapse = '"\n - "', normPath(.libPaths()[!correct_paths]))))
+    } else {
+        .libPaths(.libPaths()[correct_paths])
+    }
+}
+
 
 #' Loads `devtools` version 1.13.1 and it's dependencies.
 #'
@@ -203,8 +222,8 @@ unique_highest_package_versions <- function(packNameVersion, return_as_df = FALS
 #' @param packNameVersion A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.4.0', ggplot = '')`).
 #'
 printExampleLibCall <- function(packNameVersion) {
-    if (!interactive()) {return()}
-    if (length(packNameVersion) == 0) {return()}
+    if (!interactive()) {return(invisible())}
+    if (length(packNameVersion) == 0) {return(invisible())}
 
     nameVer <- unique_highest_package_versions(packNameVersion, return_as_df = TRUE)
 

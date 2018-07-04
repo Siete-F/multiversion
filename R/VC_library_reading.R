@@ -74,7 +74,12 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
     }
 
     # If still other libraries are set as active libraries, reset the library to just 1 lib for the build in functions (= `.Library`).
-    if (!all(grepl(normPath(lib.location), normPath(.libPaths())) | grepl(normPath(.Library), normPath(.libPaths())))) {.libPaths(.Library); cat('\nlibrary_VC: Extra libraries were found. Those are excluded from .libPaths().\n\n')}
+    if (interactive() & length(sys.calls()) == 1 & !all(grepl(normPath(lib.location), normPath(.libPaths())) | grepl(normPath(.Library), normPath(.libPaths())))) {
+        warning(paste0('\nlibrary_VC: Extra libraries were found.\n',
+                       'Library_VC will exclude those when loading packages, please be aware `library()` does not\n',
+                       'and might load a package from an unexpected location.\n',
+                       'Please use `.libPaths(.Library)` before using library_VC to suppress this warning.\n\n'))
+    }
 
     # check if the package version that is provided is a correct version (this catches a wrong input like `c(dplyr = '0.5.0', databasequeries')`  )
     if (!is.na(loadPackages) && length(loadPackages)!=0 &&
@@ -124,6 +129,7 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
 
         if (!dry.run) {
             add_package_VC_libPaths(packNameVersionList, lib.location)
+            remove_undesired_libPaths()
 
             if (quietly) {
                 suppressWarnings(suppressMessages(library(iPackage, lib.loc = package.location, character.only = TRUE, quietly = quietly)))

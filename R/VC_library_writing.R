@@ -21,7 +21,7 @@
 install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_library_location(), add_to_VC_library = TRUE) {
 
     if (any(names(installPackages) != '')) stop('Please provide a vector of names no name-version combinations.')
-    if (length(installPackages) == 0) return()
+    if (length(installPackages) == 0) return(invisible())
 
     install.location <- R_VC_temp_lib_location(lib.location)
     # loaded packages
@@ -50,7 +50,7 @@ install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_libr
 
                 cat('\nResetting your loaded packages.\n')
                 library_VC(loadPackages = currentlyLoaded, lib.location = lib.location, quietly = TRUE)
-                return()
+                return(invisible())
             }
         }
 
@@ -95,19 +95,15 @@ install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_libr
 install.packages_VC_tarball <- function(packagePath, dependencies, lib.location = R_VC_library_location(), execute_with_Rscript = TRUE, parse_dependencies = FALSE) {
 
     if (execute_with_Rscript) {
-        script_location <- normPath('./Scripts/install.packages_VC_tarball_script.R')
+        script_location <- normPath(paste0(path.package('RVClibrary'), '/exec/install.packages_VC_tarball_script.R'))
         Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
         system(sprintf('"%s" --vanilla "%s" "%s" "%s"', Rscript_dir, script_location, packagePath, printPackageList(dependencies, do_return = TRUE)))
-        return()
+        return(invisible())
     }
 
     install.location <- R_VC_temp_lib_location(lib.location)
 
-    if (parse_dependencies) {
-        dependencies <- cleanupDependencyList(dependencies)
-        cat('The ', length(dependencies), ' parsed dependencies look like this:\n')
-        printExampleLibCall(dependencies); cat('\n')
-    }
+    if (parse_dependencies) {dependencies <- cleanupDependencyList(dependencies)}
 
     currentLibs <- .libPaths()
     .libPaths(.Library)
@@ -116,7 +112,7 @@ install.packages_VC_tarball <- function(packagePath, dependencies, lib.location 
     succesfullLoads <- tryLoadPackages_VC(dependencies, lib.location)
     missingDependencies <- names(dependencies)[!(names(dependencies) %in% names(succesfullLoads))]
 
-    # install all not yet existing dependencies:
+    # Install all not yet existing dependencies:
     if (length(missingDependencies) > 0) {
         cat('\nI will install missing dependencies and try again...\n\n')
         install.packages_VC(missingDependencies, lib.location = lib.location, add_to_VC_library = TRUE)
@@ -124,7 +120,7 @@ install.packages_VC_tarball <- function(packagePath, dependencies, lib.location 
         if (all(names(dependencies) %in% names(succesfullLoads))) {cat('\nNow we succeeded, continuing... \n\n')}
     }
 
-    # check again if all wend well, if not all dependencies are there, reset and abort.
+    # Check again if all wend well, if not all dependencies are there, reset and abort.
     isSuccesfull <- names(dependencies) %in% names(succesfullLoads)
 
     if (!all(isSuccesfull | checkIfBasePackage(names(dependencies)))) {
@@ -134,6 +130,8 @@ install.packages_VC_tarball <- function(packagePath, dependencies, lib.location 
     currentlyLoaded <- detachAll()
     currentlyLoaded <- currentlyLoaded[!names(currentlyLoaded) == 'RVClibrary']
 
+    cat('\n')
+
     if (interactive()) {
         on.exit({
             cat('\nResetting your loaded packages...\n\n');
@@ -141,11 +139,13 @@ install.packages_VC_tarball <- function(packagePath, dependencies, lib.location 
         }, add = TRUE)
     }
 
-    # if all dependencies could be found/installed: add all recursive dependency libraries to the search path.
+    # If all dependencies could be found/installed: add all recursive dependency libraries to the search path.
     add_package_VC_libPaths(succesfullLoads, lib.location)
 
-    # install the tarbal!
+    # Install the tarbal!
     install.packages(packagePath, lib = install.location, type = "source", repos = NULL)
+
+    return(invisible())
 }
 
 
@@ -153,10 +153,20 @@ install.packages_VC_tarball <- function(packagePath, dependencies, lib.location 
 
 #' Move normally installed packages to R_VC_library structure.
 #'
+#' After this conversion is complete and you set the directory (temporarily by using \code{R_VC_library_location(...)}
+#' or for eternity by setting the equally named environment variable) you are good to go! You can directly use \code{library_VC}
+#' for loading packages. Thanks for using \code{RVClibrary}!! \cr
+#' \cr
+#' This functionallity is also used for converting installed packages from the temporary installation directory to the final R_VC_library format. \cr
+#' \cr
+#' Note that it is realy no problem to perform a conversion again, it will only move new versions of already present packages and will never overwrite.
+#'
 #' @param normalLibrary The temporary library where a package was temporarily installed (having a normal library structure).
 #' By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} and appends \code{/TEMP_install_location}.
 #' @param VC_library_location The folder containing a structure where all packages in the temp folder must be moved to.
 #' By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.
+#'
+#' @example convert_to_VC_library(normalLibrary = Sys.getenv("R_LIBS_USER"), VC_library_location = "C:/REMOVE_ME_example_library")
 #'
 #' @export
 #'
@@ -252,7 +262,7 @@ detachAll <- function(dryRun = FALSE, packageList = names(sessionInfo()$otherPkg
 # ------------- [install.packages] helper functions --------------
 
 #' Test load package list.
-#' 
+#'
 #' Internally used for 'test loading' a list of dependencies when installing a package.
 #' Returns a list of succesfull load operations.
 tryLoadPackages_VC <- function(packages, lib.location) {
@@ -279,7 +289,7 @@ tryLoadPackages_VC <- function(packages, lib.location) {
 #'
 reset.libPaths <- function(currentLibs) {
     .libPaths(currentLibs)
-    cat('The libraries are reset.\n')
+    if (interactive()) {cat('The libraries are reset.\n')}
 }
 
 

@@ -5,7 +5,7 @@
 #' If no name is provided, an error is returned.
 #'
 #' @param packageName The name of the package for which all versions must be returned.
-#' @param lib.location [\code{R_VC_library_location()}] The folder containing the structure where this package his versions need to be checked.
+#' @param lib.location The folder containing the structure where this package his versions need to be checked.
 #'
 #' @export
 #'
@@ -29,8 +29,8 @@ availablePackageVersions <- function(packageName, lib.location = R_VC_library_lo
 #'
 #' @param packVersion A single named version with package name and it's version like \code{c(dplyr = '>= 0.4.0')}.
 #' @param versionList A list of available versions for this package to choose from. It is the list to choose from and check availability. Created with \code{availablePackageVersions}.
-#' @param packageName [\code{''}] It is used for clear error handling. It should be the package name it is trying to load so we can mention it when crashing.
-#' @param pick.last [\code{FALSE}] If a version like \code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
+#' @param packageName  It is used for clear error handling. It should be the package name it is trying to load so we can mention it when crashing.
+#' @param pick.last If a version like \code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
 #' By default it will take the same or first higher version (when it exists, just \code{0.5}, which is often the case).
 #' This because this is most likely to not change the behaviour of the code. Alternatively, picking the latest version is most
 #' likely to be accepted by other packages their dependencies (e.g. if a package that is loaded later on depends on this package but asks for \code{> 0.6}, it will crash).
@@ -102,8 +102,8 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
 #'
 #' @param packVersion A named character vector with package names and their version indication (e.g. \code{c(dplyr = '>= 0.4.0', ggplot = '')}).
 #' @param lib.location The location of the R_VC_library folder.
-#' @param verbose [\code{TRUE}] if TRUE, it will print the choices it makes. If the session is not interactive, or verbose = FALSE, nothing will be printed.
-#' @param pick.last [\code{FALSE}] If a version like\code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
+#' @param verbose if TRUE, it will print the choices it makes. If the session is not interactive, or verbose = FALSE, nothing will be printed.
+#' @param pick.last If a version like\code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
 #' By default it will take the first higher version (when it exists, just\code{0.5}, which is often the case).
 #' This because this is most likely to not change the behaviour of the code. Picking the latest version is most
 #' compatible with matching other packages their dependencies (e.g. if a later package depends on this package but asks for\code{> 0.6}, it will crash).

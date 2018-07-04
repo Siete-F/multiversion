@@ -2,8 +2,7 @@
 % Please edit documentation in R/VC_library_writing.R
 \name{tryLoadPackages_VC}
 \alias{tryLoadPackages_VC}
-\title{Internally used for 'test loading' a list of dependencies when installing a package.
-Returns a list of succesfull load operations.}
+\title{Test load package list.}
 \usage{
 tryLoadPackages_VC(packages, lib.location)
 }
