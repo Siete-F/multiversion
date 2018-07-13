@@ -24,7 +24,7 @@ R_VC_temp_lib_location <- function(lib.location = R_VC_library_location()) {
 #' This function removes this temporary folder. Make sure that all installed packages that are desired to keep are converted.
 #' You can run the \code{convert_to_VC_library()} once again to make sure this is the case.
 #'
-#' @param install.location By default the default temporary directory path obtained with `R_VC_temp_lib_location()`.
+#' @param install.location By default the default temporary directory path obtained with \code{R_VC_temp_lib_location()}.
 #'
 #' @export
 #'
@@ -82,7 +82,13 @@ raw_input_parser = function(arguments, varnames_to_exclude) {
     arguments[1] <- NULL
 
     # get input characteristics
-    noName  <- names(arguments) == '' || is.null(names(arguments)) & length(arguments) == 1
+    # if null, not 1 name is given, so all elements need a name.
+    if (is.null(names(arguments))) {
+        noName  <- rep(TRUE, length(arguments))
+    } else {
+        noName  <- names(arguments) == ''
+    }
+
     varName <- names(arguments) %in% varnames_to_exclude
     isNum   <- sapply(arguments, function(x) {class(x) == 'numeric'})
 
@@ -121,6 +127,15 @@ cleanupDependencyList <- function(deps) {
 
 
     return(versions[names(versions) != 'R'])
+}
+
+
+#' Remove `>` or `>=` from version string.
+#'
+#' @param packageVersion A version indication you would like to remove `>` and `>=` from.
+#'
+bareVersion <- function(packageVersion) {
+    gsub('>?=?\\s?', '', packageVersion)
 }
 
 
@@ -220,6 +235,8 @@ unique_highest_package_versions <- function(packNameVersion, return_as_df = FALS
 #' Prints the library call that you can use based on a name/version input vector.
 #'
 #' @param packNameVersion A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.4.0', ggplot = '')`).
+#'
+#' @export
 #'
 printExampleLibCall <- function(packNameVersion) {
     if (!interactive()) {return(invisible())}

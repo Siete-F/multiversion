@@ -66,7 +66,7 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
     # If `loadPackages` is not provided, make use of the ... input via `match.call()`.
     # It will list all input names and values from which I will use all but the ones excluded.
     if (is.null(loadPackages)) {
-        loadPackages <- raw_input_parser(as.list(match.call()), varnames_to_exclude = c('loadPackages', 'lib.location', 'dry.run', 'quietly', 'packNameVersionList', 'skipDependencies', 'appendLibPaths'))
+        loadPackages <- raw_input_parser(as.list(match.call()), varnames_to_exclude = c('loadPackages', 'lib.location', 'dry.run', 'quietly', 'appendLibPaths', 'pick.last', 'packNameVersionList', 'skipDependencies'))
     }
 
     if (length(loadPackages) == 1 && strtrim(names(loadPackages), 2) == 'c(') {
@@ -82,23 +82,41 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
     }
 
     # check if the package version that is provided is a correct version (this catches a wrong input like `c(dplyr = '0.5.0', databasequeries')`  )
-    if (!is.na(loadPackages) && length(loadPackages)!=0 &&
+    if (length(loadPackages)!=0 && !is.na(loadPackages) &&
         any(sapply(loadPackages, function(x) {attributes(regexpr('>?=?\\s?\\d+(\\.\\d+){1,3}', x))$match.length != nchar(x) && nchar(x) > 0}) & !checkIfBasePackage(names(loadPackages)))) {
         stop(sprintf('Not all package versions that are provided seem to be valid version numbers. The following was received:\n%s', paste(paste0(names(loadPackages), ' (', loadPackages, ')'), collapse = ', ')))
     }
 
     for (iPackage in unique(names(loadPackages))) {
-
-        # if already loaded in previous recursive iteration where dry.run was TRUE (appended to skipDependencies)
-        if (iPackage %in% c(skipDependencies, 'RVClibrary')) {next}
+        startChar <- ifelse(iPackage == names(loadPackages)[1], ' \\', '  |')
+        stackStr <- sprintf('%s%s', paste(collapse = '  ', rep('|', sum(grepl('library_VC', sys.calls())) - 1)), startChar)
+        stackStr <- gsub('^  \\|', '*__', paste0(collapse = '', c(stackStr, rep('_', max(16 - nchar(stackStr), 1))))) # adds remainingdashes and changes stack '0' to 'new package' indication ('*__')
 
         # if base package, simply load and continue
         if (checkIfBasePackage(iPackage)) {
             library(iPackage, character.only = TRUE, quietly = quietly)
+            cat(stackStr)
+            cat(sprintf("Version %6s base package is loaded %s\n", loadPackages[iPackage], iPackage))
             next
         }
 
+        if (iPackage %in% c(skipDependencies, 'RVClibrary')) {
+            if (isVersionCompatible(loadPackages[iPackage], packNameVersionList[iPackage])) {
+                next
+            } else {
+                if (paste0('package:', iPackage) %in% search()) {
+                    stop(sprintf(paste('An already loaded package "%s" (version: %s) is from an earlier version than requested here (%s).',
+                                       '\nWe will not try to detach since that could cause unexpected behaviour.',
+                                       '\nPlease detach it manually (e.g. `detachAll(packageList = \'%s\')`) and',
+                                       'don\'t load it explicitly before this package is loaded.'), iPackage, packNameVersionList[iPackage], loadPackages[iPackage], iPackage))
+                }
+                packNameVersionList <- packNameVersionList[!names(packNameVersionList) == iPackage]
+            }
+        }
+
+        cat(stackStr)
         packVersion <- getCorrectVersion(loadPackages[iPackage], lib.location, pick.last = pick.last)
+        # if already loaded in previous recursive iteration where dry.run was TRUE (appended to skipDependencies)
 
         package.location <- paste(lib.location, iPackage, packVersion, sep = '/')
 
@@ -121,6 +139,7 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
                                           lib.location        = lib.location,
                                           packNameVersionList = packNameVersionList,
                                           skipDependencies    = c( names(packNameVersionList), skipDependencies ),
+                                          pick.last           = pick.last,
                                           dry.run             = TRUE)
 
         packNameVersionList <- append(packNameVersionList, setNames(packVersion, iPackage))

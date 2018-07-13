@@ -4,8 +4,9 @@
 \alias{convert_to_VC_library}
 \title{Move normally installed packages to R_VC_library structure.}
 \usage{
-convert_to_VC_library(normalLibrary = R_VC_temp_lib_location(),
-  VC_library_location = R_VC_library_location())
+
+  convert_to_VC_library(normalLibrary = R_VC_temp_lib_location(VC_library_location),
+  VC_library_location = R_VC_library_location(), force_overwrite = FALSE)
 }
 \arguments{
 \item{normalLibrary}{The temporary library where a package was temporarily installed (having a normal library structure).
@@ -13,7 +14,32 @@ By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} and 
 
 \item{VC_library_location}{The folder containing a structure where all packages in the temp folder must be moved to.
 By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.}
+
+\item{force_overwrite}{If you are experimenting and you would like to overwrite the newly installed package.
+Normally only desired when the package you are experimenting with is a self maintained package and you are sure you increased the version to a new one.}
 }
 \description{
-Move normally installed packages to R_VC_library structure.
+After this conversion is complete and you set the directory (temporarily by using \code{R_VC_library_location(...)}
+or for eternity by setting the equally named environment variable) you are good to go! You can directly use \code{library_VC}
+for loading packages. Thanks for using \code{RVClibrary}!! \cr
+\cr
+This function creates the VC library structure by moving normaly installed packages to a more parallel oriented library structure.
+lib1/BH/DESCRIPTION   becomes  lib2/BH/1.60.0-2/BH/DESCRIPTION
+\cr
+This functionallity is also used for converting installed packages from the temporary installation directory to the final R_VC_library format. \cr
+\cr
+Note that it is realy no problem to perform a conversion again, it will only move new versions of already present packages and will never overwrite.
+To continue with a clean Temp folder, run \code{clearTempInstallFolder()}, it will remove the folder.
+}
+\examples{
+# As an experiment (or when getting started) you could run this with your complete standard library (not your base library).
+convert_to_VC_library(normalLibrary = Sys.getenv("R_LIBS_USER"),
+                      VC_library_location = "C:/REMOVE_ME_example_library")
+
+# Just running it will use the VC library defined by the environment variable and look inside for the Temp folder to use.
+convert_to_VC_library()
+
+# You can also only mention the VC library, it will look for the temporary folder within automatically.
+convert_to_VC_library(VC_library_location = "M:/R_VC_library")
+
 }

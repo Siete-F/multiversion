@@ -10,7 +10,7 @@ availablePackageVersions(packageName, lib.location = R_VC_library_location())
 \arguments{
 \item{packageName}{The name of the package for which all versions must be returned.}
 
-\item{lib.location}{[\code{R_VC_library_location()}] The folder containing the structure where this package his versions need to be checked.}
+\item{lib.location}{The folder containing the structure where this package his versions need to be checked.}
 }
 \description{
 Just checks the R_VC_library folder structure for all available versions installed for a specific package.

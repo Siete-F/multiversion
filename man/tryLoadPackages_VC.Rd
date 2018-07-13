@@ -4,7 +4,15 @@
 \alias{tryLoadPackages_VC}
 \title{Test load package list.}
 \usage{
-tryLoadPackages_VC(packages, lib.location)
+tryLoadPackages_VC(packages, lib.location, pick.last = FALSE)
+}
+\arguments{
+\item{packages}{A named character vector of package/version names. None are really loaded, `library_VC` is used with the `dry.run` turned on.}
+
+\item{lib.location}{The folder containing a structure where we will try to find our required packages in.
+By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.}
+
+\item{pick.last}{Changes the way a decision is made. In the scenario where a dependency of \code{>} or \code{>=} is defined, multiple versions may be available to choose from. By default, the lowest compliant version is chosen. Setting this to TRUE will choose the highest version.}
 }
 \description{
 Internally used for 'test loading' a list of dependencies when installing a package.

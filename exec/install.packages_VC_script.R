@@ -1,27 +1,25 @@
 args <- commandArgs(trailingOnly = TRUE)
 lib.location <- args[1]
-packagePath  <- args[2]
-dependencies <- args[3]
+packagesToInstall <- args[2]
 
 # input checks:
-if (!file.exists(packagePath)) {
-    stop(sprintf("The file (%s) provided does not exist.\nPlease specify 2 arguments.\nThe complete path to the tarball file, and a character string showing the dependencies: `dplyr = (0.5.0), ggplot2 = ()`.", packagePath))
-}
 
 # Set library
 .libPaths(c(.Library, Sys.getenv("R_LIBS_USER")))
-H <- list()
 
+H <- list()
 tryCatch(withCallingHandlers({
 
     if (suppressMessages(!require(RVClibrary))) {
         stop("\nPlease install this single tarball manually using something like:\n `install.packages('M:/.../RVClibrary_0.1.0.tar.gz', lib = Sys.getenv('R_LIBS_USER'), type = 'source', repos = NULL)`\n\n")
     }
 
-    install.packages_VC_tarball(packagePath, dependencies, lib.location = lib.location, execute_with_Rscript = FALSE, parse_dependencies = TRUE)
+    install.packages_VC(installPackages      = trimws(strsplit(packagesToInstall, split = ',')[[1]]),
+                        lib.location         = lib.location,
+                        add_to_VC_library    = FALSE,
+                        execute_with_Rscript = FALSE)
 
 }, error = function(e) H <<- sys.calls()), error = function(e) {message('ERROR: The following error was returned:\n', e$message, '\n\n')})
-
 
 # If an error occured:
 if (length(H) != 0) {

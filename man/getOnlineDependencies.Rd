@@ -4,7 +4,7 @@
 \alias{getOnlineDependencies}
 \title{Check if an package belongs to the standard R packages}
 \usage{
-getOnlineDependencies(packageName)
+getOnlineDependencies(packageName, cran_url = "https://cran.rstudio.com/")
 }
 \arguments{
 \item{packageName}{The package name to check.}

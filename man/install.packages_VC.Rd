@@ -5,7 +5,8 @@
 \title{Install CRAN package into VC library.}
 \usage{
 install.packages_VC(installPackages = NULL,
-  lib.location = R_VC_library_location(), add_to_VC_library = TRUE)
+  lib.location = R_VC_library_location(), add_to_VC_library = TRUE,
+  overwrite_this_package = FALSE, execute_with_Rscript = TRUE)
 }
 \arguments{
 \item{installPackages}{Provide a vector of package names. A version cannot be supplied.}
@@ -17,6 +18,10 @@ the installed package(s) is moved to the destination location automatically.}
 
 \item{add_to_VC_library}{If TRUE (the default), the installed package(s) is (are) moved to the final destination automatically.
 Otherwise it is necessary to run \code{convert_to_VC_library()} manually after the installation into the temporary folder finished.}
+
+\item{execute_with_Rscript}{When TRUE, it will try to install the package using a sepparate Rscipt R instance.
+This simplifies installing and leaves changing loaded packages etc. to another R instance which we can kill :).
+It will run a script provided with your packages. That script will load \code{RVClibrary} and call \code{install.packages_VC} directly.}
 }
 \description{
 This function can be used to install a CRAN package in the (default or specified) R_VC_library.

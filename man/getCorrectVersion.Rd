@@ -12,9 +12,9 @@ getCorrectVersion(packVersion, lib.location, verbose = TRUE,
 
 \item{lib.location}{The location of the R_VC_library folder.}
 
-\item{verbose}{[\code{TRUE}] if TRUE, it will print the choices it makes. If the session is not interactive, or verbose = FALSE, nothing will be printed.}
+\item{verbose}{if TRUE, it will print the choices it makes. If the session is not interactive, or verbose = FALSE, nothing will be printed.}
 
-\item{pick.last}{[\code{FALSE}] If a version like\code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
+\item{pick.last}{If a version like\code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
 By default it will take the first higher version (when it exists, just\code{0.5}, which is often the case).
 This because this is most likely to not change the behaviour of the code. Picking the latest version is most
 compatible with matching other packages their dependencies (e.g. if a later package depends on this package but asks for\code{> 0.6}, it will crash).

@@ -5,7 +5,9 @@
 \title{Install Tarball into VC library.}
 \usage{
 install.packages_VC_tarball(packagePath, dependencies,
-  lib.location = R_VC_library_location(), execute_with_Rscript = TRUE,
+  lib.location = R_VC_library_location(),
+  add_to_VC_library = overwrite_this_package,
+  overwrite_this_package = FALSE, execute_with_Rscript = TRUE,
   parse_dependencies = FALSE)
 }
 \arguments{
@@ -15,10 +17,15 @@ install.packages_VC_tarball(packagePath, dependencies,
 
 \item{lib.location}{The folder containing a structure where this package needs to be installed in. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.}
 
+\item{add_to_VC_library}{If TRUE, the installed package(s) is (are) moved to the final destination automatically.
+Otherwise it is necessary to run \code{convert_to_VC_library()} manually after the installation into the temporary folder finished. To clean up the temporary folder, run \code{clearTempInstallFolder()}.}
+
+\item{overwrite_this_package}{If TRUE, the installed package is added and overwrites the existing package.}
+
 \item{execute_with_Rscript}{When true, it will try to install a tarball using a sepparate Rscipt R instance. This saves you from the hasle to prepare your Rstudio environment to match the one that the tarball requires (incl. dependencies).
 It will run a script provided with the tarball location and it's dependencies. That script will load \code{RVClibrary} and call \code{install.packages_VC_tarball} directly.}
 
-\item{parse_dependencies}{If true, the dependencies are expected to be provided in a single string kind of format. This is the case when this function is called by the installation script.}
+\item{parse_dependencies}{If true, the dependencies are expected to be provided in a single string kind of format \code{"dplyr (>= 0.5), data.table, R6 (0.1.1)"}. This is the case when this function is called by the installation script.}
 }
 \description{
 This function can try to install a tarball based on the tarball location and it's dependencies.

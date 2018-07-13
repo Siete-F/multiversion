@@ -38,15 +38,28 @@ availablePackageVersions <- function(packageName, lib.location = R_VC_library_lo
 #'
 chooseVersion <- function(packVersion, versionList, packageName = '', pick.last = FALSE) {
 
-    decidedVersion <- c()
+    compliantVersions <- c()
+    num_ver_list <- numeric_version(versionList)
+    if (!(is.na(packVersion) || nchar(packVersion) == 0)) {
+        first_next_major <- package_version(sprintf('%1.0f.0.0', package_version(bareVersion(packVersion))$major+1))
+    }
 
     if (grepl('>=', packVersion)) {
-        validVersions  <- numeric_version(versionList) >= numeric_version(gsub('>=\\s?', '', packVersion))
-        decidedVersion <- versionList[validVersions]
+        validVersions  <- num_ver_list >= numeric_version(bareVersion(packVersion)) & num_ver_list < first_next_major
+        if (!any(validVersions)) {
+            validVersions  <- num_ver_list > numeric_version(bareVersion(packVersion))
+            if (any(validVersions)) warning(sprintf('For package "%s" the lowest optional verion is a major release higher. Requested: "%s", first option "%s".', packageName, packVersion, versionList[validVersions][[1]]))
+        }
+        compliantVersions <- versionList[validVersions]
 
     } else if (grepl('>', packVersion)) {
-        validVersions  <- numeric_version(versionList) >  numeric_version(gsub('>\\s?', '', packVersion))
-        decidedVersion <- versionList[validVersions]
+        validVersions  <- num_ver_list >  numeric_version(bareVersion(packVersion)) & num_ver_list < first_next_major
+        # If no valid versions found within this major release, look for all versions above the minimal version.
+        if (!any(validVersions)) {
+            validVersions  <- num_ver_list > numeric_version(bareVersion(packVersion))
+            if (any(validVersions)) warning(sprintf('For package "%s" the lowest optional verion is a major release higher. Requested: "%s", first option "%s".', packageName, packVersion, versionList[validVersions][[1]]))
+        }
+        compliantVersions <- versionList[validVersions]
 
     } else if (is.na(packVersion) || nchar(packVersion) == 0) {
         # deal with all scenario's where there are x versions available, and none are defined (e.g. `dplyr = ''`).
@@ -60,27 +73,32 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
                 if (choice == 0) {
                     stop('There is more then one version of the package available but the user could not make a decission.')
                 }
-                decidedVersion <- versionList[choice]
+                compliantVersions <- versionList[choice]
 
             } else {
-                stop(paste0('There is more then one version of the package "', packageName,
-                            '", please define one of the following versions specifically:\n', paste0(versionList, collapse = ',  '),
-                            '\nAlternatively, create or update a `vc_override_dependencies.txt` file, located in the version folder\n',
-                            'containing an alternative set of dependencies (normaly more specific).\nExample content: "R6 (>= 2.1.2), Rcpp (>= 0.12.3), tibble (>= 1.2)"\n'))
+                if (pick.last) {
+                    # Use all versions below the next major release.
+                    compliantVersions <- versionList
+                } else {
+                    stop(paste0('There is more then one version of the package "', packageName,
+                                '",\nplease define one of the following versions specifically:\n', paste0(versionList, collapse = ',  '),
+                                '\nAlternatively, create or update a `vc_override_dependencies.txt` file, located in the version folder\n',
+                                'containing an alternative set of dependencies (normaly more specific).\nExample content: "R6 (>= 2.1.2), Rcpp (>= 0.12.3), tibble (>= 1.2)"\n'))
+                }
             }
         } else if (length(versionList) < 1) {
             stop(paste0('There is no package "', packageName, '" installed (yet). (requested version: "', packVersion, '")'))
         } else {
             # if there is only 1 version available and none requested
-            decidedVersion <- versionList
+            compliantVersions <- versionList
         }
         # deal with concrete version number (e.g. `dplyr = 0.5.0`):
     } else if (packVersion %in% versionList) {
         # if available, go with it.
-        decidedVersion <- packVersion
+        compliantVersions <- packVersion
     }
 
-    if (length(decidedVersion) == 0) {
+    if (length(compliantVersions) == 0) {
         stop(sprintf('The requested version "%s" for package "%s" is not installed.', packVersion, packageName))
     }
 
@@ -88,10 +106,44 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
     # This should only be the case when `>` or `>=` scenarios are dealt with.
     # Other scenarios should be checked (stopped) above.
     # For more details on this choice, read the instruction for the `pick.last` parameter.
-    index <- ifelse(pick.last, length(decidedVersion), 1)
-    myChoice <- sort(numeric_version(decidedVersion))[index]
+    index <- ifelse(pick.last, length(compliantVersions), 1)
+    myChoice <- sort(numeric_version(compliantVersions))[index]
 
     return(as.character(myChoice))
+}
+
+#' check if version indication is compliant.
+#'
+#' Returns TRUE if the 'condition' complies with the already available 'version'.
+#'
+#' @param condition A version indication like `>= 4.5.1` or `2.3.4` or `> 1.2.3` or `''` (empty) or `NA`.
+#' @param version A version number like `1.2.3`.
+#'
+#' @export
+#'
+isVersionCompatible <- function(condition, version) {
+    # If no reference was supplied, all conditions are acceptable.
+    if (is.null(version)) return(TRUE)
+
+    # If '', NA or an equal version as the existing version is returned, pass.
+    if (is.na(condition) || nchar(condition) == 0) {
+        return(TRUE)
+    } else if (condition == version) {
+        return(TRUE)
+    }
+
+    numCondition <- numeric_version(bareVersion(condition))
+    numVersion <- numeric_version(version)
+
+    # If the version that is requested is indeed high
+    if (grepl('>=', condition)) {
+        return(numVersion >= numCondition)
+    } else if (grepl('>', condition)) {
+        return(numVersion > numCondition)
+    } else {
+        # normally a case of (condition != with_version) where condition is an exact number.
+        return(FALSE)
+    }
 }
 
 
@@ -118,7 +170,7 @@ getCorrectVersion <- function(packVersion, lib.location, verbose = TRUE, pick.la
 
     # handle higher then, higher-or-equal, equal to (just a version) or '' (auto determine) version indications:
     packVersionList <- availablePackageVersions(packageName, lib.location)
-    packVersion <- chooseVersion(packVersion, versionList = packVersionList, packageName, pick.last)
+    packVersion <- chooseVersion(packVersion, versionList = packVersionList, packageName, pick.last = pick.last)
 
     # print instructive message:
     if (verbose || !interactive()) {
@@ -174,8 +226,8 @@ loadedPackageVersion <- function(packageName) {
 #'
 #' @export
 #'
-getOnlineDependencies <- function(packageName){
-    packList <- available.packages()
+getOnlineDependencies <- function(packageName, cran_url = 'https://cran.rstudio.com/'){
+    packList <- available.packages(repos = cran_url)
     if (!(packageName %in% packList)) {
         stop(sprintf('Package "%s" is not available on CRAN. Install from source using "install.packages_VC_tarball(path, depends)".', packageName))
     }

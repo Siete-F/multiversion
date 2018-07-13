@@ -11,9 +11,9 @@ chooseVersion(packVersion, versionList, packageName = "", pick.last = FALSE)
 
 \item{versionList}{A list of available versions for this package to choose from. It is the list to choose from and check availability. Created with \code{availablePackageVersions}.}
 
-\item{packageName}{[\code{''}] It is used for clear error handling. It should be the package name it is trying to load so we can mention it when crashing.}
+\item{packageName}{It is used for clear error handling. It should be the package name it is trying to load so we can mention it when crashing.}
 
-\item{pick.last}{[\code{FALSE}] If a version like \code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
+\item{pick.last}{If a version like \code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
 By default it will take the same or first higher version (when it exists, just \code{0.5}, which is often the case).
 This because this is most likely to not change the behaviour of the code. Alternatively, picking the latest version is most
 likely to be accepted by other packages their dependencies (e.g. if a package that is loaded later on depends on this package but asks for \code{> 0.6}, it will crash).

@@ -7,7 +7,7 @@
 clearTempInstallFolder(install.location = R_VC_temp_lib_location())
 }
 \arguments{
-\item{install.location}{By default the default temporary directory path obtained with `R_VC_temp_lib_location()`.}
+\item{install.location}{By default the default temporary directory path obtained with \code{R_VC_temp_lib_location()}.}
 }
 \description{
 The temporary installation folder (indicated by \code{R_VC_temp_lib_location()}) is used to install the package before moving ('converting') it to the final location.
