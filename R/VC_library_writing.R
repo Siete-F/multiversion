@@ -114,7 +114,7 @@ install.packages_VC_tarball <- function(packagePath, dependencies, lib.location 
                                         add_to_VC_library = overwrite_this_package, overwrite_this_package = FALSE,
                                         execute_with_Rscript = TRUE, parse_dependencies = FALSE) {
 
-    if (parse_dependencies) {dependencies <- cleanupDependencyList(dependencies)}
+    if (parse_dependencies) {dependencies <- parse_dependency_string(dependencies)}
 
     if (execute_with_Rscript) {
         Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
@@ -374,10 +374,10 @@ dependencies <- function(packageName, lib.location = R_VC_library_location()) {
 
         overrideFile <- paste(package.location, c('vc_override_dependencies.txt'), sep = '/')
         if (file.exists(overrideFile)) {
-            dependingPackages <- cleanupDependencyList(readChar(overrideFile, file.info(overrideFile)$size))
+            dependingPackages <- parse_dependency_string(readChar(overrideFile, file.info(overrideFile)$size))
         } else {
             packDesc <- packageDescription(packageName, lib.loc = package.location)
-            dependingPackages <- cleanupDependencyList(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pat = ',,', rep = ','))
+            dependingPackages <- parse_dependency_string(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pat = ',,', rep = ','))
         }
 
         cat(sprintf('%23s : %-8s ', packageName, packVersion))
@@ -396,7 +396,7 @@ dependencies <- function(packageName, lib.location = R_VC_library_location()) {
 
 #' Convert package name/version vector to single string.
 #'
-#' Used to print a set of package names and their version criteria in a way that \code{cleanupDependencyList()} can parse it again to a package list.
+#' Used to print a set of package names and their version criteria in a way that \code{parse_dependency_string()} can parse it again to a package list.
 #' This way we can list the dependencies of a function easily and it makes it possible to use it when performing a commandline call.
 #'
 #' @param x A named character vector with package names/versions.
@@ -459,10 +459,10 @@ dependsOnMe <- function(..., checkMyDeps = NULL, lib.location = R_VC_library_loc
 
             overrideFile <- paste(package.location, c('vc_override_dependencies.txt'), sep = '/')
             if (file.exists(overrideFile)) {
-                dependingPackages <- cleanupDependencyList(readChar(overrideFile, file.info(overrideFile)$size))
+                dependingPackages <- parse_dependency_string(readChar(overrideFile, file.info(overrideFile)$size))
             } else {
                 packDesc <- packageDescription(packageName, lib.loc = package.location)
-                dependingPackages <- cleanupDependencyList(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pat = ',,', rep = ','))
+                dependingPackages <- parse_dependency_string(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pat = ',,', rep = ','))
             }
 
             dependingPackages <- dependingPackages[!checkIfBasePackage(names(dependingPackages))]

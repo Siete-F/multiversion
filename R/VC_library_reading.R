@@ -74,7 +74,7 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
     }
 
     # If still other libraries are set as active libraries, reset the library to just 1 lib for the build in functions (= `.Library`).
-    if (interactive() & length(sys.calls()) == 1 & !all(grepl(normPath(lib.location), normPath(.libPaths())) | grepl(normPath(.Library), normPath(.libPaths())))) {
+    if (!quietly & interactive() & length(sys.calls()) == 1 & !all(grepl(normPath(lib.location), normPath(.libPaths())) | grepl(normPath(.Library), normPath(.libPaths())))) {
         warning(paste0('\nlibrary_VC: Extra libraries were found.\n',
                        'Library_VC will exclude those when loading packages, please be aware `library()` does not\n',
                        'and might load a package from an unexpected location.\n',
@@ -82,7 +82,7 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
     }
 
     # check if the package version that is provided is a correct version (this catches a wrong input like `c(dplyr = '0.5.0', databasequeries')`  )
-    if (length(loadPackages)!=0 && !is.na(loadPackages) &&
+    if (length(loadPackages) != 0 && !is.na(loadPackages) &&
         any(sapply(loadPackages, function(x) {attributes(regexpr('>?=?\\s?\\d+(\\.\\d+){1,3}', x))$match.length != nchar(x) && nchar(x) > 0}) & !checkIfBasePackage(names(loadPackages)))) {
         stop(sprintf('Not all package versions that are provided seem to be valid version numbers. The following was received:\n%s', paste(paste0(names(loadPackages), ' (', loadPackages, ')'), collapse = ', ')))
     }
@@ -90,13 +90,13 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
     for (iPackage in unique(names(loadPackages))) {
         startChar <- ifelse(iPackage == names(loadPackages)[1], ' \\', '  |')
         stackStr <- sprintf('%s%s', paste(collapse = '  ', rep('|', sum(grepl('library_VC', sys.calls())) - 1)), startChar)
-        stackStr <- gsub('^  \\|', '*__', paste0(collapse = '', c(stackStr, rep('_', max(16 - nchar(stackStr), 1))))) # adds remainingdashes and changes stack '0' to 'new package' indication ('*__')
+        stackStr <- gsub('^  \\||^ \\\\', '*__', paste0(collapse = '', c(stackStr, rep('_', max(16 - nchar(stackStr), 1))))) # adds remainingdashes and changes stack '0' to 'new package' indication ('*__')
 
         # if base package, simply load and continue
         if (checkIfBasePackage(iPackage)) {
             library(iPackage, character.only = TRUE, quietly = quietly)
             cat(stackStr)
-            cat(sprintf("Version %6s base package is loaded %s\n", loadPackages[iPackage], iPackage))
+            cat(sprintf("Base: '%s'\n", iPackage))
             next
         }
 
@@ -115,7 +115,7 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
         }
 
         cat(stackStr)
-        packVersion <- getCorrectVersion(loadPackages[iPackage], lib.location, pick.last = pick.last)
+        packVersion <- getCorrectVersion(loadPackages[iPackage], lib.location, pick.last = pick.last, quietly = quietly)
         # if already loaded in previous recursive iteration where dry.run was TRUE (appended to skipDependencies)
 
         package.location <- paste(lib.location, iPackage, packVersion, sep = '/')
@@ -127,10 +127,10 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
         # load dependencies: [1] from an override dependency file [2] from the original dependencies.
         overrideFile <- paste(package.location, c('vc_override_dependencies.txt'), sep = '/')
         if (file.exists(overrideFile)) {
-            dependingPackages <- cleanupDependencyList(readChar(overrideFile, file.info(overrideFile)$size))
+            dependingPackages <- parse_dependency_string(readChar(overrideFile, file.info(overrideFile)$size))
         } else {
             packDesc <- packageDescription(iPackage, lib.loc = package.location)
-            dependingPackages <- cleanupDependencyList(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pat = ',,', rep = ','))
+            dependingPackages <- parse_dependency_string(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pat = ',,', rep = ','))
         }
 
         # recusively load dependencies

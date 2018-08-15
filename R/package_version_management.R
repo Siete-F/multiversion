@@ -36,7 +36,7 @@ availablePackageVersions <- function(packageName, lib.location = R_VC_library_lo
 #' likely to be accepted by other packages their dependencies (e.g. if a package that is loaded later on depends on this package but asks for \code{> 0.6}, it will crash).
 #' The downside of this is that an update could be a major one, going from \code{0.5} to \code{2.0}, where allot of things can change and code is likely to not work anymore.
 #'
-chooseVersion <- function(packVersion, versionList, packageName = '', pick.last = FALSE) {
+chooseVersion <- function(packVersion, versionList, packageName = '', pick.last = FALSE, quietly = FALSE) {
 
     compliantVersions <- c()
     num_ver_list <- numeric_version(versionList)
@@ -48,7 +48,7 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
         validVersions  <- num_ver_list >= numeric_version(bareVersion(packVersion)) & num_ver_list < first_next_major
         if (!any(validVersions)) {
             validVersions  <- num_ver_list > numeric_version(bareVersion(packVersion))
-            if (any(validVersions)) warning(sprintf('For package "%s" the lowest optional verion is a major release higher. Requested: "%s", first option "%s".', packageName, packVersion, versionList[validVersions][[1]]))
+            if (any(validVersions) & !quietly) warning(sprintf('For package "%s" the lowest optional version is a major release higher. Requested: "%s", first option "%s".', packageName, packVersion, versionList[validVersions][[1]]))
         }
         compliantVersions <- versionList[validVersions]
 
@@ -57,40 +57,42 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
         # If no valid versions found within this major release, look for all versions above the minimal version.
         if (!any(validVersions)) {
             validVersions  <- num_ver_list > numeric_version(bareVersion(packVersion))
-            if (any(validVersions)) warning(sprintf('For package "%s" the lowest optional verion is a major release higher. Requested: "%s", first option "%s".', packageName, packVersion, versionList[validVersions][[1]]))
+            if (any(validVersions) & !quietly) warning(sprintf('For package "%s" the lowest optional version is a major release higher. Requested: "%s", first option "%s".', packageName, packVersion, versionList[validVersions][[1]]))
         }
         compliantVersions <- versionList[validVersions]
 
     } else if (is.na(packVersion) || nchar(packVersion) == 0) {
         # deal with all scenario's where there are x versions available, and none are defined (e.g. `dplyr = ''`).
 
-        if (length(versionList) > 1) {
-            # If multiple versions are available, we need to choose. Check if it is an interactive session.
-            # If so, list the options to choose from, if not, throw an error (we can't make that decission automatically).
-            if (interactive()){
-                choice <- menu(versionList, title = paste0('\nMultiple versions of the package "', packageName,
-                                                           '" are found, please select the desired version (0 to cancel):'))
-                if (choice == 0) {
-                    stop('There is more then one version of the package available but the user could not make a decission.')
-                }
-                compliantVersions <- versionList[choice]
+        # if (length(versionList) > 1) {
+        # If multiple versions are available, we need to choose. Check if it is an interactive session.
+        # If so, list the options to choose from, if not, throw an error (we can't make that decission automatically).
+        # if (interactive()){
+        # choice <- menu(versionList, title = paste0('\nMultiple versions of the package "', packageName,
+        #                                            '" are found, please select the desired version (0 to cancel):'))
+        # if (choice == 0) {
+        #     stop('There is more then one version of the package available but the user could not make a decission.')
+        # }
+        # compliantVersions <- versionList[choice]
+        compliantVersions <- versionList
 
-            } else {
-                if (pick.last) {
-                    # Use all versions below the next major release.
-                    compliantVersions <- versionList
-                } else {
-                    stop(paste0('There is more then one version of the package "', packageName,
-                                '",\nplease define one of the following versions specifically:\n', paste0(versionList, collapse = ',  '),
-                                '\nAlternatively, create or update a `vc_override_dependencies.txt` file, located in the version folder\n',
-                                'containing an alternative set of dependencies (normaly more specific).\nExample content: "R6 (>= 2.1.2), Rcpp (>= 0.12.3), tibble (>= 1.2)"\n'))
-                }
-            }
-        } else if (length(versionList) < 1) {
+        # } else {
+        # if (pick.last) {
+        #     # Use all versions below the next major release.
+        #     compliantVersions <- versionList
+        # } else {
+        #     stop(paste0('There is more then one version of the package "', packageName,
+        #                 '",\nplease define one of the following versions specifically:\n', paste0(versionList, collapse = ',  '),
+        #                 '\nAlternatively, create or update a `vc_override_dependencies.txt` file, located in the version folder\n',
+        #                 'containing an alternative set of dependencies (normaly more specific).\nExample content: "R6 (>= 2.1.2), Rcpp (>= 0.12.3), tibble (>= 1.2)"\n'))
+        # }
+        # }
+        # } else if (length(versionList) < 1) {
+        if (length(versionList) < 1) {
             stop(paste0('There is no package "', packageName, '" installed (yet). (requested version: "', packVersion, '")'))
-        } else {
-            # if there is only 1 version available and none requested
-            compliantVersions <- versionList
+        # } else {
+        #     # if there is only 1 version available and none requested
+        #     compliantVersions <- versionList
         }
         # deal with concrete version number (e.g. `dplyr = 0.5.0`):
     } else if (packVersion %in% versionList) {
@@ -161,7 +163,7 @@ isVersionCompatible <- function(condition, version) {
 #' compatible with matching other packages their dependencies (e.g. if a later package depends on this package but asks for\code{> 0.6}, it will crash).
 #' The downside of this is that an update could be a major one, going from\code{0.5} to\code{2.0}, where allot of things can change and code is likely to not work anymore.
 #'
-getCorrectVersion <- function(packVersion, lib.location, verbose = TRUE, pick.last = FALSE) {
+getCorrectVersion <- function(packVersion, lib.location, verbose = TRUE, pick.last = FALSE, quietly = FALSE) {
     packageName <- names(packVersion)
     origVersion <- unname(packVersion)
 
@@ -170,7 +172,7 @@ getCorrectVersion <- function(packVersion, lib.location, verbose = TRUE, pick.la
 
     # handle higher then, higher-or-equal, equal to (just a version) or '' (auto determine) version indications:
     packVersionList <- availablePackageVersions(packageName, lib.location)
-    packVersion <- chooseVersion(packVersion, versionList = packVersionList, packageName, pick.last = pick.last)
+    packVersion <- chooseVersion(packVersion, versionList = packVersionList, packageName, pick.last = pick.last, quietly = quietly)
 
     # print instructive message:
     if (verbose || !interactive()) {
@@ -232,7 +234,7 @@ getOnlineDependencies <- function(packageName, cran_url = 'https://cran.rstudio.
         stop(sprintf('Package "%s" is not available on CRAN. Install from source using "install.packages_VC_tarball(path, depends)".', packageName))
     }
     dependsOn <- paste(na.omit(packList[packageName, "Depends"]), na.omit(packList[packageName, "Imports"]), sep = ', ')
-    dependingPackages <- cleanupDependencyList(dependsOn)
+    dependingPackages <- parse_dependency_string(dependsOn)
 
     return(dependingPackages)
 }

@@ -113,7 +113,9 @@ raw_input_parser = function(arguments, varnames_to_exclude) {
 #'
 #' @param deps A string of format X to convert to a named character vector Y.
 #'
-cleanupDependencyList <- function(deps) {
+#' @export
+#'
+parse_dependency_string <- function(deps) {
     if (is.null(deps) || length(deps) == 0 || is.na(deps)) {
         return(as.character())
     }
