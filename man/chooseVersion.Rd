@@ -4,7 +4,8 @@
 \alias{chooseVersion}
 \title{Choose version based on the version indication, and available versions.}
 \usage{
-chooseVersion(packVersion, versionList, packageName = "", pick.last = FALSE)
+chooseVersion(packVersion, versionList, packageName = "", pick.last = FALSE,
+  quietly = FALSE)
 }
 \arguments{
 \item{packVersion}{A single named version with package name and it's version like \code{c(dplyr = '>= 0.4.0')}.}

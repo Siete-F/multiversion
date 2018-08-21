@@ -1,5 +1,24 @@
 # ============== PATHS ==============
 
+#' Return the RVClibrary installation directory.
+#'
+#' Returns the location of the RVClibrary package. It is a more complicated search than expected since it will find the development folder in a few cases.
+#' The only way to guarantee that the correct folder is found is by checking if the `INDEX` folder is present in the RVClibrary folder.
+#' This folder is only there when it is the installed instance of RVClibrary.
+#'
+RVClibrary_package_install_location <- function() {
+    RVClib_package_location <- find.package(package = 'RVClibrary', lib.loc = .libPaths(), quiet = T, verbose = F)
+
+    if (length(RVClib_package_location) == 0) {
+        RVClib_package_location <- find.package(package = 'RVClibrary', lib.loc = NULL, quiet = T, verbose = F)
+    }
+
+    if (length(RVClib_package_location) == 0 || !file.exists(file.path(RVClib_package_location, 'INDEX'))) {
+        stop(paste0('I need to be able to find the `RVClibrary` package location. To do that, it must be present in the searchpath `.libPaths()`.',
+                    'Please make sure the library search paths include the location of that package.'))
+    }
+    return(RVClib_package_location)
+}
 
 #' Temporary directory location.
 #'
@@ -163,7 +182,7 @@ strRemain <- function(patA, patB, str) {
 #' @param path The path which needs to be normalized. Will make `C:/PROGRA~1/R/R-33~1.1/library` into `C:/Program Files/R/R-3.3.1/library`.
 #'
 normPath <- function(path) {
-    return(gsub('\\\\', '/', normalizePath(path)))
+    return(gsub('\\\\', '/', normalizePath(path, mustWork = F)))
 }
 
 

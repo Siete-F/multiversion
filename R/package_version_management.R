@@ -125,7 +125,7 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
 #'
 isVersionCompatible <- function(condition, version) {
     # If no reference was supplied, all conditions are acceptable.
-    if (is.null(version)) return(TRUE)
+    if (is.null(version) || is.na(version)) return(TRUE)
 
     # If '', NA or an equal version as the existing version is returned, pass.
     if (is.na(condition) || nchar(condition) == 0) {

@@ -19,7 +19,7 @@ the installed package(s) is moved to the destination location automatically.}
 \item{add_to_VC_library}{If TRUE (the default), the installed package(s) is (are) moved to the final destination automatically.
 Otherwise it is necessary to run \code{convert_to_VC_library()} manually after the installation into the temporary folder finished.}
 
-\item{execute_with_Rscript}{When TRUE, it will try to install the package using a sepparate Rscipt R instance.
+\item{execute_with_Rscript}{When TRUE (the default), it will try to install the package using a sepparate Rscipt R instance.
 This simplifies installing and leaves changing loaded packages etc. to another R instance which we can kill :).
 It will run a script provided with your packages. That script will load \code{RVClibrary} and call \code{install.packages_VC} directly.}
 }

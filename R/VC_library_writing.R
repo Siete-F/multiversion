@@ -15,7 +15,7 @@
 #' the installed package(s) is moved to the destination location automatically.
 #' @param add_to_VC_library If TRUE (the default), the installed package(s) is (are) moved to the final destination automatically.
 #' Otherwise it is necessary to run \code{convert_to_VC_library()} manually after the installation into the temporary folder finished.
-#' @param execute_with_Rscript When TRUE, it will try to install the package using a sepparate Rscipt R instance.
+#' @param execute_with_Rscript When TRUE (the default), it will try to install the package using a sepparate Rscipt R instance.
 #' This simplifies installing and leaves changing loaded packages etc. to another R instance which we can kill :).
 #' It will run a script provided with your packages. That script will load \code{RVClibrary} and call \code{install.packages_VC} directly.
 #'
@@ -24,14 +24,15 @@
 install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_library_location(), add_to_VC_library = TRUE,
                                 overwrite_this_package = FALSE, execute_with_Rscript = TRUE) {
 
-    if (any(names(installPackages) != '')) stop('Please provide a vector of names no name-version combinations.')
+    if (any(names(installPackages) != '')) stop('Please provide a vector of names, no name-version combinations.')
     if (length(installPackages) == 0) return(invisible())
 
     if (execute_with_Rscript) {
         Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
         if (grepl('Could not find files for the given pattern(s)', Rscript_dir)) {stop('Please make sure `where Rscript` results in one or more valid paths. First one is used.')}
-        script_location <- normPath(paste0(path.package('RVClibrary'), '/exec/install.packages_VC_script.R'))
-        status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s"', Rscript_dir, script_location, lib.location, paste(collapse = ',', installPackages)))
+        RVClib_package_location <- RVClibrary_package_install_location()
+        script_location <- normPath(paste0(RVClib_package_location, '/exec/install.packages_VC_script.R'))
+        status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib.location, paste(collapse = ',', installPackages), RVClib_package_location))
         message('>> Finished with status ', as.character(status), ' <<\n')
         if (add_to_VC_library & status == 0) {convert_to_VC_library(VC_library_location = lib.location, force_overwrite = overwrite_this_package)}
         return(invisible())
@@ -80,6 +81,7 @@ install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_libr
         # because the dependencies are on the libPath, only the not present dependencies will be installed.
         # keeping them loaded would raise a popup of Rstudio.
         install.packages(iPackage, lib = install.location, quiet = TRUE, repos = cran_url)
+        cat('\n')
 
         if (add_to_VC_library) {
             convert_to_VC_library(install.location, lib.location, force_overwrite = overwrite_this_package)
@@ -104,7 +106,6 @@ install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_libr
 #' @param overwrite_this_package If TRUE, the installed package is added and overwrites the existing package.
 #' @param execute_with_Rscript When true, it will try to install a tarball using a sepparate Rscipt R instance. This saves you from the hasle to prepare your Rstudio environment to match the one that the tarball requires (incl. dependencies).
 #' It will run a script provided with the tarball location and it's dependencies. That script will load \code{RVClibrary} and call \code{install.packages_VC_tarball} directly.
-#' @param parse_dependencies If true, the dependencies are expected to be provided in a single string kind of format \code{"dplyr (>= 0.5), data.table, R6 (0.1.1)"}. This is the case when this function is called by the installation script.
 #'
 #' @note Hopefully I will be able to implement a method to run this function in a new R instance clear of loaded packages.
 #'       \code{install.packages_VC_tarball_with_Rscript} is a sketch to reach meet that wish.
@@ -112,15 +113,14 @@ install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_libr
 #'
 install.packages_VC_tarball <- function(packagePath, dependencies, lib.location = R_VC_library_location(),
                                         add_to_VC_library = overwrite_this_package, overwrite_this_package = FALSE,
-                                        execute_with_Rscript = TRUE, parse_dependencies = FALSE) {
-
-    if (parse_dependencies) {dependencies <- parse_dependency_string(dependencies)}
+                                        execute_with_Rscript = TRUE) {
 
     if (execute_with_Rscript) {
         Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
         if (grepl('Could not find files for the given pattern(s)', Rscript_dir)) {stop('Please make sure `where Rscript` results in one or more valid paths. First one is used.')}
-        script_location <- normPath(paste0(path.package('RVClibrary'), '/exec/install.packages_VC_tarball_script.R'))
-        system <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib.location, packagePath, printPackageList(dependencies, do_return = TRUE)))
+        RVClib_package_location <- RVClibrary_package_install_location()
+        script_location <- normPath(paste0(RVClib_package_location, '/exec/install.packages_VC_tarball_script.R'))
+        status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib.location, packagePath, packageList2str(dependencies, do_return = TRUE), RVClib_package_location))
         if (add_to_VC_library & status == 0) {convert_to_VC_library(VC_library_location = lib.location, force_overwrite = overwrite_this_package)}
         return(invisible())
     }
@@ -166,8 +166,9 @@ install.packages_VC_tarball <- function(packagePath, dependencies, lib.location 
 
     # Install the tarbal!
     install.packages(packagePath, lib = install.location, type = "source", repos = NULL)
+    cat('\n')
 
-    if (add_to_VC_library & !execute_with_Rscript) {convert_to_VC_library(force_overwrite = overwrite_this_package)}
+    if (add_to_VC_library) {convert_to_VC_library(force_overwrite = overwrite_this_package)}
 
     return(invisible())
 }
@@ -382,10 +383,10 @@ dependencies <- function(packageName, lib.location = R_VC_library_location()) {
 
         cat(sprintf('%23s : %-8s ', packageName, packVersion))
         if (file.exists(overrideFile)) {cat('(shadowed)| ')} else {cat('          | ')}
-        printPackageList(dependingPackages[1:3])
+        packageList2str(dependingPackages[1:3])
         if (length(dependingPackages) > 3) {
             for (index in 2: ceiling(length(dependingPackages)/3)) {
-                cat(strrep(' ', 43), '... '); printPackageList(dependingPackages[(((index-1)*3):(index*3-1))+1])
+                cat(strrep(' ', 43), '... '); packageList2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
             }
         }
     }
@@ -400,9 +401,12 @@ dependencies <- function(packageName, lib.location = R_VC_library_location()) {
 #' This way we can list the dependencies of a function easily and it makes it possible to use it when performing a commandline call.
 #'
 #' @param x A named character vector with package names/versions.
+#' @param do_return If FALSE (the default) the package sting is printed, if TRUE, it is returned as a character string and not printed.
 #'
-printPackageList <- function(x, do_return = FALSE) {
-    if (!is.null(x)) {x <- x[!is.na(x)]} else {return(cat('\n'))}
+#' @export
+#'
+packageList2str <- function(x, do_return = FALSE) {
+    if (!is.null(x)) {x <- x[!is.na(x)]} else if (do_return) {return('')} else {cat('\n')}
     str <- gsub(pat = '\\s\\(\\)', rep = '', sprintf('%s\n', paste(paste(names(x), paste0("(", x, ")")), collapse = '   ')))
     if (do_return) {return(gsub('   ', ', ', str))} else {cat(str)}
 }
@@ -487,10 +491,10 @@ dependsOnMe <- function(..., checkMyDeps = NULL, lib.location = R_VC_library_loc
             if (valid) {
                 cat(sprintf('%23s : %-8s ', packageName, packVersion))
                 if (file.exists(overrideFile)) {cat('(shadowed)| ')} else {cat('          | ')}
-                printPackageList(dependingPackages[1:3])
+                packageList2str(dependingPackages[1:3])
                 if (length(dependingPackages) > 3) {
                     for (index in 2: ceiling(length(dependingPackages)/3)) {
-                        cat(strrep(' ', 45), '... '); printPackageList(dependingPackages[(((index-1)*3):(index*3-1))+1])
+                        cat(strrep(' ', 45), '... '); packageList2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
                     }
                 }
             }

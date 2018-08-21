@@ -5,7 +5,7 @@
 \title{Choose correct package version, and print decission.}
 \usage{
 getCorrectVersion(packVersion, lib.location, verbose = TRUE,
-  pick.last = FALSE)
+  pick.last = FALSE, quietly = FALSE)
 }
 \arguments{
 \item{packVersion}{A named character vector with package names and their version indication (e.g. \code{c(dplyr = '>= 0.4.0', ggplot = '')}).}

@@ -7,8 +7,7 @@
 install.packages_VC_tarball(packagePath, dependencies,
   lib.location = R_VC_library_location(),
   add_to_VC_library = overwrite_this_package,
-  overwrite_this_package = FALSE, execute_with_Rscript = TRUE,
-  parse_dependencies = FALSE)
+  overwrite_this_package = FALSE, execute_with_Rscript = TRUE)
 }
 \arguments{
 \item{packagePath}{Provide the complete path to the tarball file that you would like to install.}
@@ -24,8 +23,6 @@ Otherwise it is necessary to run \code{convert_to_VC_library()} manually after t
 
 \item{execute_with_Rscript}{When true, it will try to install a tarball using a sepparate Rscipt R instance. This saves you from the hasle to prepare your Rstudio environment to match the one that the tarball requires (incl. dependencies).
 It will run a script provided with the tarball location and it's dependencies. That script will load \code{RVClibrary} and call \code{install.packages_VC_tarball} directly.}
-
-\item{parse_dependencies}{If true, the dependencies are expected to be provided in a single string kind of format \code{"dplyr (>= 0.5), data.table, R6 (0.1.1)"}. This is the case when this function is called by the installation script.}
 }
 \description{
 This function can try to install a tarball based on the tarball location and it's dependencies.

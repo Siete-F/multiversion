@@ -87,21 +87,22 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
         stop(sprintf('Not all package versions that are provided seem to be valid version numbers. The following was received:\n%s', paste(paste0(names(loadPackages), ' (', loadPackages, ')'), collapse = ', ')))
     }
 
+    n_skipped <- 0
     for (iPackage in unique(names(loadPackages))) {
-        startChar <- ifelse(iPackage == names(loadPackages)[1], ' \\', '  |')
+        startChar <- ifelse(iPackage == names(loadPackages)[1 + n_skipped], ' \\', '  |')
         stackStr <- sprintf('%s%s', paste(collapse = '  ', rep('|', sum(grepl('library_VC', sys.calls())) - 1)), startChar)
-        stackStr <- gsub('^  \\||^ \\\\', '*__', paste0(collapse = '', c(stackStr, rep('_', max(16 - nchar(stackStr), 1))))) # adds remainingdashes and changes stack '0' to 'new package' indication ('*__')
+        stackStr <- gsub('^  \\||^ \\\\', '*__', paste0(collapse = '', c(stackStr, rep('_', max(16 - nchar(stackStr), 1))))) # adds remaining dashes and changes stack '0' to 'new package' indication ('*__')
 
         # if base package, simply load and continue
         if (checkIfBasePackage(iPackage)) {
             library(iPackage, character.only = TRUE, quietly = quietly)
-            cat(stackStr)
-            cat(sprintf("Base: '%s'\n", iPackage))
+            n_skipped <- n_skipped + 1
             next
         }
 
         if (iPackage %in% c(skipDependencies, 'RVClibrary')) {
             if (isVersionCompatible(loadPackages[iPackage], packNameVersionList[iPackage])) {
+                n_skipped <- n_skipped + 1
                 next
             } else {
                 if (paste0('package:', iPackage) %in% search()) {
