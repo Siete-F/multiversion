@@ -25,7 +25,8 @@ tryCatch(withCallingHandlers({
     if (!dir.exists(RVClibrary.location)) {stop(error_str('The `RVClibrary` package was not found. The directory "%s" does not exist.', RVClibrary.location))}
 
     if (suppressMessages(!require(RVClibrary, lib.loc = RVClibrary.location))) {
-        stop("\nPlease install this single tarball manually using something like:\n `install.packages('M:/.../RVClibrary_0.1.0.tar.gz', lib = Sys.getenv('R_LIBS_USER'), type = 'source', repos = NULL)`\n\n")
+        stop(paste0("\nPlease install this single tarball manually. It can be installed using something like:\n",
+                    "`install.packages('.../RVClibrary_0.1.0.tar.gz', lib = Sys.getenv('R_LIBS_USER'), type = 'source', repos = NULL)`\n\n"))
     }
 
     install.packages_VC_tarball(packagePath, dependencies = parse_dependency_string(dependencies), lib.location = lib.location, execute_with_Rscript = FALSE)

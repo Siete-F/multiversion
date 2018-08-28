@@ -20,8 +20,8 @@ tryCatch(withCallingHandlers({
 
     # input checks:
     if (suppressMessages(!require(RVClibrary, lib.loc = RVClibrary.location))) {
-        stop(paste0("\nPlease install this single tarball manually using something like:",
-                    "\n `install.packages('M:/.../RVClibrary_0.1.0.tar.gz', lib = Sys.getenv('R_LIBS_USER'), type = 'source', repos = NULL)`\n\n"))
+        stop(paste0("\nPlease install this single tarball manually. It can be installed using something like:\n",
+                    "`install.packages('.../RVClibrary_0.1.0.tar.gz', lib = Sys.getenv('R_LIBS_USER'), type = 'source', repos = NULL)`\n\n"))
     }
 
     install.packages_VC(installPackages      = trimws(strsplit(packagesToInstall, split = ',')[[1]]),
