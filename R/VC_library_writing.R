@@ -407,8 +407,8 @@ dependencies <- function(packageName, lib.location = R_VC_library_location()) {
 #'
 packageList2str <- function(x, do_return = FALSE) {
     if (!is.null(x)) {x <- x[!is.na(x)]} else if (do_return) {return('')} else {cat('\n')}
-    str <- gsub(pat = '\\s\\(\\)', rep = '', sprintf('%s\n', paste(paste(names(x), paste0("(", x, ")")), collapse = '   ')))
-    if (do_return) {return(gsub('   ', ', ', str))} else {cat(str)}
+    str <- gsub(pat = '\\s\\(\\)', rep = '',paste(paste(names(x), paste0("(", x, ")")), collapse = '   '))
+    if (do_return) {return(gsub('   ', ', ', str))} else {cat(str, '\n')}
 }
 
 
