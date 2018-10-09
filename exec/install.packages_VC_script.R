@@ -2,6 +2,7 @@ args <- commandArgs(trailingOnly = TRUE)
 lib.location <- args[1]
 packagesToInstall <- args[2]
 RVClibrary.location <- args[3]
+overwrite_or_add_update <- args[4]
 
 error_str <- function(prestring, ...) {paste0(sprintf(prestring, ...), '\nExpected input:\n1) a valid VC library location.\n',
                                               '2) a character string with the package pane to install.\n',
@@ -27,7 +28,8 @@ tryCatch(withCallingHandlers({
     install.packages_VC(installPackages      = trimws(strsplit(packagesToInstall, split = ',')[[1]]),
                         lib.location         = lib.location,
                         add_to_VC_library    = FALSE,
-                        execute_with_Rscript = FALSE)
+                        execute_with_Rscript = FALSE,
+                        overwrite_this_package = as.logical(overwrite_or_add_update))
 
 }, error = function(e) H <<- sys.calls()), error = function(e) {message('ERROR: The following error was returned:\n', e$message, '\n\n')})
 

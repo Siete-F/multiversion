@@ -20,7 +20,7 @@ their paths to \code{.libPaths} but it will not load those packages. If the path
 
 \item{quietly}{Indicates if the loading must happen silently. No messages and warnings will be shown if TRUE.}
 
-\item{appendLibPaths}{If TRUE, the path to every package that is loaded will be appended to \code{.libPath(...)}. That configured path is the location where \code{library()} will look for packages.}
+\item{appendLibPaths}{If TRUE, the path to every package that is loaded will be appended to \code{.libPath(...)}. That configured path is the location where \code{library()} will look for packages. For a usecase for this feature, see the description above.}
 
 \item{pick.last}{Changes the way a decision is made. In the scenario where a dependency of \code{>} or \code{>=} is defined, multiple versions may be available to choose from. By default, the lowest compliant version is chosen. Setting this to TRUE will choose the highest version.}
 
@@ -65,12 +65,12 @@ library(dplyr)} \cr
 \code{dry.run} skips the loading step, and \code{appendLibPaths} adds the paths of dplyr and it's dependencies to \code{.libPaths}, which make a \code{library} call work. \cr
 \cr
 One reason to use \code{appendLibPaths = TRUE} is to make these packages accessible by a new 'child' R session. This is the case if \code{devtools::test()} is run
-by using \code{cntrl} + \code{shift} + \code{T} in Rstudio. When running it directly, it will use the currently loaded libraries. \cr
+by using \code{cntrl} + \code{shift} + \code{T} in Rstudio. When running it directly, it will use the packages it can find in the available libraries (\code{.libPath()}) and return an error if they cannot be found. \cr
 }
 \details{
 ERRORS: \cr If you receive the error "\code{cannot unload ...}" It means that it tries to load a package, but another version is already loaded.
 To unload this other (older) version, it may not be a dependency of other packages, if it is, you will receive this error.
 The only workaround (when using this in R studio) is to close your Rstudio session, rename (or remove) the folder "\code{RVClibrary/.Rproj.user/.../sources/prop}" and start Rstudio again.
 At the \code{...} there should be a hash used in the current session e.g. \code{/F3B1663E/} and the project \code{RVClibrary} might be any Rstudio project. After this,
-the packages should be unloaded and you should be able to load a new batch of packages.
+the packages should be unloaded and you should be able to load a new batch of packages. Most times it will just do to clear the workspace (environment) and reload the project while saving the empty environment.
 }

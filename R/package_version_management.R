@@ -44,6 +44,21 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
         first_next_major <- package_version(sprintf('%1.0f.0.0', package_version(bareVersion(packVersion))$major+1))
     }
 
+    # It is possible that this package is already loaded as a dependency of another package.
+    # 'yaml' seems to be an exception on this. It is loaded by Rstudio from your local library, which is likely a different version than is present in the VC library. (in my case 2.1.13, where VC version 2.1.14 is present)
+    if (!packageName %in% c('yaml') && isNamespaceLoaded(packageName)) {
+        alreadyLoaded <- loadedPackageVersion(packageName)
+        if (!isVersionCompatible(packVersion, alreadyLoaded)) {
+            stop(sprintf(paste('An already loaded package "%s" (version: %s) did not comply with the required version here (%s).',
+                               '\nWe will not try to detach since that could cause unexpected behaviour.',
+                               '\nPlease detach it manually (e.g. `detachAll(packageList = \'%s\')`, where %s are depending on it) and',
+                               'don\'t load it explicitly before this package is loaded.\n\n'),
+                         packageName, alreadyLoaded, packVersion, packageName,
+                         paste(collapse = ', ', paste0('\'', getNamespaceUsers(packageName), '\''))))
+        }
+        return(alreadyLoaded)
+    }
+
     if (grepl('>=', packVersion)) {
         validVersions  <- num_ver_list >= numeric_version(bareVersion(packVersion)) & num_ver_list < first_next_major
         if (!any(validVersions)) {
@@ -90,10 +105,11 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
         # } else if (length(versionList) < 1) {
         if (length(versionList) < 1) {
             stop(paste0('There is no package "', packageName, '" installed (yet). (requested version: "', packVersion, '")'))
-        # } else {
-        #     # if there is only 1 version available and none requested
-        #     compliantVersions <- versionList
+            # } else {
+            #     # if there is only 1 version available and none requested
+            #     compliantVersions <- versionList
         }
+
         # deal with concrete version number (e.g. `dplyr = 0.5.0`):
     } else if (packVersion %in% versionList) {
         # if available, go with it.

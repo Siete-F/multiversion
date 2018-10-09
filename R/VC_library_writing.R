@@ -27,14 +27,31 @@ install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_libr
     if (any(names(installPackages) != '')) stop('Please provide a vector of names, no name-version combinations.')
     if (length(installPackages) == 0) return(invisible())
 
+    # If executing using Rscript, this block is run and calls an R script which will run all except this block.
     if (execute_with_Rscript) {
+        temp_install_dir <- R_VC_temp_lib_location()
+        curr_packs <- list.dirs(temp_install_dir, full.names = F, rec = F)
+
         Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
-        if (grepl('Could not find files for the given pattern(s)', Rscript_dir)) {stop('Please make sure `where Rscript` results in one or more valid paths. First one is used.')}
+
+        if (grepl('Could not find files for the given pattern(s)', Rscript_dir)) {
+            stop('Please make sure `where Rscript` results in one or more valid paths. First one is used.')
+        }
+
         RVClib_package_location <- RVClibrary_package_install_location()
         script_location <- normPath(paste0(RVClib_package_location, '/exec/install.packages_VC_script.R'))
-        status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib.location, paste(collapse = ',', installPackages), RVClib_package_location))
-        message('>> Finished with status ', as.character(status), ' <<\n')
-        if (add_to_VC_library & status == 0) {convert_to_VC_library(VC_library_location = lib.location, force_overwrite = overwrite_this_package)}
+
+        status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib.location, paste(collapse = ',', installPackages), RVClib_package_location, as.character(overwrite_this_package)))
+
+        new_packs <- list.dirs(temp_install_dir, full.names = F, rec = F)
+        added_packages <- setdiff(new_packs, curr_packs)
+
+        message(sprintf('>> Instalation attempt finished with status %s, added were: %s <<\n', as.character(status), paste(collapse = ', ', added_packages)))
+        if (add_to_VC_library & status == 0) {
+            convert_to_VC_library(VC_library_location = lib.location,
+                                  force_overwrite     = overwrite_this_package,
+                                  packages_to_convert = added_packages)
+        }
         return(invisible())
     }
 
@@ -60,11 +77,12 @@ install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_libr
 
         dependsOn <- getOnlineDependencies(iPackage, cran_url = cran_url)
 
-        # try loading dependencies, so that thay're skipped during instalation.
+        # try loading dependencies, so that they're skipped during instalation.
         succesfullLoads <- tryLoadPackages_VC(dependsOn, lib.location, pick.last = TRUE)
 
         # If all dependencies were already there, check if the package is already installed.
-        if (all(names(dependsOn) %in% names(succesfullLoads) | checkIfBasePackage(names(dependsOn)))) {
+        # When overwriting this package (or installing the latest version) we are not interested in knowing if the package already exists.
+        if (!overwrite_this_package && all(names(dependsOn) %in% names(succesfullLoads) | checkIfBasePackage(names(dependsOn)))) {
             finalPackSucces <- tryLoadPackages_VC(setNames('', iPackage), lib.location, pick.last = TRUE)
 
             if (iPackage %in% names(finalPackSucces)) {
@@ -75,7 +93,6 @@ install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_libr
 
         # add the succesfully loaded packages to the .libPaths, so the installer knows that they are there.
         add_package_VC_libPaths(succesfullLoads, lib.location)
-
 
         message('Trying to install: ', iPackage)
         # because the dependencies are on the libPath, only the not present dependencies will be installed.
@@ -212,30 +229,34 @@ install.packages_VC_tarball <- function(packagePath, dependencies, lib.location 
 #'
 convert_to_VC_library <- function(normalLibrary = R_VC_temp_lib_location(VC_library_location),
                                   VC_library_location = R_VC_library_location(),
-                                  force_overwrite = FALSE) {
+                                  force_overwrite = FALSE, packages_to_convert = c()) {
 
     normalLibrary <- normPath(normalLibrary)
     VC_library_location <- normPath(VC_library_location)
 
     libContent  <- list.files(normalLibrary, all.files = T, recursive = T, no.. = T, full.names = T)
-    packageName <- strRemain(paste0(normalLibrary, '/'), paste0('/.*'), libContent)
+    packageNames <- strRemain(paste0(normalLibrary, '/'), '/.*', libContent)
 
-    uniquePackages <- unique(packageName)
+    uniquePackages <- unique(packageNames)
+
+    # If no specific packages are provided, convert them all to the RVClibrary structure.
+    if (length(packages_to_convert) == 0) {packages_to_convert <- uniquePackages}
+    uniquePackages <- uniquePackages[uniquePackages %in% packages_to_convert]
 
     packageVersions <- c()
     for (iPackage in uniquePackages) {
-        packageVersions[grepl(iPackage, x = packageName)] <- as.character(numeric_version(packageDescription(iPackage, normalLibrary)$Version))
+        packageVersions[grepl(iPackage, packageNames)] <- as.character(numeric_version(packageDescription(iPackage, lib.loc = normalLibrary)$Version))
     }
 
-    newLocation <- paste(VC_library_location, packageName, packageVersions, gsub(libContent, pat = paste0(normalLibrary, '/'), rep = ''), sep = '/')
+    newLocation <- paste(VC_library_location, packageNames, packageVersions, gsub(libContent, pat = paste0(normalLibrary, '/'), rep = ''), sep = '/')
 
     lapply(unique(dirname(newLocation)), dir.create, recursive = TRUE, showWarnings = FALSE)
     succes <- file.copy(libContent, newLocation, overwrite = force_overwrite)
 
     cat('\nSuccesfully copied files:\n')
-    cat(summary(data.frame(succesfully_copied = packageName[ succes]), maxsum = 80))
+    cat(summary(data.frame(succesfully_copied = packageNames[ succes]), maxsum = 80))
     cat('\nFailed copying files (might be already installed or `TEMP_install_location` was not cleaned up, can be done by running `clearTempInstallFolder()`):\n')
-    cat(summary(data.frame(failed_copied      = packageName[!succes]), maxsum = 80))
+    cat(summary(data.frame(failed_copied      = packageNames[!succes]), maxsum = 80))
     cat('\n')
 }
 

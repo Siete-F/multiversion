@@ -39,13 +39,13 @@
 #' \code{dry.run} skips the loading step, and \code{appendLibPaths} adds the paths of dplyr and it's dependencies to \code{.libPaths}, which make a \code{library} call work. \cr
 #' \cr
 #' One reason to use \code{appendLibPaths = TRUE} is to make these packages accessible by a new 'child' R session. This is the case if \code{devtools::test()} is run
-#' by using \code{cntrl} + \code{shift} + \code{T} in Rstudio. When running it directly, it will use the currently loaded libraries. \cr
+#' by using \code{cntrl} + \code{shift} + \code{T} in Rstudio. When running it directly, it will use the packages it can find in the available libraries (\code{.libPath()}) and return an error if they cannot be found. \cr
 #'
 #' @details ERRORS: \cr If you receive the error "\code{cannot unload ...}" It means that it tries to load a package, but another version is already loaded.
 #' To unload this other (older) version, it may not be a dependency of other packages, if it is, you will receive this error.
 #' The only workaround (when using this in R studio) is to close your Rstudio session, rename (or remove) the folder "\code{RVClibrary/.Rproj.user/.../sources/prop}" and start Rstudio again.
 #' At the \code{...} there should be a hash used in the current session e.g. \code{/F3B1663E/} and the project \code{RVClibrary} might be any Rstudio project. After this,
-#' the packages should be unloaded and you should be able to load a new batch of packages.
+#' the packages should be unloaded and you should be able to load a new batch of packages. Most times it will just do to clear the workspace (environment) and reload the project while saving the empty environment.
 #'
 #' @param ... All packages and their versions you would like to load e.g. \code{library_VC(DBI = '0.5', assertthat = '', R6 = '', quietly = TRUE)}. Other params like \code{quietly} will be ignored.
 #' @param loadPackages Supports providing a named character vector of packages and their versions in the shape that is supported by all other functions in this package. e.g. \code{c(DBI = '0.5', assertthat = '', R6 = '')}
@@ -53,7 +53,7 @@
 #' @param dry.run Will make it perform a dry run. It will check all dependencies and if \code{appendLibPaths} it will add
 #' their paths to \code{.libPaths} but it will not load those packages. If the paths are added this way, you should be able to just call the located packages with \code{library(...)}
 #' @param quietly  Indicates if the loading must happen silently. No messages and warnings will be shown if TRUE.
-#' @param appendLibPaths  If TRUE, the path to every package that is loaded will be appended to \code{.libPath(...)}. That configured path is the location where \code{library()} will look for packages.
+#' @param appendLibPaths  If TRUE, the path to every package that is loaded will be appended to \code{.libPath(...)}. That configured path is the location where \code{library()} will look for packages. For a usecase for this feature, see the description above.
 #' @param pick.last Changes the way a decision is made. In the scenario where a dependency of \code{>} or \code{>=} is defined, multiple versions may be available to choose from. By default, the lowest compliant version is chosen. Setting this to TRUE will choose the highest version.
 #'
 #' @param packNameVersionList See main description. Should be left blank.
@@ -74,12 +74,12 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
     }
 
     # If still other libraries are set as active libraries, reset the library to just 1 lib for the build in functions (= `.Library`).
-    if (!quietly & interactive() & length(sys.calls()) == 1 & !all(grepl(normPath(lib.location), normPath(.libPaths())) | grepl(normPath(.Library), normPath(.libPaths())))) {
-        warning(paste0('\nlibrary_VC: Extra libraries were found.\n',
-                       'Library_VC will exclude those when loading packages, please be aware `library()` does not\n',
-                       'and might load a package from an unexpected location.\n',
-                       'Please use `.libPaths(.Library)` before using library_VC to suppress this warning.\n\n'))
-    }
+    # if (!quietly & interactive() & length(sys.calls()) == 1 & !all(grepl(normPath(lib.location), normPath(.libPaths())) | grepl(normPath(.Library), normPath(.libPaths())))) {
+    #     warning(paste0('\nlibrary_VC: Extra libraries were found.\n',
+    #                    'Library_VC will exclude those when loading packages, please be aware `library()` does not\n',
+    #                    'and might load a package from an unexpected location.\n',
+    #                    'Please use `.libPaths(.Library)` before using library_VC to suppress this warning.\n\n'))
+    # }
 
     # check if the package version that is provided is a correct version (this catches a wrong input like `c(dplyr = '0.5.0', databasequeries')`  )
     if (length(loadPackages) != 0 && !is.na(loadPackages) &&
@@ -105,13 +105,28 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
                 n_skipped <- n_skipped + 1
                 next
             } else {
+                # Package was explicitly requested by previous load operation, and is already loaded:
                 if (paste0('package:', iPackage) %in% search()) {
-                    stop(sprintf(paste('An already loaded package "%s" (version: %s) is from an earlier version than requested here (%s).',
+
+                    stop(sprintf(paste('An already loaded package "%s" (version: %s) did not comply with the required version here (%s).',
                                        '\nWe will not try to detach since that could cause unexpected behaviour.',
-                                       '\nPlease detach it manually (e.g. `detachAll(packageList = \'%s\')`) and',
-                                       'don\'t load it explicitly before this package is loaded.'), iPackage, packNameVersionList[iPackage], loadPackages[iPackage], iPackage))
+                                       '\nPlease detach it manually (e.g. `detachAll(packageList = \'%s\')`, where %s are depending on it) and',
+                                       'don\'t load it explicitly before this package is loaded.\n\n'),
+                                 iPackage, packNameVersionList[iPackage], loadPackages[iPackage], iPackage,
+                                 paste(collapse = ', ', paste0('\'', getNamespaceUsers(iPackage), '\''))))
                 }
                 packNameVersionList <- packNameVersionList[!names(packNameVersionList) == iPackage]
+            }
+            # If package is loaded directly or indirectly:
+        } else if (isNamespaceLoaded(iPackage)) {
+            if (!isVersionCompatible(loadPackages[iPackage], loadedPackageVersion(iPackage))) {
+
+                stop(sprintf(paste('An already loaded package "%s" (version: %s) did not comply with the required version here (%s).',
+                                   '\nWe will not try to detach since that could cause unexpected behaviour.',
+                                   '\nPlease detach it manually (e.g. `detachAll(packageList = \'%s\')`, where %s are depending on it) and',
+                                   'don\'t load it explicitly before this package is loaded.\n\n'),
+                             iPackage, loadedPackageVersion(iPackage), loadPackages[iPackage], iPackage,
+                             paste(collapse = ', ', paste0('\'', getNamespaceUsers(iPackage), '\''))))
             }
         }
 
@@ -162,7 +177,7 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
 
         if (appendLibPaths) {
             add_package_VC_libPaths(packNameVersionList, lib.location)
-            .libPaths(c(currentLibs, .libPaths()))
+            .libPaths(c(.libPaths(), currentLibs))
         }
     }
 

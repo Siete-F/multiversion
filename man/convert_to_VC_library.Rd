@@ -6,7 +6,8 @@
 \usage{
 
   convert_to_VC_library(normalLibrary = R_VC_temp_lib_location(VC_library_location),
-  VC_library_location = R_VC_library_location(), force_overwrite = FALSE)
+  VC_library_location = R_VC_library_location(), force_overwrite = FALSE,
+  packages_to_convert = c())
 }
 \arguments{
 \item{normalLibrary}{The temporary library where a package was temporarily installed (having a normal library structure).

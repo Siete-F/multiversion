@@ -5,7 +5,10 @@
 \title{Perform operation with a certain set of packages.}
 \usage{
 execute_with_packages(packages_to_load = NULL, func_handle, ...,
-  lib.location = R_VC_library_location(), execute_quietly = FALSE)
+  execution_log_location = normPath(paste0("./execution_logs/execution_",
+  gsub("\\\\s|-|:", "_", format(Sys.time())), ".txt")),
+  lib.location = R_VC_library_location(), wait_for_response = TRUE,
+  execute_quietly = FALSE)
 }
 \arguments{
 \item{packages_to_load}{A sting indicating which packages must be loaded (e.g. `"dplyr (0.5.0), ggplot2, tidyr (1.2.3)"`).
