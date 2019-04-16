@@ -1,0 +1,36 @@
+
+# ============== MAIN FUNCTIONALITY ==============
+
+# -------------- do something --------------
+
+#' When I consider how my light is spent
+#' Ere half my days in this dark world and wide,
+#' And that one talent which is death to hide
+#' Lodg’d with me useless, though my soul more bent
+#' To serve therewith my Maker, and present
+#' My true account, lest he returning chide,
+#' “Doth God exact day-labour, light denied?”
+#' I fondly ask. But Patience, to prevent
+#' That murmur, soon replies: “God doth not need
+#' Either man’s work or his own gifts: who best
+#' Bear his mild yoke, they serve him best. His state
+#' Is kingly; thousands at his bidding speed
+#' And post o’er land and ocean without rest:
+#' They also serve who only stand and wait.”
+#'
+#' @param a The best input ever
+#' @param b The awesome second input
+#' @export
+#'
+package_d1 <- function(a, b) {
+	return('package_d1')
+}
+
+#' Just some example function.
+#' But this function will also be present in another package.
+#'
+#' @export
+#'
+what_version_are_you <- function() {
+    return('1.0.0')
+}

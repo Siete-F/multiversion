@@ -1,0 +1,13 @@
+Package: package.a
+Type: Package
+Title: an example package for test purposes
+Version: 0.2.0
+Authors@R: person(c('Siete', 'C.'), 'Frouws', , 'sietefrouws@hotmail.com', role = c('aut', 'cre'))
+Description: example package
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports:
+    package.e,
+	package.f
+RoxygenNote: 6.0.1

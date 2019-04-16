@@ -1,0 +1,16 @@
+Package: package.d
+Type: Package
+Title: an example package for test purposes
+Version: 2.0.0
+Authors@R: person(c('Siete', 'C.'), 'Frouws', , 'sietefrouws@hotmail.com', role = c('aut', 'cre'))
+Description: example package
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports:
+RoxygenNote: 6.0.1
+NeedsCompilation: no
+Packaged: 2019-04-15 07:18:29 UTC; s.frouws
+Author: Siete C. Frouws [aut, cre]
+Maintainer: Siete C. Frouws <sietefrouws@hotmail.com>
+Built: R 3.3.1; ; 2019-04-15 07:40:49 UTC; windows

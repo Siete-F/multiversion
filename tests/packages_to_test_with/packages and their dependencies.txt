@@ -1,0 +1,16 @@
+> installed.packages_VC()
+              package.a : 0.1.0              |  
+              package.a : 0.2.0              | package.e   package.f 
+              package.a : 0.3.0              | package.e (>= 1.5)   package.f 
+              package.b : 1.0.0              | package.c 
+              package.c : 15.2.8             |  
+              package.c : 15.2.9             |  
+              package.d : 1.0      (shadowed)| package.c (6.0.0) 
+              package.d : 2.0.0    (shadowed)| package.c (>= 99.0.0) 
+              package.e : 1.5.0              |  
+              package.e : 1.7.0              |  
+              package.f : 1.0.0              | package.e (> 1.6.0) 
+              package.f : 2.0.0              | package.e (>= 1.0.0) 
+
+# 'shadowed' means that there is a 'vc_override_dependencies.txt' file present in that package folder (.\test_library\package.d\2.0.0\vc_...) which changes (makes more explicit) the dependencies that will be loaded.
+# This can be used to make some loading operations more concrete or fix specific incorrect dependency specifications. To monitor changes, it is recommended to maintain the complete library under git controll. Due to the little overhead, this is quite doable.
