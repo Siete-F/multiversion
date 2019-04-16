@@ -14,3 +14,4 @@ isVersionCompatible(condition, version)
 \description{
 Returns TRUE if the 'condition' complies with the already available 'version'.
 }
+

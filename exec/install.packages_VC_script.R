@@ -1,3 +1,19 @@
+# =================================================================
+#     RVClibrary, multi-version package library management tool
+#     Copyright (C) 2019 S.C. Frouws, The Hague, The Netherlands
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License ('COPYING.LESSER') for more details.
+# =================================================================
+
+
 args <- commandArgs(trailingOnly = TRUE)
 lib.location <- args[1]
 packagesToInstall <- args[2]
@@ -27,7 +43,7 @@ tryCatch(withCallingHandlers({
 
     install.packages_VC(installPackages      = trimws(strsplit(packagesToInstall, split = ',')[[1]]),
                         lib.location         = lib.location,
-                        add_to_VC_library    = FALSE,
+                        install_temporarily  = TRUE,
                         execute_with_Rscript = FALSE,
                         overwrite_this_package = as.logical(overwrite_or_add_update))
 
@@ -37,7 +53,7 @@ tryCatch(withCallingHandlers({
 if (length(H) != 0) {
     H <- as.list(H)
     H[c(1:4, length(H)-1, length(H))] <- NULL # remove verbose stack details.
-    cat('\nError stack:\n')
+    cat('Error stack:\n')
     cat(paste(collapse = '', rep('-', 60)), '\n')
     cat(paste0(collapse = '\n\n\n', '[', seq_along(H), '] ', H), '\n')
     cat(paste(collapse = '', rep('-', 60)), '\n')

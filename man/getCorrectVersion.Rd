@@ -19,8 +19,11 @@ By default it will take the first higher version (when it exists, just\code{0.5}
 This because this is most likely to not change the behaviour of the code. Picking the latest version is most
 compatible with matching other packages their dependencies (e.g. if a later package depends on this package but asks for\code{> 0.6}, it will crash).
 The downside of this is that an update could be a major one, going from\code{0.5} to\code{2.0}, where allot of things can change and code is likely to not work anymore.}
+
+\item{quietly}{If FALSE, the default, will not return warnings if the loaded package is a major release higher then the package that was requested.}
 }
 \description{
 Obtains the correct version based on the version instruction provided (e.g. \code{>= 0.5}). It will print which version is chosen if `verbose = TRUE`.
 if no compatible version is found between the available versions, the function 'chooseVersion' will return an error to notify you.
 }
+

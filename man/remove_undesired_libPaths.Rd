@@ -11,8 +11,9 @@ remove_undesired_libPaths(lib.location = R_VC_library_location(),
 \item{lib.location}{The folder which contains the R_VC_library structure. All directories in .libPaths containing this path will be kept.
 By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} to find this directory.}
 
-\item{dry.run}{If TRUE, will return the paths that would remain after cleaning up the .libPaths() list.}
+\item{dry.run}{If TRUE, will not change the paths but will print the paths that would remain after cleaning up the .libPaths() list.}
 }
 \description{
 Excludes all .libPaths other then those needed for library_VC().
 }
+

@@ -6,7 +6,7 @@
 \usage{
 install.packages_VC_tarball(packagePath, dependencies,
   lib.location = R_VC_library_location(),
-  add_to_VC_library = overwrite_this_package,
+  install_temporarily = !overwrite_this_package,
   overwrite_this_package = FALSE, execute_with_Rscript = TRUE)
 }
 \arguments{
@@ -16,8 +16,11 @@ install.packages_VC_tarball(packagePath, dependencies,
 
 \item{lib.location}{The folder containing a structure where this package needs to be installed in. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.}
 
-\item{add_to_VC_library}{If TRUE, the installed package(s) is (are) moved to the final destination automatically.
-Otherwise it is necessary to run \code{convert_to_VC_library()} manually after the installation into the temporary folder finished. To clean up the temporary folder, run \code{clearTempInstallFolder()}.}
+\item{install_temporarily}{If FALSE, the installed package(s) is (are) moved to the final destination automatically.
+Otherwise it is necessary to run \code{convert_to_VC_library()} manually after the installation into the temporary folder finished. To clean up the temporary folder, run \code{clean_temp_library()}.
+When \code{overwrite_this_package} is TRUE, and \code{install_temporarily} is not provided, it will be set to FALSE automatically.
+Installing a package temporarily gives you the oppertunity to test the package before adding it to the RVClibrary structure.
+Loading packages including those in the temporary library (\code{R_VC_temp_lib_location()}) can be done using: \code{library_VC(..., also_load_from_temp_lib = TRUE)}.}
 
 \item{overwrite_this_package}{If TRUE, the installed package is added and overwrites the existing package.}
 
@@ -31,3 +34,4 @@ This function can try to install a tarball based on the tarball location and it'
 Hopefully I will be able to implement a method to run this function in a new R instance clear of loaded packages.
       \code{install.packages_VC_tarball_with_Rscript} is a sketch to reach meet that wish.
 }
+

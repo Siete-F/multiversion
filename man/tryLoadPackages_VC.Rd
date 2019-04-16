@@ -4,7 +4,8 @@
 \alias{tryLoadPackages_VC}
 \title{Test load package list.}
 \usage{
-tryLoadPackages_VC(packages, lib.location, pick.last = FALSE)
+tryLoadPackages_VC(packages, lib.location = R_VC_library_location(),
+  pick.last = FALSE, verbose = TRUE, msg_str = "packages")
 }
 \arguments{
 \item{packages}{A named character vector of package/version names. None are really loaded, `library_VC` is used with the `dry.run` turned on.}
@@ -13,8 +14,14 @@ tryLoadPackages_VC(packages, lib.location, pick.last = FALSE)
 By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.}
 
 \item{pick.last}{Changes the way a decision is made. In the scenario where a dependency of \code{>} or \code{>=} is defined, multiple versions may be available to choose from. By default, the lowest compliant version is chosen. Setting this to TRUE will choose the highest version.}
+
+\item{verbose}{If TRUE, the default, will show all \code{library_VC} messages.}
+
+\item{msg_str}{Can be either logical FALSE, or a character string which will be (the %s) part of the printed string ' - Trying to load %s: ...'.
+Defaults to 'packages', making the sentence: ' - Trying to load packages: lattice, RColorBrewer, grid'}
 }
 \description{
 Internally used for 'test loading' a list of dependencies when installing a package.
 Returns a list of succesfull load operations.
 }
+

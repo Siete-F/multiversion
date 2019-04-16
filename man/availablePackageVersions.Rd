@@ -16,3 +16,4 @@ availablePackageVersions(packageName, lib.location = R_VC_library_location())
 Just checks the R_VC_library folder structure for all available versions installed for a specific package.
 If no name is provided, an error is returned.
 }
+

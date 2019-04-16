@@ -26,3 +26,4 @@ It will be parsed using `parse_dependency_string` to become an offten used forma
 \description{
 This function can be used to perform some R operation with a configured set of loaded packages.
 }
+

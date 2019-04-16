@@ -4,13 +4,21 @@
 \alias{dependencies}
 \title{List the dependencies of a package.}
 \usage{
-dependencies(packageName, lib.location = R_VC_library_location())
+dependencies(packageName, do_print = TRUE, character.only = FALSE,
+  lib.location = R_VC_library_location())
 }
 \arguments{
 \item{packageName}{The (unquoted) package name for which you would like to print the dependencies.}
+
+\item{do_print}{If true (default), prints the dependencies. In both cases, the dependencies are returned invisibly.}
+
+\item{character.only}{If TRUE, (FALSE by default), the package names can be provided as character vector. Otherwise, direct unquoted package names are supported.The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.}
+
+\item{lib.location}{The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.}
 }
 \description{
 Provide a package name (can be without quotes) to show its dependencies.
 To list all dependencies of the complete library, use the inversed function "\code{dependsOnMe(all)}" with the value 'all'.
 That function also does not require quotes.
 }
+

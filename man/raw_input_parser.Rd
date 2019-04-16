@@ -18,3 +18,4 @@ to a named character vector like \code{c(hoi = '3.4', hai = '>= 7.9.2', FIETS = 
 Must be called like \code{raw_input_parser(as.list(match.call()), c('named_param1', 'named_param2', 'named_param3'))}. \cr
 It will return all (name) value pairs if values are available excluding the named parameters provided in the second argument. \cr
 }
+

@@ -4,9 +4,14 @@
 \alias{loadDevtools}
 \title{Loads `devtools` version 1.13.1 and it's dependencies.}
 \usage{
-loadDevtools()
+loadDevtools(lib.location = R_VC_library_location())
+}
+\arguments{
+\item{lib.location}{The (version controlled) library to load devtools from.
+Use installDevtools to install devtools, if you have not done so already.}
 }
 \description{
 During the library call, `appendLibPaths` is TRUE, making sure that some devtools functionallity
 (like running tests) in child R instances will still work and know where to load their libraries from.
 }
+

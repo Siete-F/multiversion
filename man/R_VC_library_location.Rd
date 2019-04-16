@@ -14,3 +14,4 @@ You can call this function and let it set the environment variable for this sess
 This function will look for the environment variable \code{R_VC_LIBRARY_LOCATION} indicating the R_VC_library location.
 Alternatively you can provide a path for this session only using \code{R_VC_library_location(yourPath)}.
 }
+

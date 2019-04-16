@@ -7,11 +7,12 @@
 packageList2str(x, do_return = FALSE)
 }
 \arguments{
-\item{x}{A named character vector with package names/versions.}
+\item{x}{A named character vector with package names/versions. `c(dplyr = '>= 1.5.0', data.table = '')`}
 
 \item{do_return}{If FALSE (the default) the package sting is printed, if TRUE, it is returned as a character string and not printed.}
 }
 \description{
-Used to print a set of package names and their version criteria in a way that \code{parse_dependency_string()} can parse it again to a package list.
-This way we can list the dependencies of a function easily and it makes it possible to use it when performing a commandline call.
+Used to print a set of package names and their version criteria in a way that \code{parse_dependency_string()} can parse it again to a package vector.
+This way we can list the dependencies of a function easily and support better commandline interaction.
 }
+

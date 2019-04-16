@@ -12,3 +12,4 @@ detachIfExisting(packageNames)
 \description{
 Detach package if it exists.
 }
+

@@ -1,3 +1,18 @@
+# =================================================================
+#     RVClibrary, multi-version package library management tool
+#     Copyright (C) 2019 S.C. Frouws, The Hague, The Netherlands
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License ('COPYING.LESSER') for more details.
+# =================================================================
+
 
 #' Perform operation with a certain set of packages.
 #'
@@ -45,7 +60,7 @@ execute_with_packages <- function(packages_to_load = NULL, func_handle, ...,
         if (!execute_quietly) {
             cat(paste0(collapse = '\n', c(return_str, '\n\n')))
         }
-
+        return_str <- strsplit(return_str, '\r?\n|\r')[[1]]
         output_index <- which(grepl('output file:<.:[/\\].*>', return_str))
         if (length(output_index) == 1) {
 

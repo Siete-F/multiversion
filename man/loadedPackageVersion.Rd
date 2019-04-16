@@ -4,7 +4,7 @@
 \alias{loadedPackageVersion}
 \title{Check the versions of an already loaded package.}
 \usage{
-loadedPackageVersion(packageName)
+loadedPackageVersion(packageNames, dont_exclude_not_loaded = F)
 }
 \arguments{
 \item{packageName}{The name or a vector of names of the packages for which to obtain the version.}
@@ -12,3 +12,4 @@ loadedPackageVersion(packageName)
 \description{
 Check the versions of an already loaded package.
 }
+

@@ -9,3 +9,4 @@ reset.libPaths(currentLibs)
 \description{
 Minor wrapper to reset libraries to the provided state.
 }
+

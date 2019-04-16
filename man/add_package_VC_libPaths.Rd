@@ -4,7 +4,8 @@
 \alias{add_package_VC_libPaths}
 \title{Append all package locations to `.libPaths()`.}
 \usage{
-add_package_VC_libPaths(packNameVersion, lib.location)
+add_package_VC_libPaths(packNameVersion, lib.location,
+  additional_lib_paths = c())
 }
 \arguments{
 \item{packNameVersion}{A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.05', ggplot = '')`).
@@ -15,3 +16,4 @@ The path that is appended to the `.libPaths` is constructed based on the name an
 \description{
 Adds the path of the package that is specified (and likely loaded before) to the `.libPaths`.
 }
+

@@ -21,3 +21,4 @@ In general, it is possible to create a complete clean environment by clearing yo
 running \code{detachAll} and then restarting Rstudio. If problems with package loading still persists,
 then follow the final alternative solution described in the details section of the documentation of \code{library_VC}.
 }
+

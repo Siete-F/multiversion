@@ -8,7 +8,7 @@ chooseVersion(packVersion, versionList, packageName = "", pick.last = FALSE,
   quietly = FALSE)
 }
 \arguments{
-\item{packVersion}{A single named version with package name and it's version like \code{c(dplyr = '>= 0.4.0')}.}
+\item{packVersion}{A single named version value. i.e. A package name and it's version requirement like: \code{c(dplyr = '>= 0.4.0')}.}
 
 \item{versionList}{A list of available versions for this package to choose from. It is the list to choose from and check availability. Created with \code{availablePackageVersions}.}
 
@@ -18,7 +18,7 @@ chooseVersion(packVersion, versionList, packageName = "", pick.last = FALSE,
 By default it will take the same or first higher version (when it exists, just \code{0.5}, which is often the case).
 This because this is most likely to not change the behaviour of the code. Alternatively, picking the latest version is most
 likely to be accepted by other packages their dependencies (e.g. if a package that is loaded later on depends on this package but asks for \code{> 0.6}, it will crash).
-The downside of this is that an update could be a major one, going from \code{0.5} to \code{2.0}, where allot of things can change and code is likely to not work anymore.}
+The downside of this is that an update could be a major one, going from \code{0.5} to \code{2.0}, where allot of things can have changed and your workable code is at risk.}
 }
 \description{
 Obtains the correct version based on the version instruction provided (e.g. \code{>= 0.5}), the package name and it's available versions.
@@ -26,5 +26,6 @@ If no compatible version is found between the available versions a suitable erro
 All different version indications should be handled in this function, including:
 1. a version with \code{>} or \code{>=} indicator
 2. a version without \code{>}, so just a version e.g. \code{'0.5.0'} (most specific)
-3. a zero length char e.g. \code{''} (auto determine)
+3. a zero length char e.g. \code{''} (auto determine, based on `pick.last`)
 }
+

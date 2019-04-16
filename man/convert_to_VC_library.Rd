@@ -30,7 +30,7 @@ lib1/BH/DESCRIPTION   becomes  lib2/BH/1.60.0-2/BH/DESCRIPTION
 This functionallity is also used for converting installed packages from the temporary installation directory to the final R_VC_library format. \cr
 \cr
 Note that it is realy no problem to perform a conversion again, it will only move new versions of already present packages and will never overwrite.
-To continue with a clean Temp folder, run \code{clearTempInstallFolder()}, it will remove the folder.
+To continue with a clean Temp folder, run \code{clean_temp_library()}, it will remove the folder.
 }
 \examples{
 # As an experiment (or when getting started) you could run this with your complete standard library (not your base library).
@@ -44,3 +44,4 @@ convert_to_VC_library()
 convert_to_VC_library(VC_library_location = "M:/R_VC_library")
 
 }
+

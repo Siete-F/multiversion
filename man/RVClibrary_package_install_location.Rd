@@ -11,3 +11,4 @@ Returns the location of the RVClibrary package. It is a more complicated search 
 The only way to guarantee that the correct folder is found is by checking if the `INDEX` folder is present in the RVClibrary folder.
 This folder is only there when it is the installed instance of RVClibrary.
 }
+

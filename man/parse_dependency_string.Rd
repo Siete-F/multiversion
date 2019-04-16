@@ -18,3 +18,4 @@ to match the normal package name/version layout like: \cr
 Used by \code{getOnlineDependencies()} to interpret the by CRAN provided dependencies,
 used to parse the 'vc_override_dependencies.txt' files and the dependencies mentioned in the 'DESCRIPTION' files of the installed packages.
 }
+

@@ -12,3 +12,4 @@ bareVersion(packageVersion)
 \description{
 Remove `>` or `>=` from version string.
 }
+
