@@ -20,15 +20,20 @@
 #' If no name is provided, an error is returned.
 #'
 #' @param packageName The name of the package for which all versions must be returned.
-#' @param lib.location The folder containing the structure where this package his versions need to be checked.
+#' @param lib_location The folder containing the structure where this package his versions need to be checked.
 #'
 #' @export
 #'
-availablePackageVersions <- function(packageName, lib.location = R_VC_library_location()) {
+lib.available_versions <- function(packageName, lib_location = lib.location()) {
     if (is.na(packageName) || length(packageName) == 0 || nchar(packageName) == 0) {stop('The package name cannot be empty.')}
 
-    available_pack_versions <- list.dirs(paste(lib.location, packageName, sep = '/'), recursive = FALSE, full.names = FALSE)
-    return(available_pack_versions)
+    available_pack_versions <- list.dirs(paste(lib_location, packageName, sep = '/'), recursive = FALSE, full.names = FALSE)
+    if (any(available_pack_versions %in% c("data", "doc", "help", "html", "Meta", "R"))) {
+        stop(paste0('The library I am trying to load from, is not shaped as expected.\n',
+                    'It seems to be `myLibrary/%s/DESCRIPTION` instead of `myLibrary/%s/1.2.3/%s/DESCRIPTION`.\n',
+                    'This desired format can be achieved by using `lib.convert` on an ordinary library structure.'))
+    }
+    return(as.character(sort(numeric_version(available_pack_versions))))
 }
 
 
@@ -43,7 +48,7 @@ availablePackageVersions <- function(packageName, lib.location = R_VC_library_lo
 #'
 #'
 #' @param packVersion A single named version value. i.e. A package name and it's version requirement like: \code{c(dplyr = '>= 0.4.0')}.
-#' @param versionList A list of available versions for this package to choose from. It is the list to choose from and check availability. Created with \code{availablePackageVersions}.
+#' @param versionList A list of available versions for this package to choose from. It is the list to choose from and check availability. Created with \code{lib.available_versions}.
 #' @param packageName  It is used for clear error handling. It should be the package name it is trying to load so we can mention it when crashing.
 #' @param pick.last If a version like \code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
 #' By default it will take the same or first higher version (when it exists, just \code{0.5}, which is often the case).
@@ -67,10 +72,10 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
             # I did find a way to unload it so that we can also alter this package his version, even when it is always loaded automatically on startup.
             unloadNamespace(asNamespace('yaml'))
             # Try again after unload is successful.
-            return(chooseVersion(packVersion, versionList, packageName = 'yaml', pick.last = FALSE, quietly = FALSE))
+            return(chooseVersion(packVersion, versionList, packageName = 'yaml', pick.last = pick.last, quietly = quietly))
         }
-        alreadyLoadedVersion <- loadedPackageVersion(packageName)
-        if (!isVersionCompatible(packVersion, alreadyLoadedVersion)) {
+        alreadyLoadedVersion <- lib.package_version_loaded(packageName)
+        if (!lib.check_compatibility(packVersion, alreadyLoadedVersion)) {
             # ERROR
             error_packageAlreadyLoaded(packageName, packVersion, alreadyLoadedVersion)
         }
@@ -86,7 +91,7 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
             stop(sprintf(paste('An already loaded package "%s" (version: %s) is compatible with the requested version, but',
                                '\nwas not loaded from the R_VC_library directory and not available (instead from: "%s").',
                                '\nRequested was %s (available versions: %s).',
-                               '\nIf this problem persists, try cleaning the RStudio catch folder as described in DETAILS of ?library_VC.',
+                               '\nIf this problem persists, try cleaning the RStudio catch folder as described in DETAILS of ?lib.load.',
                                '\nWe will not try to detach since that could cause unexpected behaviour.',
                                '\nPlease detach it manually (e.g. `detachAll(packageList = \'%s\')`, where %s are depending on it)\n\n'),
                          packageName, alreadyLoadedVersion, loaded_pack_loc, packVersion,
@@ -150,7 +155,7 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
 #'
 #' @export
 #'
-isVersionCompatible <- function(condition, version) {
+lib.check_compatibility <- function(condition, version) {
     # If no reference was supplied, all conditions are acceptable.
     if (is.null(version) || is.na(version)) return(TRUE)
 
@@ -182,7 +187,7 @@ isVersionCompatible <- function(condition, version) {
 #' if no compatible version is found between the available versions, the function 'chooseVersion' will return an error to notify you.
 #'
 #' @param packVersion A named character vector with package names and their version indication (e.g. \code{c(dplyr = '>= 0.4.0', ggplot = '')}).
-#' @param lib.location The location of the R_VC_library folder.
+#' @param lib_location The location of the R_VC_library folder.
 #' @param verbose if TRUE, it will print the choices it makes. If the session is not interactive, or verbose = FALSE, nothing will be printed.
 #' @param pick.last If a version like\code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
 #' By default it will take the first higher version (when it exists, just\code{0.5}, which is often the case).
@@ -191,7 +196,7 @@ isVersionCompatible <- function(condition, version) {
 #' The downside of this is that an update could be a major one, going from\code{0.5} to\code{2.0}, where allot of things can change and code is likely to not work anymore.
 #' @param quietly If FALSE, the default, will return warnings if the loaded package is a major release higher then the package that was requested.
 #'
-getCorrectVersion <- function(packVersion, lib.location, verbose = TRUE, pick.last = FALSE, quietly = FALSE) {
+lib.decide_version <- function(packVersion, lib_location, verbose = TRUE, pick.last = FALSE, quietly = FALSE) {
     packageName <- names(packVersion)
     origVersion <- unname(packVersion)
 
@@ -199,7 +204,7 @@ getCorrectVersion <- function(packVersion, lib.location, verbose = TRUE, pick.la
         stop("The length of packVersion cannot be 0, if it is desired to not specify the version specifically, use e.g. `dplyr = ''`.")
 
     # handle higher then, higher-or-equal, equal to (just a version) or '' (auto determine) version indications:
-    packVersionList <- availablePackageVersions(packageName, lib.location)
+    packVersionList <- lib.available_versions(packageName, lib_location)
     packVersion <- chooseVersion(packVersion, versionList = packVersionList, packageName, pick.last = pick.last, quietly = quietly)
 
     # print instructive message:
@@ -229,8 +234,8 @@ getCorrectVersion <- function(packVersion, lib.location, verbose = TRUE, pick.la
 #'
 #' @export
 #'
-checkIfBasePackage <- function(packageName) {
-    # Featuring direct call like: `checkIfBasePackage(stats)`
+lib.is_basepackage <- function(packageName) {
+    # Featuring direct call like: `lib.is_basepackage(stats)`
     # This can't be used interactively, when providing a variable with a name it would use the var name as name.
     # packageName = as.character(substitute(packageName))
 
@@ -245,7 +250,7 @@ checkIfBasePackage <- function(packageName) {
 #'
 #' @export
 #'
-loadedPackageVersion <- function(packageNames, dont_exclude_not_loaded = F) {
+lib.package_version_loaded <- function(packageNames, dont_exclude_not_loaded = F) {
     if (!dont_exclude_not_loaded) {
         packageNames <- packageNames[packageNames %in% unique(c(names(sessionInfo()$otherPkgs), names(sessionInfo()$loadedOnly)))]
     }
@@ -262,16 +267,17 @@ loadedPackageVersion <- function(packageNames, dont_exclude_not_loaded = F) {
 #' Check if an package belongs to the standard R packages
 #'
 #' @param packageName The package name to check.
+#' @param cran_url Defaults to 'https://cran.rstudio.com/'.
 #'
 #' @export
 #'
-getOnlineDependencies <- function(packageName, cran_url = 'https://cran.rstudio.com/'){
+lib.dependencies_online <- function(packageName, cran_url = 'https://cran.rstudio.com/'){
     packList <- available.packages(repos = cran_url)
     if (!(packageName %in% packList)) {
-        stop(sprintf('Package "%s" is not available on CRAN. Install from source using "install.packages_VC_tarball(path, depends)".', packageName))
+        stop(sprintf('Package "%s" is not available on CRAN (%s). Install from source using "lib.install_tarball(path, depends)".', packageName, cran_url))
     }
     dependsOn <- paste(na.omit(packList[packageName, "Depends"]), na.omit(packList[packageName, "Imports"]), sep = ', ')
-    dependingPackages <- parse_dependency_string(dependsOn)
+    dependingPackages <- lib.packs_str2vec(dependsOn)
 
     return(dependingPackages)
 }

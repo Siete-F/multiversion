@@ -10,7 +10,7 @@ chooseVersion(packVersion, versionList, packageName = "", pick.last = FALSE,
 \arguments{
 \item{packVersion}{A single named version value. i.e. A package name and it's version requirement like: \code{c(dplyr = '>= 0.4.0')}.}
 
-\item{versionList}{A list of available versions for this package to choose from. It is the list to choose from and check availability. Created with \code{availablePackageVersions}.}
+\item{versionList}{A list of available versions for this package to choose from. It is the list to choose from and check availability. Created with \code{lib.available_versions}.}
 
 \item{packageName}{It is used for clear error handling. It should be the package name it is trying to load so we can mention it when crashing.}
 
@@ -28,4 +28,3 @@ All different version indications should be handled in this function, including:
 2. a version without \code{>}, so just a version e.g. \code{'0.5.0'} (most specific)
 3. a zero length char e.g. \code{''} (auto determine, based on `pick.last`)
 }
-

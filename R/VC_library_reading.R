@@ -20,8 +20,8 @@
 #'
 #' Two ways of package/versions input are accepted:
 #' 1: just provide them directly (the \code{...} input). All not recognized named variables
-#'    will be interpreted like package names or package name/version combination. \code{library_VC(DBI = '0.5', assertthat, R6)}
-#' 2: provide the \code{loadPackages} input in the following way: \code{library_VC(loadPackages = c(DBI = '0.5', assertthat = '', R6 = ''))} \cr
+#'    will be interpreted like package names or package name/version combination. \code{\link{lib.load}(DBI = '0.5', assertthat, R6)}
+#' 2: provide the \code{loadPackages} input in the following way: \code{\link{lib.load}(loadPackages = c(DBI = '0.5', assertthat = '', R6 = ''))} \cr
 #' \cr
 #' If an empty string e.g. \code{dplyr = ''}, or only the package name is specified, one of two things will happen:
 #' - if one version is available, this one is used.
@@ -36,16 +36,16 @@
 #' In other words, dependencies are remembered, but not loaded. So all strings are released (figurely speaking), but the dependency is there for the depending package. \cr
 #' \cr
 #' The inputs packNameVersionList [list of named versions] and skipDependencies [list of names] can be
-#' left blank in general. They are used by other functionallity like \code{tryLoadPackages_VC()} and \code{install.packages_VC}
+#' left blank in general. They are used by other functionallity like \code{\link{lib.testload}()} and \code{\link{lib.install}}
 #' \code{dry.run} will show the packages that will be used and will crash when no option is feasable (not installed or not compliant packages).
-#' If you are trying to setup a propper \code{library_VC} call, it is always a good idea to work with dry.run's.
+#' If you are trying to setup a propper \code{\link{lib.load}} call, it is always a good idea to work with dry.run's.
 #' Once an incorrect package has been loaded, it is very likely you will have to restart your R session. \cr
 #' \cr
 #' "strings" can stay attached (as in, the .libPaths can be appended) when using 'appendLibPaths = TRUE'.
 #' Afterwards, the normal \code{library} call can be used to load the not yet loaded but attached package.
 #' This is more or less the same as doing the following: \cr
 #' \code{
-#' library_VC(c(dplyr = '0.5.0'), dry.run = TRUE, appendLibPaths = TRUE)
+#' lib.load(c(dplyr = '0.5.0'), dry.run = TRUE, appendLibPaths = TRUE)
 #' library(dplyr)} \cr
 #' \cr
 #' Note that the second call is a standard \code{library} call. How this works is that \code{dry.run} skips the loading step, and \code{appendLibPaths} adds the paths of dplyr and it's dependencies to \code{.libPaths}, which make a \code{library} call work. \cr
@@ -62,9 +62,9 @@
 #' "\code{YourRProject/.Rproj.user/.../sources/prop}" and start Rstudio again. If it doesn't work, try "\code{/sources/per}" also. At the \code{...} there should be a hash used in the current session e.g. \code{/F3B1663E/}.
 #' After this, the packages should be unloaded and you should be able to load a new batch of packages. Most times it will just do to clear the workspace (environment) and reload the project while saving the empty environment.
 #'
-#' @param ... All packages and their versions you would like to load e.g. \code{library_VC(DBI = '0.5', assertthat = '', R6 = '', quietly = TRUE)}. Input names like \code{quietly} will be recognized and interpreted as expected.
+#' @param ... All packages and their versions you would like to load e.g. \code{\link{lib.load}(DBI = '0.5', assertthat = '', R6 = '', quietly = TRUE)}. Input names like \code{quietly} will be recognized and interpreted as expected.
 #' @param loadPackages Supports providing a named character vector of packages and their versions in the shape that is supported by all other functions in this package. e.g. \code{c(DBI = '0.5', assertthat = '', R6 = '')}
-#' @param lib.location The folder containing a structure where this package must load packages from. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.
+#' @param lib_location The folder containing a structure where this package must load packages from. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.
 #' @param dry.run (default: FALSE) Will make it perform a dry run. It will check all dependencies and if \code{appendLibPaths} it will add
 #' their paths to \code{.libPaths} but it will not load those packages. If the paths are added this way, you should be able to just call the located packages with \code{library(...)}
 #' @param quietly (default: FALSE) Indicates if the loading must happen silently. No messages and warnings will be shown if TRUE.
@@ -77,36 +77,36 @@
 #'
 #' @export
 #'
-library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_location(), dry.run = FALSE, quietly = FALSE, appendLibPaths = FALSE, pick.last = FALSE, also_load_from_temp_lib = FALSE, packNameVersionList = c(), skipDependencies = c()) {
+lib.load <- function(..., loadPackages = NULL, lib_location = lib.location(), dry.run = FALSE, quietly = TRUE, appendLibPaths = FALSE, pick.last = FALSE, also_load_from_temp_lib = FALSE, packNameVersionList = c(), skipDependencies = c()) {
 
     # If `loadPackages` is not provided, make use of the ... input via `match.call()`.
     # It will list all input names and values from which I will use all but the ones excluded.
     if (is.null(loadPackages)) {
-        loadPackages <- raw_input_parser(as.list(match.call()), varnames_to_exclude = c('loadPackages', 'lib.location', 'dry.run', 'quietly', 'appendLibPaths', 'pick.last', 'also_load_from_temp_lib', 'packNameVersionList', 'skipDependencies'))
+        loadPackages <- raw_input_parser(as.list(match.call()), varnames_to_exclude = c('loadPackages', 'lib_location', 'dry.run', 'quietly', 'appendLibPaths', 'pick.last', 'also_load_from_temp_lib', 'packNameVersionList', 'skipDependencies'))
     }
 
     if (length(loadPackages) == 1 && strtrim(names(loadPackages), 2) == 'c(') {
-        stop('Please make sure that you call `library_VC(loadPackages = c(xx = yy))` when you would like to use a named character vector.\nAlternatively, remove the vector elements and call `library_VC(xx = yy)` directly.')
+        stop('Please make sure that you call `lib.load(loadPackages = c(xx = yy))` when you would like to use a named character vector.\nAlternatively, remove the vector elements and call `lib.load(xx = yy)` directly.')
     }
 
     # If still other libraries are set as active libraries, reset the library to just 1 lib for the build in functions (= `.Library`).
-    # if (!quietly & interactive() & length(sys.calls()) == 1 & !all(grepl(normPath(lib.location), normPath(.libPaths())) | grepl(normPath(.Library), normPath(.libPaths())))) {
-    #     warning(paste0('\nlibrary_VC: Extra libraries were found.\n',
-    #                    'Library_VC will exclude those when loading packages, please be aware `library()` does not\n',
+    # if (!quietly & interactive() & length(sys.calls()) == 1 & !all(grepl(normPath(lib_location), normPath(.libPaths())) | grepl(normPath(.Library), normPath(.libPaths())))) {
+    #     warning(paste0('\nlib.load: Extra libraries were found.\n',
+    #                    'lib.load will exclude those when loading packages, please be aware `library()` does not\n',
     #                    'and might load a package from an unexpected location.\n',
-    #                    'Please use `.libPaths(.Library)` before using library_VC to suppress this warning.\n\n'))
+    #                    'Please use `.libPaths(.Library)` before using lib.load to suppress this warning.\n\n'))
     # }
 
-    # check if the package version that is provided is a correct version (this catches a wrong input like `library_VC(dplyr = '< 0.5.0')`)
+    # check if the package version that is provided is a correct version (this catches a wrong input like `lib.load(dplyr = '< 0.5.0')`)
     if (length(loadPackages) != 0 && !is.na(loadPackages) &&
-        any(sapply(loadPackages, function(x) {attributes(regexpr('>?=?\\s?\\d+(\\.\\d+){1,3}', x))$match.length != nchar(x) && nchar(x) > 0}) & !checkIfBasePackage(names(loadPackages)))) {
+        any(sapply(loadPackages, function(x) {attributes(regexpr('>?=?\\s?\\d+(\\.\\d+){1,3}', x))$match.length != nchar(x) && nchar(x) > 0}) & !lib.is_basepackage(names(loadPackages)))) {
         stop(sprintf('Not all package versions that are provided seem to be valid version numbers. The following was received:\n%s', paste(paste0(names(loadPackages), ' (', loadPackages, ')'), collapse = ', ')))
     }
 
     n_skipped <- 0
     for (iPackage in unique(names(loadPackages))) {
         # Here, the package loading string prefix is created:
-        n_recursive <- sum(grepl('^library_VC', sapply(sys.calls(), function(x) {x[[1]]})))
+        n_recursive <- sum(grepl('^lib.load', sapply(sys.calls(), function(x) {x[[1]]})))
         if (n_recursive == 1) {
             stackStr <- '+_'
         } else {
@@ -119,47 +119,47 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
 
 
         # if base package, simply load and continue
-        if (checkIfBasePackage(iPackage)) {
+        if (lib.is_basepackage(iPackage)) {
             library(iPackage, character.only = TRUE, quietly = quietly)
             n_skipped <- n_skipped + 1
             next
         }
 
         if (iPackage %in% c(skipDependencies, 'RVClibrary')) {
-            if (isVersionCompatible(loadPackages[iPackage], packNameVersionList[iPackage])) {
+            if (lib.check_compatibility(loadPackages[iPackage], packNameVersionList[iPackage])) {
                 n_skipped <- n_skipped + 1
                 next
             } else {
                 # Package was explicitly requested by previous load operation, and is already loaded:
                 if (paste0('package:', iPackage) %in% search()) {
                     # ERROR
-                    error_packageAlreadyLoaded(iPackage, packNameVersionList[iPackage], loadedPackageVersion(iPackage))
+                    error_packageAlreadyLoaded(iPackage, packNameVersionList[iPackage], lib.package_version_loaded(iPackage))
                 }
                 packNameVersionList <- packNameVersionList[!names(packNameVersionList) == iPackage]
             }
             # If package is loaded directly or indirectly:
         } else if (isNamespaceLoaded(iPackage)) {
-            if (!isVersionCompatible(loadPackages[iPackage], loadedPackageVersion(iPackage))) {
-                error_packageAlreadyLoaded(iPackage, loadPackages[iPackage], loadedPackageVersion(iPackage))
+            if (!lib.check_compatibility(loadPackages[iPackage], lib.package_version_loaded(iPackage))) {
+                error_packageAlreadyLoaded(iPackage, loadPackages[iPackage], lib.package_version_loaded(iPackage))
             }
         }
 
         cat(stackStr)
 
-        temp_lib_dir <- R_VC_temp_lib_location(lib.location)
+        temp_lib_dir <- lib.location_install_dir(lib_location)
         additional_lib <- c()
         if (also_load_from_temp_lib) {
             additional_lib <- temp_lib_dir
         }
 
-        if (also_load_from_temp_lib && length(availablePackageVersions(iPackage, lib.location)) == 0 && file.exists(file.path(temp_lib_dir, iPackage))) {
+        if (also_load_from_temp_lib && length(lib.available_versions(iPackage, lib_location)) == 0 && file.exists(file.path(temp_lib_dir, iPackage))) {
             package_loc <- temp_lib_dir
             packVersion <- packageDescription(iPackage, package_loc)$Version
             cat(sprintf("Version %-7s INSTALLED  for package '%s'\n", packVersion, iPackage))
         } else {
             # Messages like: "Version ... is chosen  for package '...'" are printed here.
-            packVersion <- getCorrectVersion(loadPackages[iPackage], lib.location, pick.last = pick.last, quietly = quietly)
-            package_loc <- paste(lib.location, iPackage, packVersion, sep = '/')
+            packVersion <- lib.decide_version(loadPackages[iPackage], lib_location, pick.last = pick.last, quietly = quietly)
+            package_loc <- paste(lib_location, iPackage, packVersion, sep = '/')
         }
 
         if (!dir.exists(package_loc)) {
@@ -170,21 +170,21 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
         # The override dependency file never exists when the package is loaded from the temp_install_library.
         overrideFile <- file.path(package_loc, 'vc_override_dependencies.txt')
         if (file.exists(overrideFile)) {
-            dependingPackages <- parse_dependency_string(readChar(overrideFile, file.info(overrideFile)$size))
+            dependingPackages <- lib.packs_str2vec(readChar(overrideFile, file.info(overrideFile)$size))
         } else {
             packDesc <- packageDescription(iPackage, lib.loc = package_loc)
-            dependingPackages <- parse_dependency_string(gsub(paste0(packDesc$Depends, ',', packDesc$Imports), pat = ',,', rep = ','))
+            dependingPackages <- lib.packs_str2vec(gsub(paste0(packDesc$Depends, ',', packDesc$Imports), pat = ',,', rep = ','))
         }
 
         # recusively load dependencies
         # The skipDependencies is necessary for `dry.run=TRUE`. With `dry.run=FALSE` the dependency is loaded and skipped in the next itteration.
-        packNameVersionList <- library_VC(loadPackages        = dependingPackages,
-                                          lib.location        = lib.location,
-                                          packNameVersionList = packNameVersionList,
-                                          skipDependencies    = c( names(packNameVersionList), skipDependencies ),
-                                          pick.last           = pick.last,
-                                          also_load_from_temp_lib = also_load_from_temp_lib,
-                                          dry.run             = TRUE)
+        packNameVersionList <- lib.load(loadPackages        = dependingPackages,
+                                        lib_location        = lib_location,
+                                        packNameVersionList = packNameVersionList,
+                                        skipDependencies    = c( names(packNameVersionList), skipDependencies ),
+                                        pick.last           = pick.last,
+                                        also_load_from_temp_lib = also_load_from_temp_lib,
+                                        dry.run             = TRUE)
 
         packNameVersionList <- append(packNameVersionList, setNames(packVersion, iPackage))
 
@@ -193,14 +193,14 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
         # Reset .libPaths on failure
         on.exit({
             if (appendLibPaths) {
-                add_package_VC_libPaths(packNameVersionList, lib.location, additional_lib)
+                lib.add_libPaths(packNameVersionList, lib_location, additional_lib)
                 .libPaths(c(.libPaths(), currentLibs))
             }
         }, add = TRUE)
 
         if (!dry.run) {
-            add_package_VC_libPaths(packNameVersionList, lib.location, additional_lib)
-            remove_undesired_libPaths()
+            lib.add_libPaths(packNameVersionList, lib_location, additional_lib)
+            lib.clean_libPaths()
 
             if (quietly) {
                 suppressWarnings(suppressMessages(library(iPackage, lib.loc = package_loc, character.only = TRUE, quietly = quietly)))
@@ -215,7 +215,7 @@ library_VC <- function(..., loadPackages = NULL, lib.location = R_VC_library_loc
 
     # if not quietly, and at top level of stack, show an example library call.
     if (!quietly && length(sys.calls()) == 1) {
-        printExampleLibCall(packNameVersionList)
+        lib.printVerboseLibCall(packNameVersionList)
     }
 
     return(if(quietly) {invisible(packNameVersionList)} else {packNameVersionList})

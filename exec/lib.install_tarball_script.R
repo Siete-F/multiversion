@@ -15,39 +15,41 @@
 
 
 args <- commandArgs(trailingOnly = TRUE)
-lib.location <- args[1]
-packagesToInstall <- args[2]
-RVClibrary.location <- args[3]
-overwrite_or_add_update <- args[4]
+
+lib_location        <- args[1]
+packagePath         <- args[2]
+dependencies    <- args[3]
+RVClibrary.location <- args[4]
 
 error_str <- function(prestring, ...) {paste0(sprintf(prestring, ...), '\nExpected input:\n1) a valid VC library location.\n',
-                                              '2) a character string with the package pane to install.\n',
-                                              '3) and optionally the directory where the `RVClibrary` package can be loaded. Defaults to `Sys.getenv("R_LIBS_USER")`, your default lib.\n')}
-
+                                              '2) a character string with the package to install.\n',
+                                              '3) a packages string (e.g. "dplyr (0.5.0), ggplot2, tidyr (1.2.3)")',
+                                              ' indicating the dependencies that needs to be loaded.\n',
+                                              '4) and optionally the directory where the `RVClibrary` package can be loaded.',
+                                              ' Defaults to `Sys.getenv("R_LIBS_USER")`, your default lib.\n')}
 H <- list()
 tryCatch(withCallingHandlers({
 
+    # input checks:
     if (is.na(RVClibrary.location)) {
         RVClibrary.location <- Sys.getenv("R_LIBS_USER")
     }
 
-    if (!dir.exists(lib.location)) {stop(error_str('The version controlled library could not be found at the provided location: "%s".', lib.location))}
+    if (!dir.exists(lib_location)) {stop(error_str('The version controlled library could not be found at the provided location: "%s".', lib_location))}
+
+    if (!file.exists(packagePath)) {stop(error_str('The file "%s" provided does not exist.', packagePath))}
 
     if (!dir.exists(RVClibrary.location)) {stop(error_str('The `RVClibrary` package was not found. The directory "%s" does not exist.', RVClibrary.location))}
 
-    # input checks:
     if (suppressMessages(!require(RVClibrary, lib.loc = gsub('[/\\]RVClibrary$', '', RVClibrary.location)))) {
         stop(paste0("\nPlease install this single tarball manually. It can be installed using something like:\n",
                     "`install.packages('.../RVClibrary_0.1.0.tar.gz', lib = Sys.getenv('R_LIBS_USER'), type = 'source', repos = NULL)`\n\n"))
     }
 
-    install.packages_VC(installPackages      = trimws(strsplit(packagesToInstall, split = ',')[[1]]),
-                        lib.location         = lib.location,
-                        install_temporarily  = TRUE,
-                        execute_with_Rscript = FALSE,
-                        overwrite_this_package = as.logical(overwrite_or_add_update))
+    lib.install_tarball(packagePath, dependencies = lib.packs_str2vec(dependencies), lib_location = lib_location, execute_with_Rscript = FALSE, install_temporarily = TRUE)
 
 }, error = function(e) H <<- sys.calls()), error = function(e) {message('ERROR: The following error was returned:\n', e$message, '\n\n')})
+
 
 # If an error occured:
 if (length(H) != 0) {

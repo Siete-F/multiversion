@@ -21,33 +21,34 @@
 #' Install CRAN package into VC library.
 #'
 #' This function can be used to install a CRAN package in the (default or specified) R_VC_library.
-#' For installing packages from source use \code{install.packages_VC_tarball}.
+#' For installing packages from source use \code{lib.install_tarball}.
 #'
 #' @param installPackages Provide a vector of package names. A version cannot be supplied.
-#' @param lib.location The folder where this package can be installed.
-#' The package will first be installed in a temporary install folder \code{yourLib.loc/TEMP_install_location}
-#' indicated by the \code{R_VC_temp_lib_location} function. If \code{install_temporarily} is set to FALSE (the default).
+#' @param lib_location The folder where this package can be installed.
+#' The package will first be installed in a temporary install folder \code{yourLib/TEMP_install_location}
+#' indicated by the \code{\link{lib.location_install_dir}} function. If \code{install_temporarily} is set to FALSE (the default).
 #' the installed package(s) is moved to the destination location automatically.
 #' @param install_temporarily If FALSE, the installed package(s) is (are) moved to the final destination automatically.
-#' Otherwise it is necessary to run \code{convert_to_VC_library()} manually after the installation into the temporary folder finished. To clean up the temporary folder, run \code{clean_temp_library()}.
+#' Otherwise it is necessary to run \code{\link{lib.convert}()} manually after the installation into the temporary folder finished. To clean up the temporary folder, run \code{lib.clean_install_dir()}.
 #' When \code{overwrite_this_package} is TRUE, and \code{install_temporarily} is not provided, it will be set to FALSE automatically.
 #' Installing a package temporarily gives you the oppertunity to test the package before adding it to the RVClibrary structure.
-#' Loading packages including those in the temporary library (\code{R_VC_temp_lib_location()}) can be done using: \code{library_VC(..., also_load_from_temp_lib = TRUE)}.
+#' Loading packages including those in the temporary library (\code{\link{lib.location_install_dir}()}) can be done using: \code{\link{lib.load}(..., also_load_from_temp_lib = TRUE)}.
 #' @param execute_with_Rscript When TRUE (the default), it will try to install the package using a sepparate Rscipt R instance.
 #' This simplifies installing and leaves changing loaded packages etc. to another R instance which we can kill :).
-#' It will run a script provided with your packages. That script will load \code{RVClibrary} and call \code{install.packages_VC} directly.
+#' It will run a script provided with your packages. That script will load \code{RVClibrary} and call \code{\link{lib.install}()} directly.
+#' @param cran_url Will be passed trough to the install.packages command.
 #'
 #' @export
 #'
-install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_library_location(), install_temporarily = FALSE,
-                                overwrite_this_package = FALSE, execute_with_Rscript = TRUE, verbose = FALSE) {
+lib.install <- function(installPackages = NULL, lib_location = lib.location(), install_temporarily = FALSE,
+                        overwrite_this_package = FALSE, execute_with_Rscript = TRUE, verbose = FALSE, cran_url = "http://cran.us.r-project.org") {
 
     if (any(names(installPackages) != '')) stop('Please provide a vector of names, no name-version combinations.')
     if (length(installPackages) == 0) return(invisible())
 
     # If executing using Rscript, this block is run and calls an R script which will run all except this block.
     if (execute_with_Rscript) {
-        temp_install_dir <- R_VC_temp_lib_location()
+        temp_install_dir <- lib.location_install_dir()
         curr_packs <- list.dirs(temp_install_dir, full.names = F, rec = F)
 
         Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
@@ -56,75 +57,99 @@ install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_libr
             stop('Please make sure `where Rscript` results in one or more valid paths. First one is used.')
         }
 
-        RVClib_package_location <- RVClibrary_package_install_location()
-        script_location <- normPath(paste0(RVClib_package_location, '/exec/install.packages_VC_script.R'))
+        RVClib_package_location <- lib.my_location()
+        script_location <- normPath(paste0(RVClib_package_location, '/exec/lib.install_script.R'))
 
-        status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib.location, paste(collapse = ',', installPackages), RVClib_package_location, as.character(overwrite_this_package)))
+        status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib_location, paste(collapse = ',', installPackages), RVClib_package_location, as.character(overwrite_this_package), as.character(verbose)))
 
         new_packs <- list.dirs(temp_install_dir, full.names = F, rec = F)
         added_packages <- setdiff(new_packs, curr_packs)
 
         message(sprintf('>> Instalation attempt finished with status %s, added were: %s <<\n', as.character(status), paste(collapse = ', ', added_packages)))
         if (!install_temporarily & status == 0) {
-            convert_to_VC_library(VC_library_location = lib.location,
-                                  force_overwrite     = overwrite_this_package,
-                                  packages_to_convert = added_packages)
+            lib.convert(lib_location        = lib_location,
+                        force_overwrite     = overwrite_this_package,
+                        packages_to_convert = added_packages)
         }
         return(invisible())
     }
 
-    install.location <- normPath(R_VC_temp_lib_location(lib.location))
-    cran_url <- "http://cran.us.r-project.org"
+    install.location <- normPath(lib.location_install_dir(lib_location))
 
     # loaded packages
     nms <- names(sessionInfo()$otherPkgs)
     currentlyLoaded <- detachAll(packageList = nms[!nms %in% 'RVClibrary'])
 
-    if (interactive() && length(sys.calls()) == 1) {
+    # The following should only be executed once.
+    if (sum(grepl('^lib.install', sapply(sys.calls(), function(x) {x[[1]]}))) <= 1) {
+        if (!nzchar(Sys.which('make'))) {
+            stop(paste('Please make sure the `make.exe` application of `Rtools` can be',
+                       '\nfound so that packages can be compiled from source if necessary!',
+                       '\nAdd e.g. `C:/Rtools/bin` to the PATH env var if you have the program already installed',
+                       '\nor download Rtools (and check `Add paths` during install, and restart R) from "https://cran.r-project.org/bin/windows/Rtools/".'))
+        }
+        # Just took some
+        if (any(!nzchar(Sys.which(c('aspell', 'basename', 'cat', 'cp'))))) {
+            stop(sprintf(paste('%sAdd e.g. `C:/Rtools/bin` to the PATH env var if you have Rtools already installed',
+                       '\nor download Rtools (and check `Add paths` during install, and restart R) from "https://cran.r-project.org/bin/windows/Rtools/".'),
+                       ifelse(nzchar(Sys.getenv('MAKE')), '',
+                              'The MAKE variable is specified, but this is not sufficient for an Rscript instance to compile from source properly. ')))
+        }
+        if (!grepl('\\$\\(WIN\\)', Sys.getenv('BINPREF'))) {
+            stop(sprintf(paste0('Please make sure you also have the BINPREF environment variable set properly.',
+                               '\nCurrent value: "%s", expected value should be like: "C:/Rtools/mingw_$(WIN)/bin/",',
+                               '\nwhere "$(WIN)" is set by R to either "32" or "64" depending on the target.',
+                               '\nIf your PATH and BINPREF variables are set correctly, we should be ready',
+                               '\nfor compiling from source (being able to install the latest pacakges).'), Sys.getenv('BINPREF')))
+        }
+
+        if (interactive()) {
+            on.exit({
+                cat('\nResetting your loaded packages.\n')
+                invisible(lib.load(loadPackages = currentlyLoaded, lib_location = lib_location, quietly = TRUE))
+            }, add = TRUE)
+        }
+        prev_setting <- getOption("install.packages.compile.from.source")
+        options(install.packages.compile.from.source = "always")
+
+        # library paths
+        currentLibs <- .libPaths()
+        .libPaths(.Library)
+
         on.exit({
-            cat('\nResetting your loaded packages.\n')
-            invisible(library_VC(loadPackages = currentlyLoaded, lib.location = lib.location, quietly = TRUE))
+            options(install.packages.compile.from.source = prev_setting)
+            .libPaths(currentLibs)
         }, add = TRUE)
     }
 
-    prev_setting <- getOption("install.packages.compile.from.source")
-    options(install.packages.compile.from.source = "always")
 
-    # library paths
-    currentLibs <- .libPaths()
-    .libPaths(.Library)
-
-    on.exit({
-        options(install.packages.compile.from.source = prev_setting)
-        .libPaths(currentLibs)
-    }, add = TRUE)
 
     # loop through packages to install
     for (iPackage in installPackages) {
 
-        dependsOn <- getOnlineDependencies(iPackage, cran_url = cran_url)
+        dependsOn <- lib.dependencies_online(iPackage, cran_url = cran_url)
 
         # try loading dependencies, so that they're skipped during instalation.
-        succesfullLoads <- tryLoadPackages_VC(dependsOn, lib.location, pick.last = TRUE, msg_str = paste0('"', iPackage, '" his dependencies'), verbose = verbose)
+        succesfullLoads <- lib.testload(dependsOn, lib_location, pick.last = TRUE, msg_str = paste0('"', iPackage, '" his dependencies'), verbose = verbose)
 
-        failedLoads <- !names(dependsOn) %in% names(succesfullLoads) & !checkIfBasePackage(names(dependsOn))
+        failedLoads <- !names(dependsOn) %in% names(succesfullLoads) & !lib.is_basepackage(names(dependsOn))
         failedLoads <- names(dependsOn)[failedLoads]
 
         if (length(failedLoads) > 0) {
             cat(sprintf('\n - We will install for package "%s" the missing dependencies: %s.\n\n',
                         iPackage, paste0(collapse = ',', '"', failedLoads, '"')))
 
-            install.packages_VC(installPackages = failedLoads, lib.location = lib.location, install_temporarily = TRUE, execute_with_Rscript = execute_with_Rscript)
+            lib.install(installPackages = failedLoads, lib_location = lib_location, install_temporarily = TRUE, execute_with_Rscript = execute_with_Rscript, verbose = verbose)
 
             # When dependencies have been installed, try loading them again to create a more complete list of available
-            succesfullLoads <- tryLoadPackages_VC(dependsOn, lib.location, pick.last = TRUE, verbose = verbose)
+            succesfullLoads <- lib.testload(dependsOn, lib_location, pick.last = TRUE, verbose = verbose)
         }
 
 
         # If all dependencies were already there, check if the package is already installed.
         # When overwriting this package (or installing the latest version) we are not interested in knowing if the package already exists.
-        if (!overwrite_this_package && all(names(dependsOn) %in% names(succesfullLoads) | checkIfBasePackage(names(dependsOn)))) {
-            finalPackSucces <- tryLoadPackages_VC(setNames('', iPackage), lib.location, pick.last = TRUE, verbose = verbose, msg_str = '')
+        if (!overwrite_this_package && all(names(dependsOn) %in% names(succesfullLoads) | lib.is_basepackage(names(dependsOn)))) {
+            finalPackSucces <- lib.testload(setNames('', iPackage), lib_location, pick.last = TRUE, verbose = verbose, msg_str = '')
 
             if (iPackage %in% names(finalPackSucces)) {
                 cat(sprintf('\n - The "%s" package seems to be already installed...\n\n', iPackage))
@@ -133,19 +158,37 @@ install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_libr
         }
 
         # add the succesfully loaded packages to the .libPaths, so the installer knows that they are there.
-        add_package_VC_libPaths(succesfullLoads, lib.location, additional_lib_paths = install.location)
+        lib.add_libPaths(succesfullLoads, lib_location, additional_lib_paths = install.location)
 
-        message('INSTALLING: ', iPackage)
+        message('\nINSTALLING: ', iPackage)
         # because the dependencies are on the libPath, only the not present dependencies will be installed.
         # keeping them loaded would raise a popup of Rstudio.
-        install.packages(iPackage, lib = install.location, quiet = TRUE, repos = cran_url)
+        with_build_tools(install.packages(iPackage, lib = install.location, quiet = TRUE, repos = cran_url))
         message('INSTALLING DONE.')
 
         if (!install_temporarily) {
-            convert_to_VC_library(install.location, lib.location, force_overwrite = overwrite_this_package)
+            lib.convert(install.location, lib_location, force_overwrite = overwrite_this_package)
         }
     }
 
+}
+
+
+# Borrowed from: https://github.com/rstudio/packrat/blob/master/R/install.R
+with_build_tools <- function(code) {
+    check <- getOption("buildtools.check", NULL)
+    if (!is.null(check)) {
+        if (check("Installing R packages from source")) {
+            with <- getOption("buildtools.with", NULL)
+            if (!is.null(with))
+                with(code)
+            else
+                force(code)
+        }
+    }
+    else {
+        force(code)
+    }
 }
 
 
@@ -158,55 +201,54 @@ install.packages_VC <- function(installPackages = NULL, lib.location = R_VC_libr
 #'
 #' @param packagePath Provide the complete path to the tarball file that you would like to install.
 #' @param dependencies Provide the dependencies like a package version combination: \code{c(dplyr = '>= 0.5', data.table = '', R6 = '0.1.1')}
-#' @param lib.location The folder containing a structure where this package needs to be installed in. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.
+#' @param lib_location The folder containing a structure where this package needs to be installed in. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.
 #' @param install_temporarily If FALSE, the installed package(s) is (are) moved to the final destination automatically.
-#' Otherwise it is necessary to run \code{convert_to_VC_library()} manually after the installation into the temporary folder finished. To clean up the temporary folder, run \code{clean_temp_library()}.
-#' When \code{overwrite_this_package} is TRUE, and \code{install_temporarily} is not provided, it will be set to FALSE automatically.
+#' Otherwise it is necessary to run \code{\link{lib.convert}()} manually after the installation into the temporary folder finished. To clean up the temporary folder, run \code{\link{lib.clean_install_dir}()}.
 #' Installing a package temporarily gives you the oppertunity to test the package before adding it to the RVClibrary structure.
-#' Loading packages including those in the temporary library (\code{R_VC_temp_lib_location()}) can be done using: \code{library_VC(..., also_load_from_temp_lib = TRUE)}.
+#' Loading packages including those in the temporary library (\code{\link{lib.location_install_dir}()}) can be done using: \code{\link{lib.load}(..., also_load_from_temp_lib = TRUE)}.
 #' @param overwrite_this_package If TRUE, the installed package is added and overwrites the existing package.
 #' @param execute_with_Rscript When true, it will try to install a tarball using a sepparate Rscipt R instance. This saves you from the hasle to prepare your Rstudio environment to match the one that the tarball requires (incl. dependencies).
-#' It will run a script provided with the tarball location and it's dependencies. That script will load \code{RVClibrary} and call \code{install.packages_VC_tarball} directly.
+#' It will run a script provided with the tarball location and it's dependencies. That script will load \code{RVClibrary} and call \code{\link{lib.install_tarball}} directly.
 #'
 #' @note Hopefully I will be able to implement a method to run this function in a new R instance clear of loaded packages.
-#'       \code{install.packages_VC_tarball_with_Rscript} is a sketch to reach meet that wish.
+#'       \code{lib.install_tarball_with_Rscript} is a sketch to reach meet that wish.
 #' @export
 #'
-install.packages_VC_tarball <- function(packagePath, dependencies, lib.location = R_VC_library_location(),
-                                        install_temporarily = !overwrite_this_package, overwrite_this_package = FALSE,
-                                        execute_with_Rscript = TRUE) {
+lib.install_tarball <- function(packagePath, dependencies, lib_location = lib.location(),
+                                install_temporarily = FALSE, overwrite_this_package = FALSE,
+                                execute_with_Rscript = TRUE) {
 
     if (execute_with_Rscript) {
         Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
         if (grepl('Could not find files for the given pattern(s)', Rscript_dir)) {stop('Please make sure `where Rscript` results in one or more valid paths. First one is used.')}
-        RVClib_package_location <- RVClibrary_package_install_location()
-        script_location <- normPath(paste0(RVClib_package_location, '/exec/install.packages_VC_tarball_script.R'))
-        status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib.location, packagePath, packageList2str(dependencies, do_return = TRUE), RVClib_package_location))
-        if (!install_temporarily & status == 0) {convert_to_VC_library(VC_library_location = lib.location, force_overwrite = overwrite_this_package)}
+        RVClib_package_location <- lib.my_location()
+        script_location <- normPath(paste0(RVClib_package_location, '/exec/lib.install_tarball_script.R'))
+        status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib_location, packagePath, lib.packs_vec2str(dependencies, do_return = TRUE), RVClib_package_location))
+        if (!install_temporarily & status == 0) {lib.convert(lib_location = lib_location, force_overwrite = overwrite_this_package)}
         return(invisible())
     }
 
-    install.location <- R_VC_temp_lib_location(lib.location)
+    install.location <- lib.location_install_dir(lib_location)
 
     currentLibs <- .libPaths()
     .libPaths(.Library)
     on.exit(reset.libPaths(currentLibs), add = TRUE)
 
-    succesfullLoads <- tryLoadPackages_VC(dependencies, lib.location, msg_str = paste0('"', basename(packagePath), '" his dependencies'))
-    missingDependencies <- names(dependencies)[!(names(dependencies) %in% names(succesfullLoads))]
+    succesfullLoads <- lib.testload(dependencies, lib_location, msg_str = paste0('"', basename(packagePath), '" his dependencies'))
+    missingdependencies <- names(dependencies)[!(names(dependencies) %in% names(succesfullLoads))]
 
     # Install all not yet existing dependencies:
-    if (length(missingDependencies) > 0) {
+    if (length(missingdependencies) > 0) {
         cat('\nI will install missing dependencies and try again...\n\n')
-        install.packages_VC(missingDependencies, lib.location = lib.location, install_temporarily = install_temporarily)
-        succesfullLoads <- tryLoadPackages_VC(dependencies, lib.location, msg_str = paste0('"', basename(packagePath), '" his dependencies (second try)'))
+        lib.install(missingdependencies, lib_location = lib_location, install_temporarily = install_temporarily)
+        succesfullLoads <- lib.testload(dependencies, lib_location, msg_str = paste0('"', basename(packagePath), '" his dependencies (second try)'))
         if (all(names(dependencies) %in% names(succesfullLoads))) {cat('\nNow we succeeded, continuing... \n\n')}
     }
 
     # Check again if all wend well, if not all dependencies are there, reset and abort.
     isSuccesfull <- names(dependencies) %in% names(succesfullLoads)
 
-    if (!all(isSuccesfull | checkIfBasePackage(names(dependencies)))) {
+    if (!all(isSuccesfull | lib.is_basepackage(names(dependencies)))) {
         stop(paste0('\nThe following dependencies were missing and failed installation:', paste(paste0('\n- "', names(dependencies)[!isSuccesfull], '"'), collapse = ''), '\n\n'))
     }
 
@@ -218,18 +260,18 @@ install.packages_VC_tarball <- function(packagePath, dependencies, lib.location 
     if (interactive() && length(sys.calls()) == 1) {
         on.exit({
             cat('\nResetting your loaded packages...\n\n');
-            library_VC(loadPackages = currentlyLoaded, lib.location = lib.location, quietly = TRUE)
+            lib.load(loadPackages = currentlyLoaded, lib_location = lib_location, quietly = TRUE)
         }, add = TRUE)
     }
 
     # If all dependencies could be found/installed: add all recursive dependency libraries to the search path.
-    add_package_VC_libPaths(succesfullLoads, lib.location, additional_lib_paths = install.location)
+    lib.add_libPaths(succesfullLoads, lib_location, additional_lib_paths = install.location)
 
     # Install the tarbal!
     install.packages(packagePath, lib = install.location, type = "source", repos = NULL)
     cat('\n')
 
-    if (!install_temporarily) {convert_to_VC_library(install.location, lib.location, force_overwrite = overwrite_this_package)}
+    if (!install_temporarily) {lib.convert(install.location, lib_location, force_overwrite = overwrite_this_package)}
 
     return(invisible())
 }
@@ -239,8 +281,8 @@ install.packages_VC_tarball <- function(packagePath, dependencies, lib.location 
 
 #' Move normally installed packages to R_VC_library structure.
 #'
-#' After this conversion is complete and you set the directory (temporarily by using \code{R_VC_library_location(...)}
-#' or for eternity by setting the equally named environment variable) you are good to go! You can directly use \code{library_VC}
+#' After this conversion is complete and you set the directory (temporarily by using \code{lib.location(...)}
+#' or for eternity by setting the equally named environment variable) you are good to go! You can directly use \code{lib.load}
 #' for loading packages. Thanks for using \code{RVClibrary}!! \cr
 #' \cr
 #' This function creates the VC library structure by moving normaly installed packages to a more parallel oriented library structure.
@@ -249,37 +291,38 @@ install.packages_VC_tarball <- function(packagePath, dependencies, lib.location 
 #' This functionallity is also used for converting installed packages from the temporary installation directory to the final R_VC_library format. \cr
 #' \cr
 #' Note that it is realy no problem to perform a conversion again, it will only move new versions of already present packages and will never overwrite.
-#' To continue with a clean Temp folder, run \code{clean_temp_library()}, it will remove the folder.
+#' To continue with a clean Temp folder, run \code{lib.clean_install_dir()}, it will remove the folder.
 #'
-#' @param normalLibrary The temporary library where a package was temporarily installed (having a normal library structure).
-#' By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} and appends \code{/TEMP_install_location}.
-#' @param VC_library_location The folder containing a structure where all packages in the temp folder must be moved to.
+#' @param normalLibrary The temporary library where a package is temporarily installed (having a normal library structure).
+#' By default, the path is generated using \code{lib.location_install_dir()} on the \code{lib_location} that is provided which appends \code{/TEMP_install_location}.
+#' @param lib_location The folder containing a structure where all packages in the temp folder must be moved to.
 #' By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.
 #' @param force_overwrite If you are experimenting and you would like to overwrite the newly installed package.
 #' Normally only desired when the package you are experimenting with is a self maintained package and you are sure you increased the version to a new one.
 #'
 #' @examples
 #' # As an experiment (or when getting started) you could run this with your complete standard library (not your base library).
-#' convert_to_VC_library(normalLibrary = Sys.getenv("R_LIBS_USER"),
-#'                       VC_library_location = "C:/REMOVE_ME_example_library")
+#' lib.convert(normalLibrary = Sys.getenv("R_LIBS_USER"),
+#'             lib_location  = "C:/REMOVE_ME_example_library")
 #'
 #' # Just running it will use the VC library defined by the environment variable and look inside for the Temp folder to use.
-#' convert_to_VC_library()
+#' lib.convert()
 #'
-#' # You can also only mention the VC library, it will look for the temporary folder within automatically.
-#' convert_to_VC_library(VC_library_location = "M:/R_VC_library")
+#' # It is sufficient to only provide the lib_location input, it will look for the temporary folder within automatically.
+#' lib.convert(lib_location = "M:/R_VC_library")
 #'
 #' @export
 #'
-convert_to_VC_library <- function(normalLibrary = R_VC_temp_lib_location(VC_library_location),
-                                  VC_library_location = R_VC_library_location(),
-                                  force_overwrite = FALSE, packages_to_convert = c()) {
+lib.convert <- function(installLibrary      = lib.location_install_dir(lib_location),
+                        lib_location        = lib.location(),
+                        force_overwrite     = FALSE,
+                        packages_to_convert = c()) {
 
-    normalLibrary <- normPath(normalLibrary)
-    VC_library_location <- normPath(VC_library_location)
+    installLibrary <- normPath(installLibrary)
+    lib_location   <- normPath(lib_location)
 
-    libContent  <- list.files(normalLibrary, all.files = T, recursive = T, no.. = T, full.names = T)
-    packageNames <- strRemain(paste0(normalLibrary, '/'), '/.*', libContent)
+    libContent   <- list.files(installLibrary, all.files = T, recursive = T, no.. = T, full.names = T)
+    packageNames <- strRemain(paste0(installLibrary, '/'), '/.*', libContent)
 
     uniquePackages <- unique(packageNames)
 
@@ -289,17 +332,17 @@ convert_to_VC_library <- function(normalLibrary = R_VC_temp_lib_location(VC_libr
 
     packageVersions <- c()
     for (iPackage in uniquePackages) {
-        packageVersions[grepl(iPackage, packageNames)] <- as.character(numeric_version(packageDescription(iPackage, lib.loc = normalLibrary)$Version))
+        packageVersions[grepl(iPackage, packageNames)] <- as.character(numeric_version(packageDescription(iPackage, lib.loc = installLibrary)$Version))
     }
 
-    newLocation <- paste(VC_library_location, packageNames, packageVersions, gsub(libContent, pat = paste0(normalLibrary, '/'), rep = ''), sep = '/')
+    newLocation <- paste(lib_location, packageNames, packageVersions, gsub(libContent, pat = paste0(installLibrary, '/'), rep = ''), sep = '/')
 
     lapply(unique(dirname(newLocation)), dir.create, recursive = TRUE, showWarnings = FALSE)
     succes <- file.copy(libContent, newLocation, overwrite = force_overwrite)
 
     cat('\nSuccesfully copied files:\n')
     cat(summary(data.frame(succesfully_copied = packageNames[ succes]), maxsum = 80))
-    cat('\nFailed copying files (might be already installed or `TEMP_install_location` was not cleaned up, can be done by running `clean_temp_library()`):\n')
+    cat('\nFailed copying files (might be already installed or `TEMP_install_location` was not cleaned up, can be done by running `lib.clean_install_dir()`):\n')
     cat(summary(data.frame(failed_copied      = packageNames[!succes]), maxsum = 80))
     cat('\n')
 }
@@ -315,7 +358,7 @@ convert_to_VC_library <- function(normalLibrary = R_VC_temp_lib_location(VC_libr
 #' \cr
 #' In general, it is possible to create a complete clean environment by clearing your workspace,
 #' running \code{detachAll} and then restarting Rstudio. If problems with package loading still persists,
-#' then follow the final alternative solution described in the details section of the documentation of \code{library_VC}.
+#' then follow the final alternative solution described in the details section of the documentation of \code{lib.load}.
 #'
 #' @param dryRun If TRUE, lists all packages that will be cleaned up.
 #' @param packageList A character vector with the packages to detach/unload. Defaults to all packages.
@@ -323,7 +366,7 @@ convert_to_VC_library <- function(normalLibrary = R_VC_temp_lib_location(VC_libr
 #' @export
 #'
 detachAll <- function(reload_RVClibrary = FALSE, dryRun = FALSE, packageList = names(sessionInfo()$otherPkgs)) {
-    currentPackageAndVersions <- loadedPackageVersion(packageList)
+    currentPackageAndVersions <- lib.package_version_loaded(packageList)
 
     if (is.null(packageList)) {
         cat('No packages are loaded, nothing to detach.\n')
@@ -340,8 +383,8 @@ detachAll <- function(reload_RVClibrary = FALSE, dryRun = FALSE, packageList = n
         while(length(loadedNS) && cnt < 1000) {
             sapply(loadedNS, function(x) {
                 result = tryCatch(unloadNamespace(getNamespace(x)), error = function(e) e)
-                if(!is(result, "error")) {
-                }
+                # if(!is(result, "error")) {
+                # }
             })
             loadedNS = rev(names(sessionInfo()$loadedOnly))
             cnt = cnt + 1
@@ -377,15 +420,15 @@ detachAll <- function(reload_RVClibrary = FALSE, dryRun = FALSE, packageList = n
 #' Internally used for 'test loading' a list of dependencies when installing a package.
 #' Returns a list of succesfull load operations.
 #'
-#' @param packages A named character vector of package/version names. None are really loaded, `library_VC` is used with the `dry.run` turned on.
-#' @param lib.location The folder containing a structure where we will try to find our required packages in.
+#' @param packages A named character vector of package/version names. None are really loaded, `lib.load` is used with the `dry.run` turned on.
+#' @param lib_location The folder containing a structure where we will try to find our required packages in.
 #' By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.
 #' @param pick.last Changes the way a decision is made. In the scenario where a dependency of \code{>} or \code{>=} is defined, multiple versions may be available to choose from. By default, the lowest compliant version is chosen. Setting this to TRUE will choose the highest version.
-#' @param verbose If TRUE, the default, will show all \code{library_VC} messages.
+#' @param verbose If TRUE, the default, will show all \code{lib.load} messages.
 #' @param msg_str Can be either logical FALSE, or a character string which will be (the %s) part of the printed string ' - Trying to load %s: ...'.
 #' Defaults to 'packages', making the sentence: ' - Trying to load packages: lattice, RColorBrewer, grid'
 #'
-tryLoadPackages_VC <- function(packages, lib.location = R_VC_library_location(), pick.last = FALSE, verbose = TRUE, msg_str = 'packages') {
+lib.testload <- function(packages, lib_location = lib.location(), pick.last = FALSE, verbose = TRUE, msg_str = 'packages') {
     # tries to load packages and returns a vector with all successful load attempts ('yet to be installed' packages)
 
     # Handle 'verbose' options
@@ -396,7 +439,7 @@ tryLoadPackages_VC <- function(packages, lib.location = R_VC_library_location(),
         function(x) {invisible(capture.output(x)); return(x)}
     }
 
-    basePacks <- checkIfBasePackage(packages)
+    basePacks <- lib.is_basepackage(packages)
     loadedPackages <- packages[basePacks]
     packages       <- packages[!basePacks]
 
@@ -404,7 +447,7 @@ tryLoadPackages_VC <- function(packages, lib.location = R_VC_library_location(),
     if (length(packages) == 0) {return(loadedPackages)}
 
     if ((!verbose && missing(msg_str)) || is.character(msg_str) && length(msg_str) == 1) {
-        cat(sprintf('\n - Trying to load %s: %s\n', msg_str, packageList2str(packages, do_return = TRUE)))
+        cat(sprintf('\n - Trying to load %s: %s\n', msg_str, lib.packs_vec2str(packages, do_return = TRUE)))
     }
 
     for (iDependency in seq_along(packages)) {
@@ -412,10 +455,13 @@ tryLoadPackages_VC <- function(packages, lib.location = R_VC_library_location(),
 
         # TryCatch returns empty when error is caught.
         newlyLoaded <-  tryCatch({
-            suppressWarnings(execute(library_VC(loadPackages = iDependency, lib.location = lib.location, dry.run = TRUE, also_load_from_temp_lib = TRUE,
-                                                skipDependencies = names(loadedPackages), pick.last = pick.last, quietly = !verbose)))
+            suppressWarnings(execute(lib.load(loadPackages = iDependency, lib_location = lib_location, dry.run = TRUE, also_load_from_temp_lib = TRUE,
+                                              skipDependencies = names(loadedPackages), pick.last = pick.last, quietly = !verbose)))
         }, error = function(e) {
-            message(sprintf('When loading package "%s": ', names(iDependency)), gsub('Error ', '', e))
+            if (verbose) {
+                # `message` appends a linefeed itself.
+                message(sprintf('When loading package "%s": %s', names(iDependency), gsub('\n$', '', gsub('Error ', '', e))))
+            }
         })
 
         loadedPackages <- append(loadedPackages, newlyLoaded)
@@ -438,49 +484,54 @@ reset.libPaths <- function(currentLibs) {
 #' List the dependencies of a package.
 #'
 #' Provide a package name (can be without quotes) to show its dependencies.
-#' To list all dependencies of the complete library, use the inversed function "\code{dependsOnMe(all)}" with the value 'all'.
+#' To list all dependencies of the complete library, use the inversed function "\code{lib.dependsOnMe(all)}" with the value 'all'.
 #' That function also does not require quotes.
 #'
 #' @param packageName The (unquoted) package name for which you would like to print the dependencies.
 #' @param do_print If true (default), prints the dependencies. In both cases, the dependencies are returned invisibly.
-#' @param character.only If TRUE, (FALSE by default), the package names can be provided as character vector. Otherwise, direct unquoted package names are supported.The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.
-#' @param lib.location The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.
+#' @param character.only If TRUE, (FALSE by default), the package names can be provided as character vector. Otherwise, direct unquoted package names are supported.
+#' @param lib_location The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.
+#'
+#' @examples
+#' lib.dependencies(dplyr)
+#' lib.dependencies('devtools', character.only = T)
+#' devtools_deps <- lib.dependencies(devtools, do_print = F)
 #'
 #' @export
 #'
-dependencies <- function(packageName, do_print = TRUE, character.only = FALSE, lib.location = R_VC_library_location()) {
+lib.dependencies <- function(packageName, do_print = TRUE, character.only = FALSE, lib_location = lib.location()) {
 
-    # Featuring direct call like: `dependencies(dplyr)`
+    # Featuring direct call like: `lib.dependencies(dplyr)`
     if (!character.only) {
         packageName = as.character(substitute(packageName))
     }
 
-    if (!is.null(names(packageName))) stop('please only provide the name of the package. all versions will be shown')
+    if (!is.null(names(packageName))) stop('Please only provide the name of the package. All versions will be shown.')
     if (!nzchar(packageName, keepNA = TRUE)) return(invisible())
 
-    packVersionList <- list.dirs(paste(lib.location, packageName, sep = '/'), recursive = FALSE, full.names = FALSE)
+    packVersionList <- list.dirs(paste(lib_location, packageName, sep = '/'), recursive = FALSE, full.names = FALSE)
 
     listed_dependencies <- list()
     for (packVersion in packVersionList) {
 
-        package.location <- paste(lib.location, packageName, packVersion, sep = '/')
+        package.location <- paste(lib_location, packageName, packVersion, sep = '/')
 
         overrideFile <- paste(package.location, c('vc_override_dependencies.txt'), sep = '/')
         if (file.exists(overrideFile)) {
-            dependingPackages <- parse_dependency_string(readChar(overrideFile, file.info(overrideFile)$size))
+            dependingPackages <- lib.packs_str2vec(readChar(overrideFile, file.info(overrideFile)$size))
         } else {
             packDesc <- packageDescription(packageName, lib.loc = package.location)
-            dependingPackages <- parse_dependency_string(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pat = ',,', rep = ','))
+            dependingPackages <- lib.packs_str2vec(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pat = ',,', rep = ','))
         }
         listed_dependencies[[packVersion]] <- dependingPackages
 
         if (do_print) {
             cat(sprintf('%23s : %-8s ', packageName, packVersion))
             if (file.exists(overrideFile)) {cat('(shadowed)| ')} else {cat('          | ')}
-            packageList2str(dependingPackages[1:3])
+            lib.packs_vec2str(dependingPackages[1:3])
             if (length(dependingPackages) > 3) {
                 for (index in 2: ceiling(length(dependingPackages)/3)) {
-                    cat(strrep(' ', 43), '... '); packageList2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
+                    cat(strrep(' ', 43), '... '); lib.packs_vec2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
                 }
             }
         }
@@ -489,11 +540,11 @@ dependencies <- function(packageName, do_print = TRUE, character.only = FALSE, l
 }
 
 
-#   ------------------- dependsOnMe -------------------
+#   ------------------- lib.dependsOnMe -------------------
 
 #' Convert package name/version vector to single string.
 #'
-#' Used to print a set of package names and their version criteria in a way that \code{parse_dependency_string()} can parse it again to a package vector.
+#' Used to print a set of package names and their version criteria in a way that \code{lib.packs_str2vec()} can parse it again to a package vector.
 #' This way we can list the dependencies of a function easily and support better commandline interaction.
 #'
 #' @param x A named character vector with package names/versions. `c(dplyr = '>= 1.5.0', data.table = '')`
@@ -501,7 +552,7 @@ dependencies <- function(packageName, do_print = TRUE, character.only = FALSE, l
 #'
 #' @export
 #'
-packageList2str <- function(x, do_return = FALSE) {
+lib.packs_vec2str <- function(x, do_return = FALSE) {
     if (!is.null(x)) {x <- x[!is.na(x)]} else if (do_return) {return('')} else {cat('\n')}
     str <- gsub(pat = '\\s\\(\\)', rep = '',paste(paste(names(x), paste0("(", x, ")")), collapse = '   '))
     if (do_return) {return(gsub('   ', ', ', str))} else {cat(str, '\n')}
@@ -511,61 +562,61 @@ packageList2str <- function(x, do_return = FALSE) {
 #' Show the complete library content.
 #'
 #' Use to print all available packages in the VC_library with all their versions including their dependencies.
-#' Simply performs a call to \code{dependsOnMe(all)}.
+#' Simply performs a call to \code{lib.dependsOnMe(all)}.
 #' @export
 #'
-installed.packages_VC <- function() {
-    dependsOnMe(all)
+lib.installed_packages <- function(lib_location = lib.location()) {
+    lib.dependsOnMe(all, lib_location = lib_location)
 }
 
 
 #' Shows the dependencies of (all or) a certain function(s).
 #'
-#' Can be called without using quotes like \code{dependsOnMe(dplyr)}. A second very usefull feature would be the \code{dependsOnMe(all)},
+#' Can be called without using quotes like \code{lib.dependsOnMe(dplyr)}. A second very usefull feature would be the \code{lib.dependsOnMe(all)},
 #' which will print a list of all packages available with their dependencies. \cr
 #' \cr
-#' A simple wrapper to do precisely that is "\code{installed.packages_VC}".
+#' A simple wrapper to do precisely that is "\code{lib.installed_packages}".
 #'
-#' @param ... All packages and their versions you would like to load e.g. \code{dependsOnMe(DBI = '0.5', assertthat, R6 = '0.6', quietly = TRUE)}.
+#' @param ... All packages and their versions you would like to load e.g. \code{lib.dependsOnMe(DBI = '0.5', assertthat, R6 = '0.6', quietly = TRUE)}.
 #' @param checkMyDeps Supports providing a named character vector of packages and their versions instead of the direct input.
 #' Use it like this when calling it via another function. It is the shape that is supported by all other functions in this package.
 #' e.g. \code{c(DBI = '0.5', assertthat = '', R6 = '')}
-#' @param lib.location The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.
+#' @param lib_location The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.
 #'
 #' @export
 #'
-dependsOnMe <- function(..., checkMyDeps = NULL, lib.location = R_VC_library_location()) {
+lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location()) {
 
     if (is.null(checkMyDeps)) {
-        checkMyDeps <- raw_input_parser(as.list(match.call()), varnames_to_exclude = c('lib.location', 'checkMyDeps'))
+        checkMyDeps <- raw_input_parser(as.list(match.call()), varnames_to_exclude = c('lib_location', 'checkMyDeps'))
     }
 
     if (is.null(names(checkMyDeps))) {checkMyDeps <- setNames('> 0.0.0', checkMyDeps); cat('The latest version,\n')}
 
     # check if input package is realistic. if no version is selected (no name value pair is provided) the oldest version is used.
-    if (!names(checkMyDeps) == 'all') checkMyDeps <- setNames(getCorrectVersion(checkMyDeps, lib.location, pick.last = TRUE), names(checkMyDeps))
+    if (!names(checkMyDeps) == 'all') checkMyDeps <- setNames(lib.decide_version(checkMyDeps, lib_location, pick.last = TRUE), names(checkMyDeps))
 
 
-    packageList <- list.dirs(lib.location, recursive = FALSE, full.names = FALSE)
+    packageList <- list.dirs(lib_location, recursive = FALSE, full.names = FALSE)
     packageList <- packageList[!packageList %in% c('.git', 'TEMP_install_location')]
 
     for (packageName in packageList) {
         # cat(packageName, '\n')
-        packVersionList <- list.dirs(paste(lib.location, packageName, sep = '/'), recursive = FALSE, full.names = FALSE)
+        packVersionList <- list.dirs(paste(lib_location, packageName, sep = '/'), recursive = FALSE, full.names = FALSE)
 
         for (packVersion in packVersionList) {
 
-            package.location <- paste(lib.location, packageName, packVersion, sep = '/')
+            package.location <- paste(lib_location, packageName, packVersion, sep = '/')
 
             overrideFile <- paste(package.location, c('vc_override_dependencies.txt'), sep = '/')
             if (file.exists(overrideFile)) {
-                dependingPackages <- parse_dependency_string(readChar(overrideFile, file.info(overrideFile)$size))
+                dependingPackages <- lib.packs_str2vec(readChar(overrideFile, file.info(overrideFile)$size))
             } else {
                 packDesc <- packageDescription(packageName, lib.loc = package.location)
-                dependingPackages <- parse_dependency_string(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pat = ',,', rep = ','))
+                dependingPackages <- lib.packs_str2vec(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pat = ',,', rep = ','))
             }
 
-            dependingPackages <- dependingPackages[!checkIfBasePackage(names(dependingPackages))]
+            dependingPackages <- dependingPackages[!lib.is_basepackage(names(dependingPackages))]
 
             if (!names(checkMyDeps) == 'all') {
                 depThatMatters <- dependingPackages[names(dependingPackages) %in% names(checkMyDeps)]
@@ -587,10 +638,10 @@ dependsOnMe <- function(..., checkMyDeps = NULL, lib.location = R_VC_library_loc
             if (valid) {
                 cat(sprintf('%23s : %-8s ', packageName, packVersion))
                 if (file.exists(overrideFile)) {cat('(shadowed)| ')} else {cat('          | ')}
-                packageList2str(dependingPackages[1:3])
+                lib.packs_vec2str(dependingPackages[1:3])
                 if (length(dependingPackages) > 3) {
                     for (index in 2: ceiling(length(dependingPackages)/3)) {
-                        cat(strrep(' ', 45), '... '); packageList2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
+                        cat(strrep(' ', 45), '... '); lib.packs_vec2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
                     }
                 }
             }

@@ -14,6 +14,33 @@
 # =================================================================
 
 
+# ============= ALIASES =============
+
+#' Alias for \code{\link{lib.load}}
+#' @export
+library_VC <- lib.load
+
+#' Alias for \code{\link{lib.install_tarball}}
+#' @export
+install.packages_VC_tarball <- lib.install_tarball
+
+#' Alias for \code{\link{lib.install}}
+#' @export
+install.packages_VC <- lib.install
+
+#' Alias for \code{\link{lib.dependencies}}
+#' @export
+dependencies <- lib.dependencies
+
+#' Alias for \code{\link{lib.installed_packages}}
+#' @export
+installed.packages_VC <- lib.installed_packages
+
+#' Alias for \code{\link{lib.execute_using_packagelist}}
+#' @export
+execute_with_packages <- lib.execute_using_packagelist
+
+
 # ============== PATHS ==============
 
 #' Return the RVClibrary installation directory.
@@ -22,7 +49,7 @@
 #' The only way to guarantee that the correct folder is found is by checking if the `INDEX` folder is present in the RVClibrary folder.
 #' This folder is only there when it is the installed instance of RVClibrary.
 #'
-RVClibrary_package_install_location <- function() {
+lib.my_location <- function() {
     RVClib_package_location <- find.package(package = 'RVClibrary', lib.loc = .libPaths(), quiet = T, verbose = F)
 
     if (length(RVClib_package_location) == 0) {
@@ -42,21 +69,21 @@ RVClibrary_package_install_location <- function() {
 #' List all untracked direcories (libraries) within the R_VC_library. The returned untracked directories are cleaned up
 #' and printed so that only the unique combinations of each library and it's version is shown once.
 #'
-#' @param lib.location By default the default library path obtained with \code{R_VC_library_location()}.
+#' @param lib_location By default the default library path obtained with \code{lib.location()}.
 #'
 #' @export
 #'
-list_untracked_VC_libs <- function(lib.location = R_VC_library_location()) {
-    if (!file.exists(lib.location)) {
-        stop(sprintf('Please specify an existing directory for the `lib.location`. Provided was "%s".', lib.location))
+lib.show_untracked <- function(lib_location = lib.location()) {
+    if (!file.exists(lib_location)) {
+        stop(sprintf('Please specify an existing directory for the `lib_location`. Provided was "%s".', lib_location))
     }
-    if (!suppressWarnings(grepl('^true$', system(sprintf('git -C "%s" rev-parse --is-inside-work-tree', lib.location), intern = T)))) {
-        stop(sprintf('The provided directory "%s" is not a git repository.', lib.location))
+    if (!suppressWarnings(grepl('^true$', system(sprintf('git -C "%s" rev-parse --is-inside-work-tree', lib_location), intern = T)))) {
+        stop(sprintf('The provided directory "%s" is not a git repository.', lib_location))
     }
 
-    temp_installed_libs <- dir(R_VC_temp_lib_location(lib.location))
+    temp_installed_libs <- dir(lib.location_install_dir(lib_location))
 
-    listed_files <- system(sprintf('git -C "%s" ls-files --others --exclude-standard', lib.location), intern = T)
+    listed_files <- system(sprintf('git -C "%s" ls-files --others --exclude-standard', lib_location), intern = T)
     listed_files <- listed_files[grepl('DESCRIPTION', listed_files)]
     # Now remove from e.g. "htmlTable/1.13.1/htmlTable/DESCRIPTION" the "/htmlTable/DESCRIPTION" part to remain "htmlTable/1.13.1"
     added_dirs   <- gsub('/[^/]*/DESCRIPTION$', '', listed_files)
@@ -77,16 +104,16 @@ list_untracked_VC_libs <- function(lib.location = R_VC_library_location()) {
 
 #' Temporary directory location.
 #'
-#' Indicates the default directory for initially installing a package before it is 'converted' to the final VC library structure (see: \code{convert_to_VC_library()}).
+#' Indicates the default directory for initially installing a package before it is 'converted' to the final VC library structure (see: \code{lib.convert()}).
 #' This folder can be cleaned up using \code{cleanTempInstallFolder()} after installing the package succeeded.
 #' This is not done automatically but won't influence the installation of other packages.
 #'
-#' @param lib.location By default the default library path obtained with \code{R_VC_library_location()}.
+#' @param lib_location By default the default library path obtained with \code{lib.location()}.
 #'
 #' @export
 #'
-R_VC_temp_lib_location <- function(lib.location = R_VC_library_location()) {
-    install.location <- gsub(normalizePath(paste0(lib.location, '/TEMP_install_location'), winslash = '/', mustWork = FALSE), pat = '/$', rep = '')
+lib.location_install_dir <- function(lib_location = lib.location()) {
+    install.location <- gsub(normalizePath(paste0(lib_location, '/TEMP_install_location'), winslash = '/', mustWork = FALSE), pat = '/$', rep = '')
     dir.create(install.location, showWarnings = FALSE)
     return(install.location)
 }
@@ -99,19 +126,19 @@ R_VC_temp_lib_location <- function(lib.location = R_VC_library_location()) {
 #'
 #' Since it involves a quite invasive operation, it asks for permission when being called in an interactive session.
 #'
-#' @param lib.location By default the default library path obtained with \code{R_VC_library_location()}.
+#' @param lib_location By default the default library path obtained with \code{lib.location()}.
 #'
 #' @export
 #'
-clean_library <- function(lib.location = R_VC_library_location(), clean_temp_lib = TRUE) {
-    if (!file.exists(lib.location)) {
-        stop(sprintf('Please specify an existing directory for the `lib.location`. Provided was "%s".', lib.location))
+lib.clean <- function(lib_location = lib.location(), clean_temp_lib = TRUE) {
+    if (!file.exists(lib_location)) {
+        stop(sprintf('Please specify an existing directory for the `lib_location`. Provided was "%s".', lib_location))
     }
-    if (!suppressWarnings(grepl('^true$', system(sprintf('git -C "%s" rev-parse --is-inside-work-tree', lib.location), intern = T)))) {
-        stop(sprintf('The provided directory "%s" is not a git repository.', lib.location))
+    if (!suppressWarnings(grepl('^true$', system(sprintf('git -C "%s" rev-parse --is-inside-work-tree', lib_location), intern = T)))) {
+        stop(sprintf('The provided directory "%s" is not a git repository.', lib_location))
     }
 
-    list_untracked_VC_libs(lib.location = lib.location)
+    lib.show_untracked(lib_location = lib_location)
 
     if (interactive()){
         choice <- menu(c('yes', 'no'), title = '\nAre you sure you want to undo all changes made to the R_VC_library and go back to the last commit?')
@@ -123,27 +150,27 @@ clean_library <- function(lib.location = R_VC_library_location(), clean_temp_lib
     # You can remove untracked files with: git clean -f
     # You can remove untracked files and directories with: git clean -fd              <- this one is applied below.
     # You can remove ignored and untracked files and directories git clean -fdx.
-    system(sprintf('git -C "%s" clean -fd', lib.location), intern = T)
+    system(sprintf('git -C "%s" clean -fd', lib_location), intern = T)
 
     if (clean_temp_lib) {
         # Additionally clear the temp_install directory:
         # The temp lib location is based on the main lib location. The folder 'TEMP_install_location' is appended to it.
-        clean_temp_library(R_VC_temp_lib_location(lib.location))
+        lib.clean_install_dir(lib.location_install_dir(lib_location))
     }
 }
 
 
 #' Clear the temp install folder.
 #'
-#' The temporary installation folder (indicated by \code{R_VC_temp_lib_location()}) is used to install the package before moving ('converting') it to the final location.
+#' The temporary installation folder (indicated by \code{lib.location_install_dir()}) is used to install the package before moving ('converting') it to the final location.
 #' This function removes this temporary folder. Make sure that all installed packages that are desired to keep are converted.
-#' You can run the \code{convert_to_VC_library()} once again to make sure this is the case.
+#' You can run the \code{\link{lib.convert}()} once again to make sure this is the case.
 #'
-#' @param install.location By default the default temporary directory path obtained with \code{R_VC_temp_lib_location()}.
+#' @param temp_install.location By default the default temporary directory path obtained with \code{lib.location_install_dir()}.
 #'
 #' @export
 #'
-clean_temp_library <- function(temp_install.location = R_VC_temp_lib_location()) {
+lib.clean_install_dir <- function(temp_install.location = lib.location_install_dir()) {
     return(unlink(temp_install.location, recursive = TRUE, force = TRUE))
 }
 
@@ -162,14 +189,15 @@ clean_download_catch <- function() {
 #' The R_VC_library location.
 #'
 #' This function will look for the environment variable \code{R_VC_LIBRARY_LOCATION} indicating the R_VC_library location.
-#' Alternatively you can provide a path for this session only using \code{R_VC_library_location(yourPath)}.
+#' Alternatively you can provide a path for this session only using \code{\link{lib.location}(yourPath)}. This will set the environment variable for you, which will reset on restart.
+#' (Would it be an idea to add it to your .Profile file?)
 #'
 #' @param set_session_path (optional) If no environment variable has been set to indicate the library location,
 #' You can call this function and let it set the environment variable for this session only.
 #'
 #' @export
 #'
-R_VC_library_location <- function(set_session_path = NULL) {
+lib.location <- function(set_session_path = NULL) {
     # If input is provided, set that value as library location.
     if (!is.null(set_session_path)) {
         Sys.setenv(R_VC_LIBRARY_LOCATION = set_session_path)
@@ -181,13 +209,13 @@ R_VC_library_location <- function(set_session_path = NULL) {
         stop(paste('No environment variable has been set for me to find the R_VC_library location.\n',
                    'Please fill the environment variable `R_VC_LIBRARY_LOCATION` with a path to an empty\n',
                    'or already created library base folder, and restart R!!\nAlternatively provide it for\n',
-                   'this session using `R_VC_library_location(YourPath)`.\n\n'))
+                   'this session using `lib.location(YourPath)`.\n\n'))
     }
-    lib.location <- Sys.getenv('R_VC_LIBRARY_LOCATION')
+    lib_location <- Sys.getenv('R_VC_LIBRARY_LOCATION')
 
     # force a forward slash and remove an ending slash.
-    lib.location <- gsub(gsub(lib.location, pat = '\\\\', rep = '/'), pat = '/$', rep = '')
-    return(lib.location)
+    lib_location <- gsub(gsub(lib_location, pat = '\\\\', rep = '/'), pat = '/$', rep = '')
+    return(lib_location)
 }
 
 
@@ -195,14 +223,15 @@ R_VC_library_location <- function(set_session_path = NULL) {
 
 #' Parse direct unquoted input to package name/version vector.
 #'
-#' Converts input like \code{library_VC(hoi = 3.4, hai = '>= 7.9.2', FIETS)} \cr
-#' to a named character vector like \code{c(hoi = '3.4', hai = '>= 7.9.2', FIETS = '')} which is compatible with all code that follows. \cr
+#' Converts input like \code{\link{lib.load}(hoi = 3.4, hai = '>= 7.9.2', FIETS)} \cr
+#' to a named character vector like \code{c(hoi = '3.4', hai = '>= 7.9.2', FIETS = '')} \cr
+#' which is compatible with all code that follows. \cr
 #' \cr
 #' Must be called like \code{raw_input_parser(as.list(match.call()), c('named_param1', 'named_param2', 'named_param3'))}. \cr
 #' It will return all (name) value pairs if values are available excluding the named parameters provided in the second argument. \cr
 #'
 #' @param arguments The \code{as.list(match.call())} list returned from the calling function. It creates a list of all provided arguments.
-#' @param varnames_to_exclude A character vector with var names to exclude. Normally the remaining variable names after the `n`
+#' @param varnames_to_exclude A character vector with var names to exclude. Normally that includes all arguments after \code{...}.
 #'
 raw_input_parser = function(arguments, varnames_to_exclude) {
     arguments[1] <- NULL
@@ -234,14 +263,14 @@ raw_input_parser = function(arguments, varnames_to_exclude) {
 #' to match the normal package name/version layout like: \cr
 #' \code{   assertthat          R6         Rcpp      tibble    magrittr     lazyeval          DBI} \cr
 #' \code{     ">= 0.1"  ">= 2.1.2"  ">= 0.12.3"    ">= 1.2"    ">= 1.5"   ">= 0.2.0"   ">= 0.4.1"} \cr \cr
-#' Used by \code{getOnlineDependencies()} to interpret the by CRAN provided dependencies,
+#' Used by \code{\link{lib.dependencies_online}} to interpret the by CRAN provided dependencies,
 #' used to parse the 'vc_override_dependencies.txt' files and the dependencies mentioned in the 'DESCRIPTION' files of the installed packages.
 #'
 #' @param deps A string of format X to convert to a named character vector Y.
 #'
 #' @export
 #'
-parse_dependency_string <- function(deps) {
+lib.packs_str2vec <- function(deps) {
     if (is.null(deps) || length(deps) == 0 || is.na(deps)) {
         return(as.character())
     }
@@ -315,24 +344,24 @@ normPath <- function(path) {
 #'
 #' @param packNameVersion A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.05', ggplot = '')`).
 #' The path that is appended to the `.libPaths` is constructed based on the name and version provided.
-#' @param lib.location The R_VC_library location path (no default configured here).
+#' @param lib_location The R_VC_library location path (no default configured here).
 #'
-add_package_VC_libPaths <- function(packNameVersion, lib.location, additional_lib_paths = c()) {
-    .libPaths(c(.Library, paste(lib.location, names(packNameVersion), packNameVersion, sep = '/'), additional_lib_paths))
+lib.add_libPaths <- function(packNameVersion, lib_location, additional_lib_paths = c()) {
+    .libPaths(c(.Library, paste(lib_location, names(packNameVersion), packNameVersion, sep = '/'), additional_lib_paths))
 }
 
 #' Exclude not relevant search paths.
 #'
-#' Excludes all .libPaths other then those needed for library_VC().
+#' Excludes all .libPaths other then those needed for lib.load().
 #'
-#' @param lib.location The folder which contains the R_VC_library structure. All directories in .libPaths containing this path will be kept.
+#' @param lib_location The folder which contains the R_VC_library structure. All directories in .libPaths containing this path will be kept.
 #' By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} to find this directory.
 #' @param dry.run If TRUE, will not change the paths but will print the paths that would remain after cleaning up the .libPaths() list.
 #'
 #' @export
 #'
-remove_undesired_libPaths <- function(lib.location = R_VC_library_location(), dry.run = FALSE) {
-    correct_paths <- grepl(normPath(lib.location), normPath(.libPaths())) | normPath(.libPaths()) == normPath(.Library)
+lib.clean_libPaths <- function(lib_location = lib.location(), dry.run = FALSE) {
+    correct_paths <- grepl(normPath(lib_location), normPath(.libPaths())) | normPath(.libPaths()) == normPath(.Library)
     if (dry.run) {
         cat(sprintf('The following paths will be excluded:\n - "%s"\n\n', paste(collapse = '"\n - "', normPath(.libPaths()[!correct_paths]))))
     } else {
@@ -343,25 +372,25 @@ remove_undesired_libPaths <- function(lib.location = R_VC_library_location(), dr
 
 #' Installs the incredible `devtools` package.
 #'
-#' Will install devtools and it's dependencies into the library provided by `R_VC_library_location()`.
-#' If the
+#' Will install devtools and it's dependencies into the library provided by `lib.location()`.
+#' An alternative library location can optionally be specified.
 #'
-#' @param lib.location The library (can be an empty folder) to install Devtools in.
+#' @param lib_location The library (can be an empty folder) to install Devtools in.
 #' @param force_install FALSE by default, if the package `devTools` is already installed, it will return silently.
 #'
 #' @export
 #'
-installDevtools <- function(lib.location = R_VC_library_location(), force_install = FALSE) {
-    if (!force_install && length(availablePackageVersions('devtools')) > 0) {
+lib.devTools_install <- function(lib_location = lib.location(), force_install = FALSE) {
+    if (!force_install && length(lib.available_versions('devtools')) > 0) {
         cat('The package devtools seems to be already installed. Please set `force_install` to true if you would like to overwrite or update devtools.')
         return()
     }
-    if (length(libs <- dir(lib_dir <- R_VC_temp_lib_location(lib.location))) > 0) {
-        list_untracked_VC_libs()
-        stop(sprintf('These libraries are still present in the install directory "%s":\n%s.\nPlease run `clean_temp_library(yourLib)` to clean up if possible and run me again.', lib_dir, paste0(collapse = ', ', "'", libs, "'")))
+    if (length(libs <- dir(lib_dir <- lib.location_install_dir(lib_location))) > 0) {
+        lib.show_untracked()
+        stop(sprintf('These libraries are still present in the install directory "%s":\n%s.\nPlease run `lib.clean_install_dir(yourLib)` to clean up if possible and run me again.', lib_dir, paste0(collapse = ', ', "'", libs, "'")))
     }
-    install.packages_VC('devtools', lib.location = lib.location, overwrite_this_package = TRUE)
-    clean_temp_library(lib.location)
+    lib.install('devtools', lib_location = lib_location, overwrite_this_package = TRUE)
+    lib.clean_install_dir(lib_location)
 }
 
 
@@ -370,14 +399,14 @@ installDevtools <- function(lib.location = R_VC_library_location(), force_instal
 #' During the library call, `appendLibPaths` is TRUE, making sure that some devtools functionallity
 #' (like running tests) in child R instances will still work and know where to load their libraries from.
 #'
-#' @param lib.location The (version controlled) library to load devtools from.
-#' Use installDevtools to install devtools, if you have not done so already.
+#' @param lib_location The (version controlled) library to load devtools from.
+#' Use lib.devTools_install to install devtools, if you have not done so already.
 #'
 #' @export
 #'
-loadDevtools <- function(lib.location = R_VC_library_location()) {
+lib.devtools_load <- function(lib_location = lib.location()) {
 
-    library_VC(devtools = '>= 1.13.1', testthat, Rcpp, roxygen2, stringi, digest, pick.last = T, appendLibPaths = TRUE, quietly = T)
+    lib.load(devtools = '>= 1.13.1', testthat, Rcpp, roxygen2, stringi, digest, pick.last = T, appendLibPaths = TRUE, quietly = T)
 }
 
 
@@ -385,7 +414,7 @@ loadDevtools <- function(lib.location = R_VC_library_location()) {
 #'
 #' Will uniquify the named character vector with package versions to remain the highest functions. (for now only used for printing)
 #'
-#' @param packNameVersion provide a packageNameVersion list like so: `printExampleLibCall(c(dplyr = '0.5.0', R6 = '', R6 = 0.5))`
+#' @param packNameVersion provide a packageNameVersion list like so: `lib.printVerboseLibCall(c(dplyr = '0.5.0', R6 = '', R6 = 0.5))`
 #' @param return_as_df {FALSE} if the output should remain a structured dataframe, or if it should return a named character vector.
 #'
 unique_highest_package_versions <- function(packNameVersion, return_as_df = FALSE) {
@@ -402,7 +431,7 @@ unique_highest_package_versions <- function(packNameVersion, return_as_df = FALS
 }
 
 
-#' Print example \code{library_VC} call.
+#' Print example \code{lib.load} call.
 #'
 #' Prints the library call that you can use based on a name/version input vector.
 #'
@@ -410,7 +439,7 @@ unique_highest_package_versions <- function(packNameVersion, return_as_df = FALS
 #'
 #' @export
 #'
-printExampleLibCall <- function(packNameVersion) {
+lib.printVerboseLibCall <- function(packNameVersion) {
     if (!interactive()) {return(invisible())}
     if (length(packNameVersion) == 0) {return(invisible())}
 
@@ -419,7 +448,7 @@ printExampleLibCall <- function(packNameVersion) {
     p  = paste
     p0 = paste0
     cat('\nVerbose example call to the library (use `quetly = T` to supress this message): ')
-    cat(p0('\nlibrary_VC( ', p(p(nameVer$names, p0("'", nameVer$version, "'"), sep = ' = '), collapse = ', '), ')\n\n'))
+    cat(p0('\nlib.load( ', p(p(nameVer$names, p0("'", nameVer$version, "'"), sep = ' = '), collapse = ', '), ')\n\n'))
 }
 
 

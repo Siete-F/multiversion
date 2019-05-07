@@ -19,6 +19,5 @@ A proper reset of all libraries is not possible, this is the best we can do. \cr
 \cr
 In general, it is possible to create a complete clean environment by clearing your workspace,
 running \code{detachAll} and then restarting Rstudio. If problems with package loading still persists,
-then follow the final alternative solution described in the details section of the documentation of \code{library_VC}.
+then follow the final alternative solution described in the details section of the documentation of \code{lib.load}.
 }
-

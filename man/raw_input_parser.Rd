@@ -9,13 +9,13 @@ raw_input_parser(arguments, varnames_to_exclude)
 \arguments{
 \item{arguments}{The \code{as.list(match.call())} list returned from the calling function. It creates a list of all provided arguments.}
 
-\item{varnames_to_exclude}{A character vector with var names to exclude. Normally the remaining variable names after the `n`}
+\item{varnames_to_exclude}{A character vector with var names to exclude. Normally that includes all arguments after \code{...}.}
 }
 \description{
-Converts input like \code{library_VC(hoi = 3.4, hai = '>= 7.9.2', FIETS)} \cr
-to a named character vector like \code{c(hoi = '3.4', hai = '>= 7.9.2', FIETS = '')} which is compatible with all code that follows. \cr
+Converts input like \code{\link{lib.load}(hoi = 3.4, hai = '>= 7.9.2', FIETS)} \cr
+to a named character vector like \code{c(hoi = '3.4', hai = '>= 7.9.2', FIETS = '')} \cr
+which is compatible with all code that follows. \cr
 \cr
 Must be called like \code{raw_input_parser(as.list(match.call()), c('named_param1', 'named_param2', 'named_param3'))}. \cr
 It will return all (name) value pairs if values are available excluding the named parameters provided in the second argument. \cr
 }
-
