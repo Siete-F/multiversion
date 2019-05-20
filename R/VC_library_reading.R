@@ -1,5 +1,5 @@
 # =================================================================
-#     RVClibrary, multi-version package library management tool
+#     multiversion, multi-version package library management tool
 #     Copyright (C) 2019 S.C. Frouws, The Hague, The Netherlands
 #
 # This library is free software; you can redistribute it and/or
@@ -10,7 +10,7 @@
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# Lesser General Public License ('COPYING.LESSER') for more details.
+# Lesser General Public License for more details.
 # =================================================================
 
 
@@ -18,28 +18,28 @@
 
 #' Load package from R_VC_library
 #'
-#' Two ways of package/versions input are accepted:
+#' There are two ways you can provide a package or vector of packages that need to be loaded: \cr
 #' 1: just provide them directly (the \code{...} input). All not recognized named variables
-#'    will be interpreted like package names or package name/version combination. \code{\link{lib.load}(DBI = '0.5', assertthat, R6)}
+#'    will be interpreted as package names or (if it's a named argument) as a package name=version combination. \code{\link{lib.load}(DBI = '0.5', assertthat, R6)}
 #' 2: provide the \code{loadPackages} input in the following way: \code{\link{lib.load}(loadPackages = c(DBI = '0.5', assertthat = '', R6 = ''))} \cr
 #' \cr
 #' If an empty string e.g. \code{dplyr = ''}, or only the package name is specified, one of two things will happen:
 #' - if one version is available, this one is used.
-#' - if multiple versions are available, the first or last version depending on the 'pick.last' parameter. \cr
+#' - if multiple versions are available, the first or last version loaded, which depends on the 'pick.last' property. \cr
 #' \cr
-#' if >= or > is used, as in \code{dplyr = '>= 2.5'}, it will list the options and take the first or last version depending on the 'pick.last' parameter.
-#' If another version is desired, please define it in the input list of packages to load before the package that depends on it is loaded.
+#' if >= or > is used, as in \code{dplyr = '>= 2.5'}, it will decide for the first or last compatible version, depending on the 'pick.last' parameter.
+#' If another version is desired, please define it in the input list of packages to load, prior to the package that depends on it.
 #' \cr
 #' Dependencies are checked and then loaded by recursively running this function with \code{dry.run = TRUE}.
-#' This makes that dependencies are not loaded automatically, but are added to the namespace and accesible by its caller.
+#' This makes that dependencies are not loaded automatically, but are added to the namespace and made accesible by its caller.
 #' To access a dependency directly, load it explicitly. \cr
 #' In other words, dependencies are remembered, but not loaded. So all strings are released (figurely speaking), but the dependency is there for the depending package. \cr
 #' \cr
 #' The inputs packNameVersionList [list of named versions] and skipDependencies [list of names] can be
-#' left blank in general. They are used by other functionallity like \code{\link{lib.testload}()} and \code{\link{lib.install}}
-#' \code{dry.run} will show the packages that will be used and will crash when no option is feasable (not installed or not compliant packages).
+#' left blank in general. They are used by other functionallity like \code{\link{lib.testload}()} and \code{\link{lib.install}}.
+#' Using \code{dry.run} will show the packages that will be used and will crash when no option is feasable (not installed or not compliant packages).
 #' If you are trying to setup a propper \code{\link{lib.load}} call, it is always a good idea to work with dry.run's.
-#' Once an incorrect package has been loaded, it is very likely you will have to restart your R session. \cr
+#' Once an incorrect package has been loaded, it is very likely you will have to restart your R session to unload it. Unloading packages in R is very hard. \cr
 #' \cr
 #' "strings" can stay attached (as in, the .libPaths can be appended) when using 'appendLibPaths = TRUE'.
 #' Afterwards, the normal \code{library} call can be used to load the not yet loaded but attached package.
@@ -56,7 +56,7 @@
 #' @details
 #' All packages within the directory returned by \code{.Library} cannot be version controlled and will be considered 'base packages'. \cr
 #' \cr
-#' ERRORS: \cr If you receive the error "\code{cannot unload ...}" it means that it tries to load a package, but another version is already loaded.
+#' Problem solving: \cr If you receive the error "\code{cannot unload ...}" it means that it tries to load a package, but another version is already loaded.
 #' To unload this other (older) version, run detach(package = '...'). If it is a dependency of an other package, you will receive this error.
 #' Try restarting your RStudio with a clean workspace (environment). If that doesn't help, the only workaround (when using this in R studio) is to close your Rstudio session (NOTE: save your unsaved process before proceding!!), rename (or remove) the folder
 #' "\code{YourRProject/.Rproj.user/.../sources/prop}" and start Rstudio again. If it doesn't work, try "\code{/sources/per}" also. At the \code{...} there should be a hash used in the current session e.g. \code{/F3B1663E/}.
@@ -64,7 +64,7 @@
 #'
 #' @param ... All packages and their versions you would like to load e.g. \code{\link{lib.load}(DBI = '0.5', assertthat = '', R6 = '', quietly = TRUE)}. Input names like \code{quietly} will be recognized and interpreted as expected.
 #' @param loadPackages Supports providing a named character vector of packages and their versions in the shape that is supported by all other functions in this package. e.g. \code{c(DBI = '0.5', assertthat = '', R6 = '')}
-#' @param lib_location The folder containing a structure where this package must load packages from. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.
+#' @param lib_location The folder containing a structure where this package must load packages from. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.
 #' @param dry.run (default: FALSE) Will make it perform a dry run. It will check all dependencies and if \code{appendLibPaths} it will add
 #' their paths to \code{.libPaths} but it will not load those packages. If the paths are added this way, you should be able to just call the located packages with \code{library(...)}
 #' @param quietly (default: FALSE) Indicates if the loading must happen silently. No messages and warnings will be shown if TRUE.
@@ -125,7 +125,8 @@ lib.load <- function(..., loadPackages = NULL, lib_location = lib.location(), dr
             next
         }
 
-        if (iPackage %in% c(skipDependencies, 'RVClibrary')) {
+        # Also checking 'RVClibrary' for backwards compatibility
+        if (iPackage %in% c(skipDependencies, 'multiversion', 'RVClibrary')) {
             if (lib.check_compatibility(loadPackages[iPackage], packNameVersionList[iPackage])) {
                 n_skipped <- n_skipped + 1
                 next

@@ -1,5 +1,5 @@
 # =================================================================
-#     RVClibrary, multi-version package library management tool
+#     multiversion, multi-version package library management tool
 #     Copyright (C) 2019 S.C. Frouws, The Hague, The Netherlands
 #
 # This library is free software; you can redistribute it and/or
@@ -10,7 +10,7 @@
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# Lesser General Public License ('COPYING.LESSER') for more details.
+# Lesser General Public License for more details.
 # =================================================================
 
 
@@ -43,30 +43,30 @@ execute_with_packages <- lib.execute_using_packagelist
 
 # ============== PATHS ==============
 
-#' Return the RVClibrary installation directory.
+#' Return the `multiversion` installation directory.
 #'
-#' Returns the location of the RVClibrary package. It is a more complicated search than expected since it will find the development folder in a few cases.
-#' The only way to guarantee that the correct folder is found is by checking if the `INDEX` folder is present in the RVClibrary folder.
-#' This folder is only there when it is the installed instance of RVClibrary.
+#' Returns the location of the `multiversion` package. It is a more complicated search than expected since it will find the development folder in a few cases.
+#' The only way to guarantee that the correct folder is found is by checking if the `INDEX` folder is present in the `multiversion` folder.
+#' This folder is only there when it is the installed instance of multiversion.
 #'
 lib.my_location <- function() {
-    RVClib_package_location <- find.package(package = 'RVClibrary', lib.loc = .libPaths(), quiet = T, verbose = F)
+    MV_package_location <- find.package(package = 'multiversion', lib.loc = .libPaths(), quiet = T, verbose = F)
 
-    if (length(RVClib_package_location) == 0) {
-        RVClib_package_location <- find.package(package = 'RVClibrary', lib.loc = NULL, quiet = T, verbose = F)
+    if (length(MV_package_location) == 0) {
+        MV_package_location <- find.package(package = 'multiversion', lib.loc = NULL, quiet = T, verbose = F)
     }
 
-    if (length(RVClib_package_location) == 0 || !file.exists(file.path(RVClib_package_location, 'INDEX'))) {
-        stop(paste0('I need to be able to find the `RVClibrary` package location. To do that, it must be present in the searchpath `.libPaths()`.',
+    if (length(MV_package_location) == 0 || !file.exists(file.path(MV_package_location, 'INDEX'))) {
+        stop(paste0('I need to be able to find the `multiversion` package location. To do that, it must be present in the searchpath `.libPaths()`.',
                     'Please make sure the library search paths include the location of that package.'))
     }
-    return(RVClib_package_location)
+    return(MV_package_location)
 }
 
 
 #' List all untracked library folders
 #'
-#' List all untracked direcories (libraries) within the R_VC_library. The returned untracked directories are cleaned up
+#' List all untracked direcories (libraries) within the multiversion library. The returned untracked directories are cleaned up
 #' and printed so that only the unique combinations of each library and it's version is shown once.
 #'
 #' @param lib_location By default the default library path obtained with \code{lib.location()}.
@@ -104,7 +104,7 @@ lib.show_untracked <- function(lib_location = lib.location()) {
 
 #' Temporary directory location.
 #'
-#' Indicates the default directory for initially installing a package before it is 'converted' to the final VC library structure (see: \code{lib.convert()}).
+#' Indicates the default directory for initially installing a package before it is 'converted' to the final multiversion library structure (see: \code{lib.convert()}).
 #' This folder can be cleaned up using \code{cleanTempInstallFolder()} after installing the package succeeded.
 #' This is not done automatically but won't influence the installation of other packages.
 #'
@@ -119,14 +119,14 @@ lib.location_install_dir <- function(lib_location = lib.location()) {
 }
 
 
-#' Clean R_VC_library, revert to state of last commit.
+#' Clean multiversion library, revert to state of last commit.
 #'
-#' Clean up all untracked (not committed) installed libraries in the R_VC_library environment.
+#' Clean up all untracked (not committed) installed libraries in the multiversion library.
 #' Will additionally also clean up the TEMP_install_location directory (this is an 'ignored' directory).
 #'
 #' Since it involves a quite invasive operation, it asks for permission when being called in an interactive session.
 #'
-#' @param lib_location By default the default library path obtained with \code{lib.location()}.
+#' @param lib_location By default the library path returned by \code{lib.location()} is used.
 #'
 #' @export
 #'
@@ -141,7 +141,7 @@ lib.clean <- function(lib_location = lib.location(), clean_temp_lib = TRUE) {
     lib.show_untracked(lib_location = lib_location)
 
     if (interactive()){
-        choice <- menu(c('yes', 'no'), title = '\nAre you sure you want to undo all changes made to the R_VC_library and go back to the last commit?')
+        choice <- menu(c('yes', 'no'), title = '\nAre you sure you want to undo all changes made to the \'multiversion library\' and go back to the last commit?')
 
         if (choice != 1) {return(invisible())}
     }
@@ -188,7 +188,7 @@ clean_download_catch <- function() {
 
 #' The R_VC_library location.
 #'
-#' This function will look for the environment variable \code{R_VC_LIBRARY_LOCATION} indicating the R_VC_library location.
+#' This function will look for the environment variable \code{R_MV_LIBRARY_LOCATION} indicating the R_VC_library location.
 #' Alternatively you can provide a path for this session only using \code{\link{lib.location}(yourPath)}. This will set the environment variable for you, which will reset on restart.
 #' (Would it be an idea to add it to your .Profile file?)
 #'
@@ -200,18 +200,21 @@ clean_download_catch <- function() {
 lib.location <- function(set_session_path = NULL) {
     # If input is provided, set that value as library location.
     if (!is.null(set_session_path)) {
-        Sys.setenv(R_VC_LIBRARY_LOCATION = set_session_path)
+        Sys.setenv(R_MV_LIBRARY_LOCATION = set_session_path)
         return(set_session_path)
     }
 
-    # Check if environment variable is present
-    if (nchar(Sys.getenv('R_VC_LIBRARY_LOCATION')) == 0) {
+    # Check if environment variable is present (checking 'R_VC_LIBRARY_LOCATION' for backwards compatibility)
+    A <- Sys.getenv('R_VC_LIBRARY_LOCATION')
+    B <- Sys.getenv('R_MV_LIBRARY_LOCATION')
+
+    if (!nzchar(A) && !nzchar(B)) {
         stop(paste('No environment variable has been set for me to find the R_VC_library location.\n',
-                   'Please fill the environment variable `R_VC_LIBRARY_LOCATION` with a path to an empty\n',
+                   'Please fill the environment variable `R_MV_LIBRARY_LOCATION` with a path to an empty\n',
                    'or already created library base folder, and restart R!!\nAlternatively provide it for\n',
                    'this session using `lib.location(YourPath)`.\n\n'))
     }
-    lib_location <- Sys.getenv('R_VC_LIBRARY_LOCATION')
+    lib_location <- ifelse(nzchar(A), A, B)
 
     # force a forward slash and remove an ending slash.
     lib_location <- gsub(gsub(lib_location, pat = '\\\\', rep = '/'), pat = '/$', rep = '')
@@ -287,22 +290,6 @@ lib.packs_str2vec <- function(deps) {
 }
 
 
-# #' Remove empty folders recursively
-# #'
-# #' When maintaining a git repository with an RVClibrary, and incorrectly packages are removed by the user using git,
-# #' The folders will remain behind, empty. This influences the loading behaviour and causes errors like 'No DESCRIPTION file could be found'.
-# #' This function can remove all empty folders to X levels deep.
-# #'
-# #' @param parent_dir A directory path where to start to remove all empty folders recursively.
-# #' @param depth (default = 2, proper for RVClib) The depth that needs to be searched. 0 is only provided directory is searched, 1 is 1 subdirectory is searched to.
-# #'
-# #' @export
-# #'
-# unlink_empty_dirs <- function(parent_dir, depth = 2) {
-#     # dir(gsub('[/\\\\]?$', '/', parent_dir))
-# }
-
-
 #' Remove `>` or `>=` from version string.
 #'
 #' @param packageVersion A version indication you would like to remove `>` and `>=` from.
@@ -334,7 +321,7 @@ strRemain <- function(patA, patB, str) {
 #' @param path The path which needs to be normalized. Will make `C:/PROGRA~1/R/R-33~1.1/library` into `C:/Program Files/R/R-3.3.1/library`.
 #'
 normPath <- function(path) {
-    return(gsub('\\\\', '/', normalizePath(path, mustWork = F)))
+    return(gsub('\\\\', '/', normalizePath(path, '/', mustWork = F)))
 }
 
 
@@ -344,18 +331,19 @@ normPath <- function(path) {
 #'
 #' @param packNameVersion A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.05', ggplot = '')`).
 #' The path that is appended to the `.libPaths` is constructed based on the name and version provided.
-#' @param lib_location The R_VC_library location path (no default configured here).
+#' @param lib_location The multiversion library location path (no default configured here!).
 #'
 lib.add_libPaths <- function(packNameVersion, lib_location, additional_lib_paths = c()) {
     .libPaths(c(.Library, paste(lib_location, names(packNameVersion), packNameVersion, sep = '/'), additional_lib_paths))
 }
 
+
 #' Exclude not relevant search paths.
 #'
 #' Excludes all .libPaths other then those needed for lib.load().
 #'
-#' @param lib_location The folder which contains the R_VC_library structure. All directories in .libPaths containing this path will be kept.
-#' By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} to find this directory.
+#' @param lib_location The folder which contains the multiversion library. All directories in .libPaths containing this path will be kept.
+#' By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} to find this directory.
 #' @param dry.run If TRUE, will not change the paths but will print the paths that would remain after cleaning up the .libPaths() list.
 #'
 #' @export
@@ -372,7 +360,7 @@ lib.clean_libPaths <- function(lib_location = lib.location(), dry.run = FALSE) {
 
 #' Installs the incredible `devtools` package.
 #'
-#' Will install devtools and it's dependencies into the library provided by `lib.location()`.
+#' Will install devtools and it's dependencies into the multiversion library provided by `lib.location()`.
 #' An alternative library location can optionally be specified.
 #'
 #' @param lib_location The library (can be an empty folder) to install Devtools in.

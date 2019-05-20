@@ -1,5 +1,5 @@
 # =================================================================
-#     RVClibrary, multi-version package library management tool
+#     multiversion, multi-version package library management tool
 #     Copyright (C) 2019 S.C. Frouws, The Hague, The Netherlands
 #
 # This library is free software; you can redistribute it and/or
@@ -10,13 +10,13 @@
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# Lesser General Public License ('COPYING.LESSER') for more details.
+# Lesser General Public License for more details.
 # =================================================================
 
 
 # -------------- version checking --------------
 
-#' Just checks the R_VC_library folder structure for all available versions installed for a specific package.
+#' Just checks the multiversion library for all available versions installed for a specific package.
 #' If no name is provided, an error is returned.
 #'
 #' @param packageName The name of the package for which all versions must be returned.

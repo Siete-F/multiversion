@@ -11,7 +11,7 @@ lib.location(set_session_path = NULL)
 You can call this function and let it set the environment variable for this session only.}
 }
 \description{
-This function will look for the environment variable \code{R_VC_LIBRARY_LOCATION} indicating the R_VC_library location.
+This function will look for the environment variable \code{R_MV_LIBRARY_LOCATION} indicating the R_VC_library location.
 Alternatively you can provide a path for this session only using \code{\link{lib.location}(yourPath)}. This will set the environment variable for you, which will reset on restart.
 (Would it be an idea to add it to your .Profile file?)
 }

@@ -20,16 +20,17 @@ the installed package(s) is moved to the destination location automatically.}
 \item{install_temporarily}{If FALSE, the installed package(s) is (are) moved to the final destination automatically.
 Otherwise it is necessary to run \code{\link{lib.convert}()} manually after the installation into the temporary folder finished. To clean up the temporary folder, run \code{lib.clean_install_dir()}.
 When \code{overwrite_this_package} is TRUE, and \code{install_temporarily} is not provided, it will be set to FALSE automatically.
-Installing a package temporarily gives you the oppertunity to test the package before adding it to the RVClibrary structure.
+Installing a package temporarily gives you the oppertunity to test the package before adding it to the multiversion library structure.
 Loading packages including those in the temporary library (\code{\link{lib.location_install_dir}()}) can be done using: \code{\link{lib.load}(..., also_load_from_temp_lib = TRUE)}.}
 
 \item{execute_with_Rscript}{When TRUE (the default), it will try to install the package using a sepparate Rscipt R instance.
 This simplifies installing and leaves changing loaded packages etc. to another R instance which we can kill :).
-It will run a script provided with your packages. That script will load \code{RVClibrary} and call \code{\link{lib.install}()} directly.}
+It will run a script which it provides with your list of packages to install.
+That script will load this \code{multiversion} package and call \code{\link{lib.install}()} directly.}
 
 \item{cran_url}{Will be passed trough to the install.packages command.}
 }
 \description{
-This function can be used to install a CRAN package in the (default or specified) R_VC_library.
+This function can be used to install a CRAN package in the (default or specified) multiversion library.
 For installing packages from source use \code{lib.install_tarball}.
 }

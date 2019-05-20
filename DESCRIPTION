@@ -1,4 +1,4 @@
-Package: RVClibrary
+Package: multiversion
 Type: Package
 Title: Version controlled package manager
 Version: 0.1.0

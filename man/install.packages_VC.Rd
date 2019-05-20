@@ -2,7 +2,7 @@
 % Please edit documentation in R/helper_functions.R
 \name{install.packages_VC}
 \alias{install.packages_VC}
-\title{Alias of \code{\link{lib.install}}}
+\title{Alias for \code{\link{lib.install}}}
 \usage{
 install.packages_VC(installPackages = NULL, lib_location = lib.location(),
   install_temporarily = FALSE, overwrite_this_package = FALSE,
@@ -10,5 +10,5 @@ install.packages_VC(installPackages = NULL, lib_location = lib.location(),
   cran_url = "http://cran.us.r-project.org")
 }
 \description{
-Alias of \code{\link{lib.install}}
+Alias for \code{\link{lib.install}}
 }

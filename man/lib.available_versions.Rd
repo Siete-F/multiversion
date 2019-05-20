@@ -2,7 +2,7 @@
 % Please edit documentation in R/package_version_management.R
 \name{lib.available_versions}
 \alias{lib.available_versions}
-\title{Just checks the R_VC_library folder structure for all available versions installed for a specific package.
+\title{Just checks the multiversion library for all available versions installed for a specific package.
 If no name is provided, an error is returned.}
 \usage{
 lib.available_versions(packageName, lib_location = lib.location())
@@ -13,6 +13,6 @@ lib.available_versions(packageName, lib_location = lib.location())
 \item{lib_location}{The folder containing the structure where this package his versions need to be checked.}
 }
 \description{
-Just checks the R_VC_library folder structure for all available versions installed for a specific package.
+Just checks the multiversion library for all available versions installed for a specific package.
 If no name is provided, an error is returned.
 }

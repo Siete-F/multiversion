@@ -1,5 +1,5 @@
 # =================================================================
-#     RVClibrary, multi-version package library management tool
+#     multiversion, multi-version package library management tool
 #     Copyright (C) 2019 S.C. Frouws, The Hague, The Netherlands
 #
 # This library is free software; you can redistribute it and/or
@@ -10,7 +10,7 @@
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# Lesser General Public License ('COPYING.LESSER') for more details.
+# Lesser General Public License for more details.
 # =================================================================
 
 
@@ -19,7 +19,7 @@ args <- commandArgs(trailingOnly = TRUE)
 lib_location         <- args[1]
 load_packages        <- args[2]
 input_arguments_file <- args[3]
-RVClibrary.location  <- args[4]
+multiversion.location  <- args[4]
 process_log          <- args[5]
 
 
@@ -28,7 +28,7 @@ error_str <- function(prestring, ...) {paste0(sprintf(prestring, ...), '\nExpect
                                               ' indicating the dependencies that needs to be loaded.\n',
                                               '3) the location of the `Rds` file with a list containing the ',
                                               'function (function or string) and arguments to call it with.\n',
-                                              '4) and optionally the directory where the `RVClibrary` package can be loaded.',
+                                              '4) and optionally the directory where the `multiversion` package can be loaded.',
                                               ' Defaults to `Sys.getenv("R_LIBS_USER")`, your default lib.\n')}
 # If not provided
 if (is.na(process_log)) {
@@ -46,23 +46,23 @@ H <- list()
 tryCatch(withCallingHandlers({
 
 
-    # By default we expect that the `RVClibrary` is installed in the default user library.
-    if (is.na(RVClibrary.location)) {
-        RVClibrary.location <- Sys.getenv("R_LIBS_USER")
+    # By default we expect that the `multiversion` is installed in the default user library.
+    if (is.na(multiversion.location)) {
+        multiversion.location <- Sys.getenv("R_LIBS_USER")
     }
 
-    if (!dir.exists(RVClibrary.location)) {stop(error_str('The `RVClibrary` package was not found. The directory %s" does not exist.', RVClibrary.location))}
+    if (!dir.exists(multiversion.location)) {stop(error_str('The `multiversion` package was not found. The directory %s" does not exist.', multiversion.location))}
 
     if (!dir.exists(lib_location)) {stop(error_str('The version controlled library could not be found at the provided location: %s', lib_location))}
 
-    # Set library location for loading the `RVClibrary` package.
-    RVC_lib_path <- gsub('[/\\]RVClibrary$', '', RVClibrary.location)
+    # Set library location for loading the `multiversion` package.
+    MV_lib_path <- gsub('[/\\]multiversion$', '', multiversion.location)
 
-    if (suppressMessages(!require(RVClibrary, lib.loc = RVC_lib_path))) {
-        stop(sprintf(paste0("The package `RVClibrary` could not be found at the provided (or default) location: %s.",
+    if (suppressMessages(!require(multiversion, lib.loc = MV_lib_path))) {
+        stop(sprintf(paste0("The package `multiversion` could not be found at the provided (or default) location: \"%s\".",
                             "\nPlease install this single tarball manually. It can be installed using something like:\n",
-                            "`install.packages('.../RVClibrary_0.1.0.tar.gz', lib = Sys.getenv('R_LIBS_USER'), type = 'source', repos = NULL)`\n\n"),
-                     RVC_lib_path))
+                            "`install.packages('.../multiversion_0.1.0.tar.gz', lib = Sys.getenv('R_LIBS_USER'), type = 'source', repos = NULL)`\n\n"),
+                     MV_lib_path))
     }
     .libPaths(.Library)
 

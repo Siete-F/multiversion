@@ -14,7 +14,7 @@ lib.dependencies(packageName, do_print = TRUE, character.only = FALSE,
 
 \item{character.only}{If TRUE, (FALSE by default), the package names can be provided as character vector. Otherwise, direct unquoted package names are supported.}
 
-\item{lib_location}{The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.}
+\item{lib_location}{The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
 }
 \description{
 Provide a package name (can be without quotes) to show its dependencies.

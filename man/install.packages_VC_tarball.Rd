@@ -2,12 +2,12 @@
 % Please edit documentation in R/helper_functions.R
 \name{install.packages_VC_tarball}
 \alias{install.packages_VC_tarball}
-\title{Alias of \code{\link{lib.install_tarball}}}
+\title{Alias for \code{\link{lib.install_tarball}}}
 \usage{
 install.packages_VC_tarball(packagePath, dependencies,
   lib_location = lib.location(), install_temporarily = FALSE,
   overwrite_this_package = FALSE, execute_with_Rscript = TRUE)
 }
 \description{
-Alias of \code{\link{lib.install_tarball}}
+Alias for \code{\link{lib.install_tarball}}
 }

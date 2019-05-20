@@ -10,7 +10,7 @@ lib.add_libPaths(packNameVersion, lib_location, additional_lib_paths = c())
 \item{packNameVersion}{A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.05', ggplot = '')`).
 The path that is appended to the `.libPaths` is constructed based on the name and version provided.}
 
-\item{lib_location}{The R_VC_library location path (no default configured here).}
+\item{lib_location}{The multiversion library location path (no default configured here!).}
 }
 \description{
 Adds the path of the package that is specified (and likely loaded before) to the `.libPaths`.

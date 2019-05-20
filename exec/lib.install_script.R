@@ -1,5 +1,5 @@
 # =================================================================
-#     RVClibrary, multi-version package library management tool
+#     multiversion, multi-version package library management tool
 #     Copyright (C) 2019 S.C. Frouws, The Hague, The Netherlands
 #
 # This library is free software; you can redistribute it and/or
@@ -10,7 +10,7 @@
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# Lesser General Public License ('COPYING.LESSER') for more details.
+# Lesser General Public License for more details.
 # =================================================================
 
 
@@ -18,7 +18,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 lib_location            <- args[1]
 packagesToInstall       <- args[2]
-RVClibrary.location     <- args[3]
+multiversion.location   <- args[3]
 overwrite_or_add_update <- args[4]
 verbose                 <- args[5]
 
@@ -30,23 +30,24 @@ verbose                 <- args[5]
 
 error_str <- function(prestring, ...) {paste0(sprintf(prestring, ...), '\nExpected input:\n1) a valid VC library location.\n',
                                               '2) a character string with the package pane to install.\n',
-                                              '3) and optionally the directory where the `RVClibrary` package can be loaded. Defaults to `Sys.getenv("R_LIBS_USER")`, your default lib.\n')}
+                                              '3) and optionally the directory where the `multiversion` package can be loaded. Defaults to `Sys.getenv("R_LIBS_USER")`, your default lib.\n')}
 
 H <- list()
 tryCatch(withCallingHandlers({
 
-    if (is.na(RVClibrary.location)) {
-        RVClibrary.location <- Sys.getenv("R_LIBS_USER")
+    # By default we expect that the `multiversion` is installed in the default user library.
+    if (is.na(multiversion.location)) {
+        multiversion.location <- Sys.getenv("R_LIBS_USER")
     }
 
     if (!dir.exists(lib_location)) {stop(error_str('The version controlled library could not be found at the provided location: "%s".', lib_location))}
 
-    if (!dir.exists(RVClibrary.location)) {stop(error_str('The `RVClibrary` package was not found. The directory "%s" does not exist.', RVClibrary.location))}
+    if (!dir.exists(multiversion.location)) {stop(error_str('The `multiversion` package was not found. The directory "%s" does not exist.', multiversion.location))}
 
     # input checks:
-    if (suppressMessages(!require(RVClibrary, lib.loc = gsub('[/\\]RVClibrary$', '', RVClibrary.location)))) {
+    if (suppressMessages(!require(multiversion, lib.loc = gsub('[/\\]multiversion$', '', multiversion.location)))) {
         stop(paste0("\nPlease install this single tarball manually. It can be installed using something like:\n",
-                    "`install.packages('.../RVClibrary_0.1.0.tar.gz', lib = Sys.getenv('R_LIBS_USER'), type = 'source', repos = NULL)`\n\n"))
+                    "`install.packages('.../multiversion_0.1.0.tar.gz', lib = Sys.getenv('R_LIBS_USER'), type = 'source', repos = NULL)`\n\n"))
     }
 
     lib.install(installPackages        = trimws(strsplit(packagesToInstall, split = ',')[[1]]),

@@ -11,7 +11,7 @@ lib.testload(packages, lib_location = lib.location(), pick.last = FALSE,
 \item{packages}{A named character vector of package/version names. None are really loaded, `lib.load` is used with the `dry.run` turned on.}
 
 \item{lib_location}{The folder containing a structure where we will try to find our required packages in.
-By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.}
+By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
 
 \item{pick.last}{Changes the way a decision is made. In the scenario where a dependency of \code{>} or \code{>=} is defined, multiple versions may be available to choose from. By default, the lowest compliant version is chosen. Setting this to TRUE will choose the highest version.}
 

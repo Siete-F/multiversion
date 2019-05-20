@@ -4,7 +4,7 @@
 \alias{detachAll}
 \title{Detach all loaded packages and namespaces.}
 \usage{
-detachAll(reload_RVClibrary = FALSE, dryRun = FALSE,
+detachAll(reload_multiversion = FALSE, dryRun = FALSE,
   packageList = names(sessionInfo()$otherPkgs))
 }
 \arguments{

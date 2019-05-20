@@ -2,13 +2,13 @@
 % Please edit documentation in R/helper_functions.R
 \name{library_VC}
 \alias{library_VC}
-\title{Alias of \code{\link{lib.load}}}
+\title{Alias for \code{\link{lib.load}}}
 \usage{
 library_VC(..., loadPackages = NULL, lib_location = lib.location(),
-  dry.run = FALSE, quietly = FALSE, appendLibPaths = FALSE,
+  dry.run = FALSE, quietly = TRUE, appendLibPaths = FALSE,
   pick.last = FALSE, also_load_from_temp_lib = FALSE,
   packNameVersionList = c(), skipDependencies = c())
 }
 \description{
-Alias of \code{\link{lib.load}}
+Alias for \code{\link{lib.load}}
 }
