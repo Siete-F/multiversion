@@ -12,6 +12,6 @@ lib.devTools_install(lib_location = lib.location(), force_install = FALSE)
 \item{force_install}{FALSE by default, if the package `devTools` is already installed, it will return silently.}
 }
 \description{
-Will install devtools and it's dependencies into the library provided by `lib.location()`.
+Will install devtools and it's dependencies into the multiversion library provided by `lib.location()`.
 An alternative library location can optionally be specified.
 }

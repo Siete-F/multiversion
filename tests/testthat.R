@@ -1,2 +1,2 @@
 library(testthat)
-test_package("RVClibrary")
+test_package("multiversion")

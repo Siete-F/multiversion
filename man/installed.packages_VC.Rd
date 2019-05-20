@@ -2,10 +2,10 @@
 % Please edit documentation in R/helper_functions.R
 \name{installed.packages_VC}
 \alias{installed.packages_VC}
-\title{Alias of \code{\link{lib.installed_packages}}}
+\title{Alias for \code{\link{lib.installed_packages}}}
 \usage{
 installed.packages_VC(lib_location = lib.location())
 }
 \description{
-Alias of \code{\link{lib.installed_packages}}
+Alias for \code{\link{lib.installed_packages}}
 }

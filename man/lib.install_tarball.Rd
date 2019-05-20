@@ -13,17 +13,17 @@ lib.install_tarball(packagePath, dependencies, lib_location = lib.location(),
 
 \item{dependencies}{Provide the dependencies like a package version combination: \code{c(dplyr = '>= 0.5', data.table = '', R6 = '0.1.1')}}
 
-\item{lib_location}{The folder containing a structure where this package needs to be installed in. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.}
+\item{lib_location}{The folder containing a structure where this package needs to be installed in. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
 
 \item{install_temporarily}{If FALSE, the installed package(s) is (are) moved to the final destination automatically.
 Otherwise it is necessary to run \code{\link{lib.convert}()} manually after the installation into the temporary folder finished. To clean up the temporary folder, run \code{\link{lib.clean_install_dir}()}.
-Installing a package temporarily gives you the oppertunity to test the package before adding it to the RVClibrary structure.
+Installing a package temporarily gives you the oppertunity to test the package before adding it to the multiversion library structure.
 Loading packages including those in the temporary library (\code{\link{lib.location_install_dir}()}) can be done using: \code{\link{lib.load}(..., also_load_from_temp_lib = TRUE)}.}
 
 \item{overwrite_this_package}{If TRUE, the installed package is added and overwrites the existing package.}
 
 \item{execute_with_Rscript}{When true, it will try to install a tarball using a sepparate Rscipt R instance. This saves you from the hasle to prepare your Rstudio environment to match the one that the tarball requires (incl. dependencies).
-It will run a script provided with the tarball location and it's dependencies. That script will load \code{RVClibrary} and call \code{\link{lib.install_tarball}} directly.}
+It will run a script provided with the tarball location and it's dependencies. That script will load \code{multiversion} and call \code{\link{lib.install_tarball}} directly.}
 }
 \description{
 This function can try to install a tarball based on the tarball location and it's dependencies.

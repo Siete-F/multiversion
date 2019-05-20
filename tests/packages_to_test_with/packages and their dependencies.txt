@@ -1,4 +1,4 @@
-> installed.packages_VC()
+> lib.installed_packages()
               package.a : 0.1.0              |  
               package.a : 0.2.0              | package.e   package.f 
               package.a : 0.3.0              | package.e (>= 1.5)   package.f 

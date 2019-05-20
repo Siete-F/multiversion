@@ -7,8 +7,8 @@
 lib.clean_libPaths(lib_location = lib.location(), dry.run = FALSE)
 }
 \arguments{
-\item{lib_location}{The folder which contains the R_VC_library structure. All directories in .libPaths containing this path will be kept.
-By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} to find this directory.}
+\item{lib_location}{The folder which contains the multiversion library. All directories in .libPaths containing this path will be kept.
+By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} to find this directory.}
 
 \item{dry.run}{If TRUE, will not change the paths but will print the paths that would remain after cleaning up the .libPaths() list.}
 }

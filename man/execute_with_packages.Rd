@@ -2,7 +2,7 @@
 % Please edit documentation in R/helper_functions.R
 \name{execute_with_packages}
 \alias{execute_with_packages}
-\title{Alias of \code{\link{lib.execute_using_packagelist}}}
+\title{Alias for \code{\link{lib.execute_using_packagelist}}}
 \usage{
 execute_with_packages(packages_to_load = NULL, func_handle, ...,
   execution_log_location = normPath(paste0("./execution_logs/execution_",
@@ -11,5 +11,5 @@ execute_with_packages(packages_to_load = NULL, func_handle, ...,
   execute_quietly = FALSE)
 }
 \description{
-Alias of \code{\link{lib.execute_using_packagelist}}
+Alias for \code{\link{lib.execute_using_packagelist}}
 }

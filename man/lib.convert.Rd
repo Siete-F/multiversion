@@ -10,7 +10,7 @@ lib.convert(installLibrary = lib.location_install_dir(lib_location),
 }
 \arguments{
 \item{lib_location}{The folder containing a structure where all packages in the temp folder must be moved to.
-By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.}
+By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
 
 \item{force_overwrite}{If you are experimenting and you would like to overwrite the newly installed package.
 Normally only desired when the package you are experimenting with is a self maintained package and you are sure you increased the version to a new one.}
@@ -21,7 +21,7 @@ By default, the path is generated using \code{lib.location_install_dir()} on the
 \description{
 After this conversion is complete and you set the directory (temporarily by using \code{lib.location(...)}
 or for eternity by setting the equally named environment variable) you are good to go! You can directly use \code{lib.load}
-for loading packages. Thanks for using \code{RVClibrary}!! \cr
+for loading packages. Thanks for using \code{multiversion}!! \cr
 \cr
 This function creates the VC library structure by moving normaly installed packages to a more parallel oriented library structure.
 lib1/BH/DESCRIPTION   becomes  lib2/BH/1.60.0-2/BH/DESCRIPTION

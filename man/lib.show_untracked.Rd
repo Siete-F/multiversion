@@ -10,6 +10,6 @@ lib.show_untracked(lib_location = lib.location())
 \item{lib_location}{By default the default library path obtained with \code{lib.location()}.}
 }
 \description{
-List all untracked direcories (libraries) within the R_VC_library. The returned untracked directories are cleaned up
+List all untracked direcories (libraries) within the multiversion library. The returned untracked directories are cleaned up
 and printed so that only the unique combinations of each library and it's version is shown once.
 }

@@ -2,15 +2,15 @@
 % Please edit documentation in R/helper_functions.R
 \name{lib.clean}
 \alias{lib.clean}
-\title{Clean R_VC_library, revert to state of last commit.}
+\title{Clean multiversion library, revert to state of last commit.}
 \usage{
 lib.clean(lib_location = lib.location(), clean_temp_lib = TRUE)
 }
 \arguments{
-\item{lib_location}{By default the default library path obtained with \code{lib.location()}.}
+\item{lib_location}{By default the library path returned by \code{lib.location()} is used.}
 }
 \description{
-Clean up all untracked (not committed) installed libraries in the R_VC_library environment.
+Clean up all untracked (not committed) installed libraries in the multiversion library.
 Will additionally also clean up the TEMP_install_location directory (this is an 'ignored' directory).
 }
 \details{

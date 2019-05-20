@@ -13,7 +13,7 @@ lib.dependsOnMe(..., checkMyDeps = NULL, lib_location = lib.location())
 Use it like this when calling it via another function. It is the shape that is supported by all other functions in this package.
 e.g. \code{c(DBI = '0.5', assertthat = '', R6 = '')}}
 
-\item{lib_location}{The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_VC_LIBRARY_LOCATION} for this directory.}
+\item{lib_location}{The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
 }
 \description{
 Can be called without using quotes like \code{lib.dependsOnMe(dplyr)}. A second very usefull feature would be the \code{lib.dependsOnMe(all)},

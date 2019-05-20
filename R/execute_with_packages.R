@@ -1,5 +1,5 @@
 # =================================================================
-#     RVClibrary, multi-version package library management tool
+#     multiversion, multi-version package library management tool
 #     Copyright (C) 2019 S.C. Frouws, The Hague, The Netherlands
 #
 # This library is free software; you can redistribute it and/or
@@ -10,7 +10,7 @@
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# Lesser General Public License ('COPYING.LESSER') for more details.
+# Lesser General Public License for more details.
 # =================================================================
 
 
@@ -34,18 +34,18 @@ lib.execute_using_packagelist <- function(packages_to_load = NULL, func_handle, 
         Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
         if (grepl('Could not find files for the given pattern(s)', Rscript_dir)) {stop('Please make sure `where Rscript` results in one or more valid paths. First one is used.')}
 
-        RVClib_package_location <- lib.my_location()
-        script_location <- normPath(file.path(RVClib_package_location, 'exec/execute_with_packages_script.R'))
-        # stdout_assistent <- normPath(file.path(RVClib_package_location, 'exec/wtee.exe'))
-        # if (!file.exists(stdout_assistent)) {stop('The tiny executable `wtee.exe` within the `exec` folder of the installed `RVClibrary` package could not be found.')}
+        multiversion_package_location <- lib.my_location()
+        script_location <- normPath(file.path(multiversion_package_location, 'exec/execute_with_packages_script.R'))
+        # stdout_assistent <- normPath(file.path(multiversion_package_location, 'exec/wtee.exe'))
+        # if (!file.exists(stdout_assistent)) {stop('The tiny executable `wtee.exe` within the `exec` folder of the installed `multiversion` package could not be found.')}
 
         # Save the input as list on a temporary location
         temp_input_save_location <- paste0(dirname(tempdir()), '/R_execute_with_packages_input_', gsub('\\s|-|:', '_', format(Sys.time())), '.Rds')
         function_input <- list(func_handle, ...)
         saveRDS(function_input, file = temp_input_save_location)
 
-        cmd <- sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib_location, packages_to_load, temp_input_save_location, RVClib_package_location, execution_log_location)
-        # cmd <- sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s" | "%s" "cmd_std_out.log"', Rscript_dir, script_location, lib_location, packages_to_load, temp_input_save_location, RVClib_package_location, stdout_assistent)
+        cmd <- sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib_location, packages_to_load, temp_input_save_location, multiversion_package_location, execution_log_location)
+        # cmd <- sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s" | "%s" "cmd_std_out.log"', Rscript_dir, script_location, lib_location, packages_to_load, temp_input_save_location, multiversion_package_location, stdout_assistent)
 
         cat(sprintf("\nExecuting command...\n%s\n\n", cmd))
         system(cmd, wait = wait_for_response)
