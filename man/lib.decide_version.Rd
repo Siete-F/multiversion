@@ -26,3 +26,4 @@ The downside of this is that an update could be a major one, going from\code{0.5
 Obtains the correct version based on the version instruction provided (e.g. \code{>= 0.5}). It will print which version is chosen if `verbose = TRUE`.
 if no compatible version is found between the available versions, the function 'chooseVersion' will return an error to notify you.
 }
+

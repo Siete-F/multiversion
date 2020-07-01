@@ -9,3 +9,4 @@ clean_download_catch()
 \description{
 Clean the catch folder 'downloaded_packages' which lives in the temporary R session folder `tempdir()`.
 }
+

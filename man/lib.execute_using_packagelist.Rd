@@ -26,3 +26,4 @@ It will be parsed using `lib.packs_str2vec` to become an offten used format look
 \description{
 This function can be used to perform some R operation with a configured set of loaded packages.
 }
+

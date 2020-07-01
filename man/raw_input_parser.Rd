@@ -19,3 +19,4 @@ which is compatible with all code that follows. \cr
 Must be called like \code{raw_input_parser(as.list(match.call()), c('named_param1', 'named_param2', 'named_param3'))}. \cr
 It will return all (name) value pairs if values are available excluding the named parameters provided in the second argument. \cr
 }
+

@@ -12,3 +12,4 @@ install.packages_VC(installPackages = NULL, lib_location = lib.location(),
 \description{
 Alias for \code{\link{lib.install}}
 }
+

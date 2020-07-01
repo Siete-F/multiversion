@@ -34,3 +34,4 @@ That script will load this \code{multiversion} package and call \code{\link{lib.
 This function can be used to install a CRAN package in the (default or specified) multiversion library.
 For installing packages from source use \code{lib.install_tarball}.
 }
+

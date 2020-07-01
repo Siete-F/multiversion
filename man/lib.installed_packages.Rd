@@ -10,3 +10,4 @@ lib.installed_packages(lib_location = lib.location())
 Use to print all available packages in the VC_library with all their versions including their dependencies.
 Simply performs a call to \code{lib.dependsOnMe(all)}.
 }
+

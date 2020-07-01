@@ -9,3 +9,4 @@ installed.packages_VC(lib_location = lib.location())
 \description{
 Alias for \code{\link{lib.installed_packages}}
 }
+

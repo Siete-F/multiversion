@@ -15,3 +15,4 @@ We cannot version control packages which are located in this library since the \
 For base packages, this is acceptable, but it apears that this directory is not always as clean as we would wish.
 Because of this reason, we do not check the more widely accepted \code{rownames(installed.packages(priority="base"))}.
 }
+

@@ -12,3 +12,4 @@ lib.package_version_loaded(packageNames, dont_exclude_not_loaded = F)
 \description{
 Check the versions of an already loaded package.
 }
+

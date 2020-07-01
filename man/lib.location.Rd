@@ -15,3 +15,4 @@ This function will look for the environment variable \code{R_MV_LIBRARY_LOCATION
 Alternatively you can provide a path for this session only using \code{\link{lib.location}(yourPath)}. This will set the environment variable for you, which will reset on restart.
 (Would it be an idea to add it to your .Profile file?)
 }
+

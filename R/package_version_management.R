@@ -149,20 +149,28 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
 #' check if version indication is compliant.
 #'
 #' Returns TRUE if the 'condition' complies with the already available 'version'.
+#' This function is vectorized.
 #'
 #' @param condition A version indication like `>= 4.5.1` or `2.3.4` or `> 1.2.3` or `''` (empty) or `NA`.
-#' @param version A version number like `1.2.3`.
+#' @param version A version number like `1.2.3`, or a vector of version strings (will be converted to `numeric_version('1.2.3') during comparison).
 #'
 #' @export
 #'
 lib.check_compatibility <- function(condition, version) {
+    if (length(condition) > 1) {
+        stop('Please provide one condition only in `lib.check_compatibility`!')
+    }
+    if (length(version) > 1) {
+        return(sapply(version, lib.check_compatibility, condition = condition))
+    }
+
     # If no reference was supplied, all conditions are acceptable.
     if (is.null(version) || is.na(version)) return(TRUE)
 
     # If '', NA or an equal version as the existing version is returned, pass.
     if (is.na(condition) || nchar(condition) == 0) {
         return(TRUE)
-    } else if (condition == version) {
+    } else if (trimws(condition) == version) {
         return(TRUE)
     }
 
@@ -175,7 +183,7 @@ lib.check_compatibility <- function(condition, version) {
     } else if (grepl('>', condition)) {
         return(numVersion > numCondition)
     } else {
-        # normally a case of (condition != with_version) where condition is an exact number.
+        # normally a case of (condition != version) where condition is an exact number.
         return(FALSE)
     }
 }
@@ -210,13 +218,13 @@ lib.decide_version <- function(packVersion, lib_location, verbose = TRUE, pick.l
     # print instructive message:
     if (verbose || !interactive()) {
         if (!is.na(origVersion) && strtrim(origVersion, 1) == '>') {
-            cat(sprintf("Version %-7s is chosen  for package '%s'\n", packVersion, packageName))
+            message(sprintf("Version %-7s is chosen  for package '%s'", packVersion, packageName))
 
         } else if (is.na(origVersion) || nchar(origVersion) == 0) {
-            cat(sprintf("Only    %-7s is there   for package '%s'\n", packVersion, packageName))
+            message(sprintf("Only    %-7s is there   for package '%s'", packVersion, packageName))
 
         } else if (packVersion == origVersion)
-            cat(sprintf("Exactly %-7s is used    for package '%s'\n", packVersion, packageName))
+            message(sprintf("Exactly %-7s is used    for package '%s'", packVersion, packageName))
     }
 
     return(packVersion)

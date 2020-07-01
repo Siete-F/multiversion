@@ -28,3 +28,4 @@ All different version indications should be handled in this function, including:
 2. a version without \code{>}, so just a version e.g. \code{'0.5.0'} (most specific)
 3. a zero length char e.g. \code{''} (auto determine, based on `pick.last`)
 }
+

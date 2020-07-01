@@ -15,3 +15,4 @@ By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} to f
 \description{
 Excludes all .libPaths other then those needed for lib.load().
 }
+

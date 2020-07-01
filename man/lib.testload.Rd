@@ -24,3 +24,4 @@ Defaults to 'packages', making the sentence: ' - Trying to load packages: lattic
 Internally used for 'test loading' a list of dependencies when installing a package.
 Returns a list of succesfull load operations.
 }
+
