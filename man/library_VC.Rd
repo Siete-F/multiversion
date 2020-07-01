@@ -12,3 +12,4 @@ library_VC(..., loadPackages = NULL, lib_location = lib.location(),
 \description{
 Alias for \code{\link{lib.load}}
 }
+

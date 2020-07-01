@@ -73,7 +73,7 @@ lib.my_location <- function() {
 #'
 #' @export
 #'
-lib.show_untracked <- function(lib_location = lib.location()) {
+lib.git_show_untracked <- function(lib_location = lib.location()) {
     if (!file.exists(lib_location)) {
         stop(sprintf('Please specify an existing directory for the `lib_location`. Provided was "%s".', lib_location))
     }
@@ -87,16 +87,16 @@ lib.show_untracked <- function(lib_location = lib.location()) {
     listed_files <- listed_files[grepl('DESCRIPTION', listed_files)]
     # Now remove from e.g. "htmlTable/1.13.1/htmlTable/DESCRIPTION" the "/htmlTable/DESCRIPTION" part to remain "htmlTable/1.13.1"
     added_dirs   <- gsub('/[^/]*/DESCRIPTION$', '', listed_files)
-    cat(sprintf('The following libraries are installed but untracked:\n%s\n', paste0(added_dirs, collapse = '\n')))
+    message(sprintf('The following libraries are installed but untracked:\n%s', paste0(added_dirs, collapse = '\n')))
 
     if (length(added_dirs) == 0) {
         added_dirs <- ''
     }
     if (length(temp_installed_libs) == 0) {
-        cat('\nAnd the following libraries are temporarily installed:\n\n')
+        message('\nAnd the following libraries are temporarily installed:\n')
         return(invisible())
     }
-    cat(sprintf('\nAnd the following libraries are temporarily installed:\n%s\n%s\n', sprintf('%20s - %s', 'libs:', 'already converted:'),
+    message(sprintf('\nAnd the following libraries are temporarily installed:\n%s\n%s', sprintf('%20s - %s', 'libs:', 'already converted:'),
                 paste0(sprintf('%20s - %s', temp_installed_libs,
                                as.character(apply(matrix(sapply(temp_installed_libs, grepl, added_dirs), ncol = length(temp_installed_libs)), 2, any))), collapse = '\n')))
 }
@@ -138,7 +138,7 @@ lib.clean <- function(lib_location = lib.location(), clean_temp_lib = TRUE) {
         stop(sprintf('The provided directory "%s" is not a git repository.', lib_location))
     }
 
-    lib.show_untracked(lib_location = lib_location)
+    lib.git_show_untracked(lib_location = lib_location)
 
     if (interactive()){
         choice <- menu(c('yes', 'no'), title = '\nAre you sure you want to undo all changes made to the \'multiversion library\' and go back to the last commit?')
@@ -325,7 +325,7 @@ normPath <- function(path) {
 }
 
 
-#' Append all package locations to `.libPaths()`.
+#' Append all package locations to `.libPaths()`, including .Library, but leaving out old values.
 #'
 #' Adds the path of the package that is specified (and likely loaded before) to the `.libPaths`.
 #'
@@ -333,7 +333,8 @@ normPath <- function(path) {
 #' The path that is appended to the `.libPaths` is constructed based on the name and version provided.
 #' @param lib_location The multiversion library location path (no default configured here!).
 #'
-lib.add_libPaths <- function(packNameVersion, lib_location, additional_lib_paths = c()) {
+lib.set_libPaths <- function(packNameVersion, lib_location, additional_lib_paths = c()) {
+    # non existing paths are silently ignored by `.libPaths()`
     .libPaths(c(.Library, paste(lib_location, names(packNameVersion), packNameVersion, sep = '/'), additional_lib_paths))
 }
 
@@ -351,7 +352,7 @@ lib.add_libPaths <- function(packNameVersion, lib_location, additional_lib_paths
 lib.clean_libPaths <- function(lib_location = lib.location(), dry.run = FALSE) {
     correct_paths <- grepl(normPath(lib_location), normPath(.libPaths())) | normPath(.libPaths()) == normPath(.Library)
     if (dry.run) {
-        cat(sprintf('The following paths will be excluded:\n - "%s"\n\n', paste(collapse = '"\n - "', normPath(.libPaths()[!correct_paths]))))
+        message(sprintf('The following paths will be excluded:\n - "%s"\n', paste(collapse = '"\n - "', normPath(.libPaths()[!correct_paths]))))
     } else {
         .libPaths(.libPaths()[correct_paths])
     }
@@ -370,11 +371,11 @@ lib.clean_libPaths <- function(lib_location = lib.location(), dry.run = FALSE) {
 #'
 lib.devTools_install <- function(lib_location = lib.location(), force_install = FALSE) {
     if (!force_install && length(lib.available_versions('devtools')) > 0) {
-        cat('The package devtools seems to be already installed. Please set `force_install` to true if you would like to overwrite or update devtools.')
+        message('The package devtools seems to be already installed. Please set `force_install` to true if you would like to overwrite or update devtools.')
         return()
     }
     if (length(libs <- dir(lib_dir <- lib.location_install_dir(lib_location))) > 0) {
-        lib.show_untracked()
+        lib.git_show_untracked()
         stop(sprintf('These libraries are still present in the install directory "%s":\n%s.\nPlease run `lib.clean_install_dir(yourLib)` to clean up if possible and run me again.', lib_dir, paste0(collapse = ', ', "'", libs, "'")))
     }
     lib.install('devtools', lib_location = lib_location, overwrite_this_package = TRUE)
@@ -406,15 +407,69 @@ lib.devtools_load <- function(lib_location = lib.location()) {
 #' @param return_as_df {FALSE} if the output should remain a structured dataframe, or if it should return a named character vector.
 #'
 unique_highest_package_versions <- function(packNameVersion, return_as_df = FALSE) {
-    nameVer <- data.frame(names = names(packNameVersion), version = packNameVersion, ordering = seq_len(length(packNameVersion)))
+    if (length(packNameVersion) == 0) {
+        return(if (return_as_df) {data.frame(names = '', version = '')[0,]} else {c()})
+    }
+    nameVer <- data.frame(names    = names(packNameVersion),
+                          version  = packNameVersion,
+                          ordering = seq_len(length(packNameVersion)))
 
-    nameVerU <- do.call(rbind, lapply(split(nameVer, as.factor(nameVer$names)), function(x) {return(x[which.max(x$version),])}))
+    nameVerU <- do.call(rbind, lapply(split(nameVer, nameVer$names), function(x) {return(x[which.max(x$version),])}))
     nameVerU <- nameVerU[order(nameVerU$ordering),]
+    nameVerU <- nameVerU[,-3]
 
     if (return_as_df) {
         return(nameVerU)
     } else {
-        return(setNames(nameVerU, names(nameVerU)))
+        return(setNames(as.character(nameVerU$version), as.character(nameVerU$names)))
+    }
+}
+
+
+#' Load namespaces
+#'
+#' Load (but do not attach) the namespaces of a list of packages.
+#'
+#' @param packNameVersion A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.4.0', ggplot = '')`).
+#' @param lib_location The folder which contains the multiversion library. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} to find this directory, see code{lib.location()}.
+#' @param additional_lib A single or multiple paths that must be used in addition to the lib_location for looking up the packages. Non existing paths are silently ignored.
+#'
+lib.load_namespaces <- function(packages_to_load_in_ns, lib_location = lib.location(), additional_lib) {
+    if (length(packages_to_load_in_ns) == 0) {
+        return()
+    }
+
+    # filter list so that only the latest versions remain of the list of required packages, i.e. the list is unique.
+    packages_to_load_in_ns <- unique_highest_package_versions(packages_to_load_in_ns)
+
+    currentLibs <- .libPaths()
+    # Reset when done (or when crashing)
+    on.exit({.libPaths(currentLibs)}, add = TRUE)
+
+    # Set only the directories that we may observe in our search path, i.e.  .libPaths().
+    lib.set_libPaths(packages_to_load_in_ns, lib_location, additional_lib)
+
+    failed_to_load <- c()
+    for (iPack in names(packages_to_load_in_ns)) {
+        packVer <- packages_to_load_in_ns[iPack]
+
+        # Keep.source = T makes sure that (if source is included in install), the source is visible when debugging the package.
+        # (keep.source is potentially depricated)
+        #
+        tryCatch(
+            loadNamespace(iPack, lib.loc = .libPaths(), keep.source = TRUE),
+            error = function(e) {
+                warning('The following error occured when trying to load the namespace of package: ', iPack,
+                        '\nThe following error was returned:\n', e$message)
+                failed_to_load <<- append(failed_to_load, packVer)
+            }
+        )
+    }
+
+    if (length(failed_to_load) > 0) {
+        stop('multiversion: The namespaces of the following packages could not be loaded: ', lib.packs_vec2str(failed_to_load, do_return = T),
+             '.\nPlease make sure this package is present, as it is a required dependency (of something, see printed messages).',
+             ' Otherwise specify it explicitly in your lib.load call.')
     }
 }
 
@@ -435,8 +490,8 @@ lib.printVerboseLibCall <- function(packNameVersion) {
 
     p  = paste
     p0 = paste0
-    cat('\nVerbose example call to the library (use `quetly = T` to supress this message): ')
-    cat(p0('\nlib.load( ', p(p(nameVer$names, p0("'", nameVer$version, "'"), sep = ' = '), collapse = ', '), ')\n\n'))
+    message('\nVerbose example call to the library (use `quetly = T` to supress this message):')
+    message(p0('lib.load( ', p(p(nameVer$names, p0("'", nameVer$version, "'"), sep = ' = '), collapse = ', '), ')\n'))
 }
 
 
@@ -460,7 +515,7 @@ detachIfExisting <- function(packageNames) {
         detach(pos = which(search() %in% iPackage))
         dll <- getLoadedDLLs()[[gsub(iPackage, pattern = 'package:', rep = '')]]
 
-        if(!is.null(dll)) {
+        if (!is.null(dll)) {
             tryCatch(library.dynam.unload(iPackage, dirname(dirname(dll[["path"]]))), error = function(e) NULL)
         }
     }

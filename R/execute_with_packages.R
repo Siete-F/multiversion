@@ -47,7 +47,7 @@ lib.execute_using_packagelist <- function(packages_to_load = NULL, func_handle, 
         cmd <- sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib_location, packages_to_load, temp_input_save_location, multiversion_package_location, execution_log_location)
         # cmd <- sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s" | "%s" "cmd_std_out.log"', Rscript_dir, script_location, lib_location, packages_to_load, temp_input_save_location, multiversion_package_location, stdout_assistent)
 
-        cat(sprintf("\nExecuting command...\n%s\n\n", cmd))
+        message(sprintf("\nExecuting command...\n%s\n", cmd))
         system(cmd, wait = wait_for_response)
 
         # If the application is fired off solely to finish a task on it's own, just continue.
@@ -56,14 +56,14 @@ lib.execute_using_packagelist <- function(packages_to_load = NULL, func_handle, 
         # Print the output to the console if desired.
         return_str <- readChar(execution_log_location, file.info(execution_log_location)$size)
         if (!execute_quietly) {
-            cat(paste0(collapse = '\n', c(return_str, '\n\n')))
+            message(paste0(collapse = '\n', c(return_str, '\n')))
         }
         return_str <- strsplit(return_str, '\r?\n|\r')[[1]]
         output_index <- which(grepl('output file:<.:[/\\].*>', return_str))
         if (length(output_index) == 1) {
 
             returned_str <- gsub('output file:<|>$', '', return_str[output_index])
-            cat(sprintf('loading results file: "%s".\n', returned_str))
+            message(sprintf('loading results file: "%s".', returned_str))
             if (!file.exists(returned_str)) {stop(sprintf('The returned path: "%s" does not exist!', returned_str))}
             output_data <- readRDS(returned_str)
         } else if (length(output_index) > 1) {

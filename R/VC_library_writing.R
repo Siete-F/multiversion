@@ -106,7 +106,7 @@ lib.install <- function(installPackages = NULL, lib_location = lib.location(), i
 
         if (interactive()) {
             on.exit({
-                cat('\nResetting your loaded packages.\n')
+                message('\nResetting your loaded packages.')
                 invisible(lib.load(loadPackages = currentlyLoaded, lib_location = lib_location, quietly = TRUE))
             }, add = TRUE)
         }
@@ -137,7 +137,7 @@ lib.install <- function(installPackages = NULL, lib_location = lib.location(), i
         failedLoads <- names(dependsOn)[failedLoads]
 
         if (length(failedLoads) > 0) {
-            cat(sprintf('\n - We will install for package "%s" the missing dependencies: %s.\n\n',
+            message(sprintf('\n - We will install for package "%s" the missing dependencies: %s.\n',
                         iPackage, paste0(collapse = ',', '"', failedLoads, '"')))
 
             lib.install(installPackages = failedLoads, lib_location = lib_location, install_temporarily = TRUE, execute_with_Rscript = execute_with_Rscript, verbose = verbose)
@@ -153,13 +153,13 @@ lib.install <- function(installPackages = NULL, lib_location = lib.location(), i
             finalPackSucces <- lib.testload(setNames('', iPackage), lib_location, pick.last = TRUE, verbose = verbose, msg_str = '')
 
             if (iPackage %in% names(finalPackSucces)) {
-                cat(sprintf('\n - The "%s" package seems to be already installed...\n\n', iPackage))
+                message(sprintf('\n - The "%s" package seems to be already installed...\n', iPackage))
                 next
             }
         }
 
         # add the succesfully loaded packages to the .libPaths, so the installer knows that they are there.
-        lib.add_libPaths(succesfullLoads, lib_location, additional_lib_paths = install.location)
+        lib.set_libPaths(succesfullLoads, lib_location, additional_lib_paths = install.location)
 
         message('\nINSTALLING: ', iPackage)
         # because the dependencies are on the libPath, only the not present dependencies will be installed.
@@ -240,10 +240,13 @@ lib.install_tarball <- function(packagePath, dependencies, lib_location = lib.lo
 
     # Install all not yet existing dependencies:
     if (length(missingdependencies) > 0) {
-        cat('\nI will install missing dependencies and try again...\n\n')
+        message('\nI will install missing dependencies and try again...\n')
         lib.install(missingdependencies, lib_location = lib_location, install_temporarily = install_temporarily)
         succesfullLoads <- lib.testload(dependencies, lib_location, msg_str = paste0('"', basename(packagePath), '" his dependencies (second try)'))
-        if (all(names(dependencies) %in% names(succesfullLoads))) {cat('\nNow we succeeded, continuing... \n\n')}
+
+        if (all(names(dependencies) %in% names(succesfullLoads))) {
+            message('\nNow we succeeded, continuing... \n')
+        }
     }
 
     # Check again if all wend well, if not all dependencies are there, reset and abort.
@@ -256,21 +259,21 @@ lib.install_tarball <- function(packagePath, dependencies, lib_location = lib.lo
     nms <- names(sessionInfo()$otherPkgs)
     currentlyLoaded <- detachAll(packageList = nms[!nms %in% c('RVClibrary', 'multiversion')])
 
-    cat('\n')
+    message('') # (applying a newline)
 
     if (interactive() && length(sys.calls()) == 1) {
         on.exit({
-            cat('\nResetting your loaded packages...\n\n');
+            message('\nResetting your loaded packages...\n');
             lib.load(loadPackages = currentlyLoaded, lib_location = lib_location, quietly = TRUE)
         }, add = TRUE)
     }
 
     # If all dependencies could be found/installed: add all recursive dependency libraries to the search path.
-    lib.add_libPaths(succesfullLoads, lib_location, additional_lib_paths = install.location)
+    lib.set_libPaths(succesfullLoads, lib_location, additional_lib_paths = install.location)
 
     # Install the tarbal!
     install.packages(packagePath, lib = install.location, type = "source", repos = NULL)
-    cat('\n')
+    message('') # (applying a newline)
 
     if (!install_temporarily) {lib.convert(install.location, lib_location, force_overwrite = overwrite_this_package)}
 
@@ -341,11 +344,11 @@ lib.convert <- function(installLibrary      = lib.location_install_dir(lib_locat
     lapply(unique(dirname(newLocation)), dir.create, recursive = TRUE, showWarnings = FALSE)
     succes <- file.copy(libContent, newLocation, overwrite = force_overwrite)
 
-    cat('\nSuccesfully copied files:\n')
-    cat(summary(data.frame(succesfully_copied = packageNames[ succes]), maxsum = 80))
-    cat('\nFailed copying files (might be already installed or `TEMP_install_location` was not cleaned up, can be done by running `lib.clean_install_dir()`):\n')
-    cat(summary(data.frame(failed_copied      = packageNames[!succes]), maxsum = 80))
-    cat('\n')
+    message('\nSuccesfully copied files:')
+    message(summary(data.frame(succesfully_copied = packageNames[ succes]), maxsum = 80))
+    message('\nFailed copying files (might be already installed or `TEMP_install_location` was not cleaned up, can be done by running `lib.clean_install_dir()`):')
+    message(summary(data.frame(failed_copied      = packageNames[!succes]), maxsum = 80))
+    message('')
 }
 
 
@@ -370,7 +373,7 @@ detachAll <- function(reload_multiversion = FALSE, dryRun = FALSE, packageList =
     currentPackageAndVersions <- lib.package_version_loaded(packageList)
 
     if (is.null(packageList)) {
-        cat('No packages are loaded, nothing to detach.\n')
+        message('No packages are loaded, nothing to detach.')
 
     } else if (!dryRun) {
         lapply(sprintf('package:%s', packageList), detach, character.only = TRUE, unload = TRUE)
@@ -408,7 +411,7 @@ detachAll <- function(reload_multiversion = FALSE, dryRun = FALSE, packageList =
         library(multiversion, lib.loc = Sys.getenv("R_LIBS_USER"))
     }
 
-    if (!'package:multiversion' %in% search()) {cat('Note that the package "multiversion" is also detached:\n>  library(multiversion, lib.loc = Sys.getenv("R_LIBS_USER"))\n')}
+    if (!'package:multiversion' %in% search()) {message('Note that the package "multiversion" is also detached:\n>  library(multiversion, lib.loc = Sys.getenv("R_LIBS_USER"))')}
 
     return(if(dryRun) {currentPackageAndVersions} else {invisible(currentPackageAndVersions)})
 }
@@ -448,7 +451,7 @@ lib.testload <- function(packages, lib_location = lib.location(), pick.last = FA
     if (length(packages) == 0) {return(loadedPackages)}
 
     if ((!verbose && missing(msg_str)) || is.character(msg_str) && length(msg_str) == 1) {
-        cat(sprintf('\n - Trying to load %s: %s\n', msg_str, lib.packs_vec2str(packages, do_return = TRUE)))
+        message(sprintf('\n - Trying to load %s: %s', msg_str, lib.packs_vec2str(packages, do_return = TRUE)))
     }
 
     for (iDependency in seq_along(packages)) {
@@ -476,7 +479,7 @@ lib.testload <- function(packages, lib_location = lib.location(), pick.last = FA
 #'
 reset.libPaths <- function(currentLibs) {
     .libPaths(currentLibs)
-    if (interactive()) {cat('The libraries are reset.\n')}
+    if (interactive()) {message('The libraries are reset.')}
 }
 
 
@@ -527,12 +530,12 @@ lib.dependencies <- function(packageName, do_print = TRUE, character.only = FALS
         listed_dependencies[[packVersion]] <- dependingPackages
 
         if (do_print) {
-            cat(sprintf('%23s : %-8s ', packageName, packVersion))
-            if (file.exists(overrideFile)) {cat('(shadowed)| ')} else {cat('          | ')}
+            message(sprintf('%23s : %-8s ', packageName, packVersion), appendLF = F)
+            if (file.exists(overrideFile)) {message('(shadowed)| ', appendLF = F)} else {message('          | ', appendLF = F)}
             lib.packs_vec2str(dependingPackages[1:3])
             if (length(dependingPackages) > 3) {
                 for (index in 2: ceiling(length(dependingPackages)/3)) {
-                    cat(strrep(' ', 43), '... '); lib.packs_vec2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
+                    message(strrep(' ', 43), '... ', appendLF = F); lib.packs_vec2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
                 }
             }
         }
@@ -554,9 +557,9 @@ lib.dependencies <- function(packageName, do_print = TRUE, character.only = FALS
 #' @export
 #'
 lib.packs_vec2str <- function(x, do_return = FALSE) {
-    if (!is.null(x)) {x <- x[!is.na(x)]} else if (do_return) {return('')} else {cat('\n')}
+    if (!is.null(x)) {x <- x[!is.na(x)]} else if (do_return) {return('')} else {message('')}
     str <- gsub(pat = '\\s\\(\\)', rep = '',paste(paste(names(x), paste0("(", x, ")")), collapse = '   '))
-    if (do_return) {return(gsub('   ', ', ', str))} else {cat(str, '\n')}
+    if (do_return) {return(gsub('   ', ', ', str))} else {message(str)}
 }
 
 
@@ -592,7 +595,7 @@ lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location
         checkMyDeps <- raw_input_parser(as.list(match.call()), varnames_to_exclude = c('lib_location', 'checkMyDeps'))
     }
 
-    if (is.null(names(checkMyDeps))) {checkMyDeps <- setNames('> 0.0.0', checkMyDeps); cat('The latest version,\n')}
+    if (is.null(names(checkMyDeps))) {checkMyDeps <- setNames('> 0.0.0', checkMyDeps); message('The latest version,')}
 
     # check if input package is realistic. if no version is selected (no name value pair is provided) the oldest version is used.
     if (!names(checkMyDeps) == 'all') checkMyDeps <- setNames(lib.decide_version(checkMyDeps, lib_location, pick.last = TRUE), names(checkMyDeps))
@@ -602,7 +605,7 @@ lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location
     packageList <- packageList[!packageList %in% c('.git', 'TEMP_install_location')]
 
     for (packageName in packageList) {
-        # cat(packageName, '\n')
+        # message(packageName)
         packVersionList <- list.dirs(paste(lib_location, packageName, sep = '/'), recursive = FALSE, full.names = FALSE)
 
         for (packVersion in packVersionList) {
@@ -637,12 +640,12 @@ lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location
             }
 
             if (valid) {
-                cat(sprintf('%23s : %-8s ', packageName, packVersion))
-                if (file.exists(overrideFile)) {cat('(shadowed)| ')} else {cat('          | ')}
+                message(sprintf('%23s : %-8s ', packageName, packVersion), appendLF = F)
+                if (file.exists(overrideFile)) {message('(shadowed)| ', appendLF = F)} else {message('          | ', appendLF = F)}
                 lib.packs_vec2str(dependingPackages[1:3])
                 if (length(dependingPackages) > 3) {
                     for (index in 2: ceiling(length(dependingPackages)/3)) {
-                        cat(strrep(' ', 45), '... '); lib.packs_vec2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
+                        message(strrep(' ', 45), '... ', appendLF = F); lib.packs_vec2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
                     }
                 }
             }

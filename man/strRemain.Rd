@@ -16,3 +16,4 @@ strRemain(patA, patB, str)
 \description{
 Removes pattern A and pattern B from a string.
 }
+

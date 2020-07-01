@@ -32,3 +32,4 @@ This function can try to install a tarball based on the tarball location and it'
 Hopefully I will be able to implement a method to run this function in a new R instance clear of loaded packages.
       \code{lib.install_tarball_with_Rscript} is a sketch to reach meet that wish.
 }
+

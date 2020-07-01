@@ -10,3 +10,4 @@ dependencies(packageName, do_print = TRUE, character.only = FALSE,
 \description{
 Alias for \code{\link{lib.dependencies}}
 }
+

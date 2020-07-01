@@ -23,10 +23,10 @@ overwrite_or_add_update <- args[4]
 verbose                 <- args[5]
 
 # DEV CODE ONLY!!!
-# cat('SCRIPT HERE!!!')
-# #cat(is.null(options()$buildtools.with), '\n')
-# #cat(is.null(options()$buildtools.check), '\n')
-# cat(paste(names(Sys.getenv(c('PATH', 'MAKE', 'BINPREF'))), ':', Sys.getenv(c('PATH', 'MAKE', 'BINPREF')), '\n'))
+# message('SCRIPT HERE!!!')
+# #message(is.null(options()$buildtools.with))
+# #message(is.null(options()$buildtools.check))
+# message(paste(names(Sys.getenv(c('PATH', 'MAKE', 'BINPREF'))), ':', Sys.getenv(c('PATH', 'MAKE', 'BINPREF'))))
 
 error_str <- function(prestring, ...) {paste0(sprintf(prestring, ...), '\nExpected input:\n1) a valid VC library location.\n',
                                               '2) a character string with the package pane to install.\n',
@@ -59,14 +59,13 @@ tryCatch(withCallingHandlers({
 
 }, error = function(e) H <<- sys.calls()), error = function(e) {message('ERROR: The following error was returned:\n', e$message, '\n\n')})
 
-# If an error occured:
 if (length(H) != 0) {
     H <- as.list(H)
     H[c(1:4, length(H)-1, length(H))] <- NULL # remove verbose stack details.
-    cat('Error stack:\n')
-    cat(paste(collapse = '', rep('-', 60)), '\n')
-    cat(paste0(collapse = '\n\n\n', '[', seq_along(H), '] ', H), '\n')
-    cat(paste(collapse = '', rep('-', 60)), '\n')
+    message('Error stack:')
+    message(paste(collapse = '', rep('-', 60)))
+    message(paste0(collapse = '\n\n\n', '[', seq_along(H), '] ', H))
+    message(paste(collapse = '', rep('-', 60)))
 
     # Quit the R script execution with failed status.
     quit(save = 'no', status = 2)

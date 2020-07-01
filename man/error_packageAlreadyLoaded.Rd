@@ -17,3 +17,4 @@ error_packageAlreadyLoaded(requested_package_name, requested_version,
 \description{
 Throw error because this package is already loaded and not compatible with the requested version.
 }
+

@@ -16,3 +16,4 @@ Will additionally also clean up the TEMP_install_location directory (this is an 
 \details{
 Since it involves a quite invasive operation, it asks for permission when being called in an interactive session.
 }
+

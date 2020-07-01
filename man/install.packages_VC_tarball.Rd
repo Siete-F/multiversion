@@ -11,3 +11,4 @@ install.packages_VC_tarball(packagePath, dependencies,
 \description{
 Alias for \code{\link{lib.install_tarball}}
 }
+

@@ -14,3 +14,4 @@ Indicates the default directory for initially installing a package before it is 
 This folder can be cleaned up using \code{cleanTempInstallFolder()} after installing the package succeeded.
 This is not done automatically but won't influence the installation of other packages.
 }
+

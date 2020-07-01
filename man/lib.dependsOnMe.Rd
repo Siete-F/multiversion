@@ -21,3 +21,4 @@ which will print a list of all packages available with their dependencies. \cr
 \cr
 A simple wrapper to do precisely that is "\code{lib.installed_packages}".
 }
+

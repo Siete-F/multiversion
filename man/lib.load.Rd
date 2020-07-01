@@ -25,7 +25,7 @@ their paths to \code{.libPaths} but it will not load those packages. If the path
 
 \item{pick.last}{(default: FALSE) Changes the way a decision is made. In the scenario where a dependency of \code{>} or \code{>=} is defined, multiple versions may be available to choose from. By default, the lowest compliant version is chosen. Setting this to TRUE will choose the highest version.}
 
-\item{also_load_from_temp_lib}{(default: TRUE)}
+\item{also_load_from_temp_lib}{(default: FALSE) If TRUE, will also load packages from the temporary installation directory (created on install in the RVC library.) Install a package using \code{lib.install("new package!", install_temporarily = T)}}
 
 \item{packNameVersionList}{See main description. Should be left blank.}
 
@@ -53,10 +53,10 @@ The inputs packNameVersionList [list of named versions] and skipDependencies [li
 left blank in general. They are used by other functionallity like \code{\link{lib.testload}()} and \code{\link{lib.install}}.
 Using \code{dry.run} will show the packages that will be used and will crash when no option is feasable (not installed or not compliant packages).
 If you are trying to setup a propper \code{\link{lib.load}} call, it is always a good idea to work with dry.run's.
-Once an incorrect package has been loaded, it is very likely you will have to restart your R session to unload it. Unloading packages in R is very hard. \cr
+Once an incorrect package has been loaded, it is very likely you will have to restart your R session to unload it (Cntrl+shift+F10). Unloading packages in R often leaves traces. \cr
 \cr
 "strings" can stay attached (as in, the .libPaths can be appended) when using 'appendLibPaths = TRUE'.
-Afterwards, the normal \code{library} call can be used to load the not yet loaded but attached package.
+Afterwards, the normal \code{library} call can be used to load the not yet loaded but attached package,
 This is more or less the same as doing the following: \cr
 \code{
 lib.load(c(dplyr = '0.5.0'), dry.run = TRUE, appendLibPaths = TRUE)
@@ -76,3 +76,4 @@ Try restarting your RStudio with a clean workspace (environment). If that doesn'
 "\code{YourRProject/.Rproj.user/.../sources/prop}" and start Rstudio again. If it doesn't work, try "\code{/sources/per}" also. At the \code{...} there should be a hash used in the current session e.g. \code{/F3B1663E/}.
 After this, the packages should be unloaded and you should be able to load a new batch of packages. Most times it will just do to clear the workspace (environment) and reload the project while saving the empty environment.
 }
+

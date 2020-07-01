@@ -14,3 +14,4 @@ Use lib.devTools_install to install devtools, if you have not done so already.}
 During the library call, `appendLibPaths` is TRUE, making sure that some devtools functionallity
 (like running tests) in child R instances will still work and know where to load their libraries from.
 }
+

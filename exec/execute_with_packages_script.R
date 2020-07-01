@@ -77,7 +77,7 @@ tryCatch(withCallingHandlers({
     temp_output_save_location <- paste0(dirname(tempdir()), '/R_lib.execute_using_packagelist_output_', gsub('\\s|-|:', '_', format(Sys.time())), '.Rds')
     saveRDS(output, file = temp_output_save_location)
     if (!file.exists(temp_output_save_location)) {stop('The file we tried to save was not saved correctly.')}
-    cat(paste0('\noutput file:<', temp_output_save_location, '>\n\n'))
+    message(paste0('\noutput file:<', temp_output_save_location, '>\n'))
 
 }, error = function(e) H <<- sys.calls()), error = function(e) {message('ERROR: The following error was returned:\n', e$message, '\n\n')})
 
@@ -87,10 +87,10 @@ status <- 0
 if (length(H) != 0) {
     H <- as.list(H)
     H[c(1:4, length(H)-1, length(H))] <- NULL # remove verbose stack details.
-    cat('Error stack:\n')
-    cat(paste(collapse = '', rep('-', 60)), '\n')
-    cat(paste0(collapse = '\n\n\n', '[', seq_along(H), '] ', H), '\n')
-    cat(paste(collapse = '', rep('-', 60)), '\n')
+    message('Error stack:')
+    message(paste(collapse = '', rep('-', 60)))
+    message(paste0(collapse = '\n\n\n', '[', seq_along(H), '] ', H))
+    message(paste(collapse = '', rep('-', 60)))
 
     # Quit the R script execution with failed status.
     status <- 2
@@ -100,7 +100,7 @@ sink(type = 'message')
 sink()
 
 # if succesfully finished, print the output file location string
-if ('temp_output_save_location' %in% ls()) {cat(paste0('\noutput file:<', temp_output_save_location, '>\n\n'))}
+if ('temp_output_save_location' %in% ls()) {message(paste0('\noutput file:<', temp_output_save_location, '>\n'))}
 
 # Quit the R script execution.
 quit(save = 'no', status = status)

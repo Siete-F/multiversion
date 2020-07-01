@@ -9,8 +9,10 @@ lib.check_compatibility(condition, version)
 \arguments{
 \item{condition}{A version indication like `>= 4.5.1` or `2.3.4` or `> 1.2.3` or `''` (empty) or `NA`.}
 
-\item{version}{A version number like `1.2.3`.}
+\item{version}{A version number like `1.2.3`, or a vector of version strings (will be converted to `numeric_version('1.2.3') during comparison).}
 }
 \description{
 Returns TRUE if the 'condition' complies with the already available 'version'.
+This function is vectorized.
 }
+

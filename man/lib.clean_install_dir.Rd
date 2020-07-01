@@ -14,3 +14,4 @@ The temporary installation folder (indicated by \code{lib.location_install_dir()
 This function removes this temporary folder. Make sure that all installed packages that are desired to keep are converted.
 You can run the \code{\link{lib.convert}()} once again to make sure this is the case.
 }
+
