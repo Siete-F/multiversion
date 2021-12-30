@@ -12,7 +12,7 @@ Reproducability is a major requirement for my company, and there was no package 
 
 To get started, install the package:
 
-```
+```r
 install.packages("multiversion")  # (<- hopefully possible in the near future, for now a manual installation is required)
 library(multiversion)
 ```
@@ -21,35 +21,35 @@ Now you are ready, there are two things you could try to get to know us (me and 
 
 1. If you already have some packages installed, you can try to convert your standard library to the structure that is required by `multiversion` to be able to load packages. This can of course be done automatically. Create an empty folder somewhere and run:
 
-```
-dir.create("C:/example_library_location")
-lib.convert(normalLibrary = Sys.getenv("R_LIBS_USER"),
-            lib_location  = "C:/example_library_location")
-```
+    ```r
+    dir.create("C:/example_library_location")
+    lib.convert(normalLibrary = Sys.getenv("R_LIBS_USER"),
+                lib_location  = "C:/example_library_location")
+    ```
+    
+    Now take a look at the library that is created in C:/example_library_location. Every package you had installed before can now be loaded using:
 
-Now take a look at the library that is created in C:/example_library_location. Every package you had installed before can now be loaded using:
-
-```
-lib.load(YourPackage, lib.location = "C:/example_library_location")
-```
+    ```r
+    lib.load(YourPackage, lib.location = "C:/example_library_location")
+    ```
 
 2. Alternatively, you can start off fresh and install your favorite packages directly in the new structure. In example 1 we defined "C:/example_library_location", but it is of course not desirable to have to specify this directory over and over again.
 `multiversion` provides 2 ways to indicate the multiversion library location, a) you can set it for the duration of the session by running `lib.location()` and providing it your multiversion library location or, b) you can set the `R_MV_LIBRARY_LOCATION` environment variable with that path. The function `lib.location()` is used to define the location of the library throughout the package.
 
-```
-# Check whats configured, or learn how to configure it:
-lib.location()
-
-# Configure it (for this session):
-lib.location("C:/example_library_location")
-
-# Install a package:
-lib.install("devtools")
-```
+    ```r
+    # Check whats configured, or learn how to configure it:
+    lib.location()
+    
+    # Configure it (for this session):
+    lib.location("C:/example_library_location")
+    
+    # Install a package:
+    lib.install("devtools")
+    ```
 
 Congratulations with installing your first package! Now try to load it:
 
-```
+```r
 # Now load your package (offcourse you can ommit the quotes):
 lib.load(devtools)  # or also specify a version `lib.load(devtools = '> 1.0.0')`
 
