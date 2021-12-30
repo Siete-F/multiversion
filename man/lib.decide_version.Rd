@@ -4,13 +4,18 @@
 \alias{lib.decide_version}
 \title{Choose correct package version, and print decission.}
 \usage{
-lib.decide_version(packVersion, lib_location, verbose = TRUE,
-  pick.last = FALSE, quietly = FALSE)
+lib.decide_version(
+  packVersion,
+  lib_location,
+  verbose = TRUE,
+  pick.last = FALSE,
+  quietly = FALSE
+)
 }
 \arguments{
 \item{packVersion}{A named character vector with package names and their version indication (e.g. \code{c(dplyr = '>= 0.4.0', ggplot = '')}).}
 
-\item{lib_location}{The location of the R_VC_library folder.}
+\item{lib_location}{The location of the R_MV_library folder.}
 
 \item{verbose}{if TRUE, it will print the choices it makes. If the session is not interactive, or verbose = FALSE, nothing will be printed.}
 
@@ -26,4 +31,3 @@ The downside of this is that an update could be a major one, going from\code{0.5
 Obtains the correct version based on the version instruction provided (e.g. \code{>= 0.5}). It will print which version is chosen if `verbose = TRUE`.
 if no compatible version is found between the available versions, the function 'chooseVersion' will return an error to notify you.
 }
-

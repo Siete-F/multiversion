@@ -14,4 +14,3 @@ lib.dependencies_online(packageName, cran_url = "https://cran.rstudio.com/")
 \description{
 Check if an package belongs to the standard R packages
 }
-

@@ -4,11 +4,14 @@
 \alias{lib.load_namespaces}
 \title{Load namespaces}
 \usage{
-lib.load_namespaces(packages_to_load_in_ns, lib_location = lib.location(),
-  additional_lib)
+lib.load_namespaces(
+  packages_to_load_in_ns,
+  lib_location = lib.location(),
+  additional_lib
+)
 }
 \arguments{
-\item{lib_location}{The folder which contains the multiversion library. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} to find this directory, see code{lib.location()}.}
+\item{lib_location}{The folder which contains the multiversion library. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} to find this directory, see \code{lib.location()}.}
 
 \item{additional_lib}{A single or multiple paths that must be used in addition to the lib_location for looking up the packages. Non existing paths are silently ignored.}
 
@@ -17,4 +20,3 @@ lib.load_namespaces(packages_to_load_in_ns, lib_location = lib.location(),
 \description{
 Load (but do not attach) the namespaces of a list of packages.
 }
-

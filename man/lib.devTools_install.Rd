@@ -15,4 +15,3 @@ lib.devTools_install(lib_location = lib.location(), force_install = FALSE)
 Will install devtools and it's dependencies into the multiversion library provided by `lib.location()`.
 An alternative library location can optionally be specified.
 }
-

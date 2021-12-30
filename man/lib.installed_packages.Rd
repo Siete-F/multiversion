@@ -6,8 +6,10 @@
 \usage{
 lib.installed_packages(lib_location = lib.location())
 }
+\arguments{
+\item{lib_location}{The R_MV_library location.}
+}
 \description{
-Use to print all available packages in the VC_library with all their versions including their dependencies.
+Use to print all available packages in the R_MV_library with all their versions including their dependencies.
 Simply performs a call to \code{lib.dependsOnMe(all)}.
 }
-

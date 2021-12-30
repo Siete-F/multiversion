@@ -14,4 +14,3 @@ unique_highest_package_versions(packNameVersion, return_as_df = FALSE)
 \description{
 Will uniquify the named character vector with package versions to remain the highest functions. (for now only used for printing)
 }
-

@@ -2,17 +2,17 @@
 % Please edit documentation in R/helper_functions.R
 \name{lib.location}
 \alias{lib.location}
-\title{The R_VC_library location.}
+\title{The R_MV_library location.}
 \usage{
-lib.location(set_session_path = NULL)
+lib.location(set_session_path)
 }
 \arguments{
 \item{set_session_path}{(optional) If no environment variable has been set to indicate the library location,
 You can call this function and let it set the environment variable for this session only.}
 }
 \description{
-This function will look for the environment variable \code{R_MV_LIBRARY_LOCATION} indicating the R_VC_library location.
-Alternatively you can provide a path for this session only using \code{\link{lib.location}(yourPath)}. This will set the environment variable for you, which will reset on restart.
-(Would it be an idea to add it to your .Profile file?)
+This function will look for the environment variable \code{R_MV_LIBRARY_LOCATION} indicating the R_MV_library location.
+Alternatively you can provide a path for this session only, using \code{\link{lib.location}(yourPath)}.
+This will set the environment variable for this session.
+(You might want to consider to add this to your \code{.Rprofile} file, see \code{?Startup})
 }
-

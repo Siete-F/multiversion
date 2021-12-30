@@ -2,18 +2,23 @@
 % Please edit documentation in R/VC_library_writing.R
 \name{lib.install}
 \alias{lib.install}
-\title{Install CRAN package into VC library.}
+\title{Install CRAN package into the R_MV_library}
 \usage{
-lib.install(installPackages = NULL, lib_location = lib.location(),
-  install_temporarily = FALSE, overwrite_this_package = FALSE,
-  execute_with_Rscript = TRUE, verbose = FALSE,
-  cran_url = "http://cran.us.r-project.org")
+lib.install(
+  installPackages = NULL,
+  lib_location = lib.location(),
+  install_temporarily = FALSE,
+  overwrite_this_package = FALSE,
+  execute_with_Rscript = TRUE,
+  verbose = FALSE,
+  cran_url = "http://cran.us.r-project.org"
+)
 }
 \arguments{
 \item{installPackages}{Provide a vector of package names. A version cannot be supplied.}
 
 \item{lib_location}{The folder where this package can be installed.
-The package will first be installed in a temporary install folder \code{yourLib/TEMP_install_location}
+The package will first be installed in a temporary install folder \code{<multiversion lib>/TEMP_install_location}
 indicated by the \code{\link{lib.location_install_dir}} function. If \code{install_temporarily} is set to FALSE (the default).
 the installed package(s) is moved to the destination location automatically.}
 
@@ -31,7 +36,6 @@ That script will load this \code{multiversion} package and call \code{\link{lib.
 \item{cran_url}{Will be passed trough to the install.packages command.}
 }
 \description{
-This function can be used to install a CRAN package in the (default or specified) multiversion library.
+This function can be used to install a CRAN package in the multiversion library. \cr
 For installing packages from source use \code{lib.install_tarball}.
 }
-

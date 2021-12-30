@@ -15,4 +15,3 @@ lib.check_compatibility(condition, version)
 Returns TRUE if the 'condition' complies with the already available 'version'.
 This function is vectorized.
 }
-

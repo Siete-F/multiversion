@@ -16,4 +16,3 @@ lib.available_versions(packageName, lib_location = lib.location())
 Just checks the multiversion library for all available versions installed for a specific package.
 If no name is provided, an error is returned.
 }
-

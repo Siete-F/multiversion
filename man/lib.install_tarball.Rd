@@ -2,11 +2,16 @@
 % Please edit documentation in R/VC_library_writing.R
 \name{lib.install_tarball}
 \alias{lib.install_tarball}
-\title{Install Tarball into VC library.}
+\title{Install Tarball into R_MV_library}
 \usage{
-lib.install_tarball(packagePath, dependencies, lib_location = lib.location(),
-  install_temporarily = FALSE, overwrite_this_package = FALSE,
-  execute_with_Rscript = TRUE)
+lib.install_tarball(
+  packagePath,
+  dependencies,
+  lib_location = lib.location(),
+  install_temporarily = FALSE,
+  overwrite_this_package = FALSE,
+  execute_with_Rscript = TRUE
+)
 }
 \arguments{
 \item{packagePath}{Provide the complete path to the tarball file that you would like to install.}
@@ -32,4 +37,3 @@ This function can try to install a tarball based on the tarball location and it'
 Hopefully I will be able to implement a method to run this function in a new R instance clear of loaded packages.
       \code{lib.install_tarball_with_Rscript} is a sketch to reach meet that wish.
 }
-

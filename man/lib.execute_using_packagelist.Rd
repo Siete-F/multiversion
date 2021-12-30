@@ -4,11 +4,16 @@
 \alias{lib.execute_using_packagelist}
 \title{Perform operation with a certain set of packages.}
 \usage{
-lib.execute_using_packagelist(packages_to_load = NULL, func_handle, ...,
+lib.execute_using_packagelist(
+  packages_to_load = NULL,
+  func_handle,
+  ...,
   execution_log_location = normPath(paste0("./execution_logs/execution_",
-  gsub("\\\\s|-|:", "_", format(Sys.time())), ".txt")),
-  lib_location = lib.location(), wait_for_response = TRUE,
-  execute_quietly = FALSE)
+    gsub("\\\\s|-|:", "_", format(Sys.time())), ".txt")),
+  lib_location = lib.location(),
+  wait_for_response = TRUE,
+  execute_quietly = FALSE
+)
 }
 \arguments{
 \item{packages_to_load}{A sting indicating which packages must be loaded (e.g. `"dplyr (0.5.0), ggplot2, tidyr (1.2.3)"`).
@@ -26,4 +31,3 @@ It will be parsed using `lib.packs_str2vec` to become an offten used format look
 \description{
 This function can be used to perform some R operation with a configured set of loaded packages.
 }
-

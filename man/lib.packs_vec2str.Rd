@@ -15,4 +15,3 @@ lib.packs_vec2str(x, do_return = FALSE)
 Used to print a set of package names and their version criteria in a way that \code{lib.packs_str2vec()} can parse it again to a package vector.
 This way we can list the dependencies of a function easily and support better commandline interaction.
 }
-

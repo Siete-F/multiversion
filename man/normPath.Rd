@@ -13,4 +13,3 @@ normPath(path)
 This short-hand function normalizes the path and makes sure only forward slashes are used.
 Other slashes are not usable in `grepl` statements directly for example, the '\\' is parsed to '\' before being used as regex.
 }
-

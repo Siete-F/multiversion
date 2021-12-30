@@ -15,4 +15,3 @@ The path that is appended to the `.libPaths` is constructed based on the name an
 \description{
 Adds the path of the package that is specified (and likely loaded before) to the `.libPaths`.
 }
-

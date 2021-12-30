@@ -4,8 +4,11 @@
 \alias{error_packageAlreadyLoaded}
 \title{Throw error because this package is already loaded and not compatible with the requested version.}
 \usage{
-error_packageAlreadyLoaded(requested_package_name, requested_version,
-  already_loaded_version)
+error_packageAlreadyLoaded(
+  requested_package_name,
+  requested_version,
+  already_loaded_version
+)
 }
 \arguments{
 \item{requested_package_name}{A single package name of the package that was desired to be loaded.}
@@ -17,4 +20,3 @@ error_packageAlreadyLoaded(requested_package_name, requested_version,
 \description{
 Throw error because this package is already loaded and not compatible with the requested version.
 }
-

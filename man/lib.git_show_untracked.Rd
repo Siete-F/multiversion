@@ -13,4 +13,3 @@ lib.git_show_untracked(lib_location = lib.location())
 List all untracked direcories (libraries) within the multiversion library. The returned untracked directories are cleaned up
 and printed so that only the unique combinations of each library and it's version is shown once.
 }
-

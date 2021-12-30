@@ -4,8 +4,13 @@
 \alias{lib.testload}
 \title{Test load package list.}
 \usage{
-lib.testload(packages, lib_location = lib.location(), pick.last = FALSE,
-  verbose = TRUE, msg_str = "packages")
+lib.testload(
+  packages,
+  lib_location = lib.location(),
+  pick.last = FALSE,
+  verbose = TRUE,
+  msg_str = "packages"
+)
 }
 \arguments{
 \item{packages}{A named character vector of package/version names. None are really loaded, `lib.load` is used with the `dry.run` turned on.}
@@ -24,4 +29,3 @@ Defaults to 'packages', making the sentence: ' - Trying to load packages: lattic
 Internally used for 'test loading' a list of dependencies when installing a package.
 Returns a list of succesfull load operations.
 }
-

@@ -4,8 +4,12 @@
 \alias{lib.dependencies}
 \title{List the dependencies of a package.}
 \usage{
-lib.dependencies(packageName, do_print = TRUE, character.only = FALSE,
-  lib_location = lib.location())
+lib.dependencies(
+  packageName,
+  do_print = TRUE,
+  character.only = FALSE,
+  lib_location = lib.location()
+)
 }
 \arguments{
 \item{packageName}{The (unquoted) package name for which you would like to print the dependencies.}
@@ -14,7 +18,7 @@ lib.dependencies(packageName, do_print = TRUE, character.only = FALSE,
 
 \item{character.only}{If TRUE, (FALSE by default), the package names can be provided as character vector. Otherwise, direct unquoted package names are supported.}
 
-\item{lib_location}{The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
+\item{lib_location}{The folder containing the R_MV_library structure where this function observes the dependencies. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
 }
 \description{
 Provide a package name (can be without quotes) to show its dependencies.
@@ -22,9 +26,10 @@ To list all dependencies of the complete library, use the inversed function "\co
 That function also does not require quotes.
 }
 \examples{
-lib.dependencies(dplyr)
-lib.dependencies('devtools', character.only = T)
-devtools_deps <- lib.dependencies(devtools, do_print = F)
-
+\dontrun{
+    lib.dependencies(dplyr)
+    lib.dependencies('devtools', character.only = T)
+    devtools_deps <- lib.dependencies(devtools, do_print = F)
 }
 
+}
