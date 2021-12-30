@@ -2,45 +2,59 @@
 % Please edit documentation in R/VC_library_writing.R
 \name{lib.convert}
 \alias{lib.convert}
-\title{Move normally installed packages to R_VC_library structure.}
+\title{Move normally installed packages to R_MV_library structure.}
 \usage{
-lib.convert(installLibrary = lib.location_install_dir(lib_location),
-  lib_location = lib.location(), force_overwrite = FALSE,
-  packages_to_convert = c())
+lib.convert(
+  source_lib = lib.location_install_dir(destination_mv_lib),
+  destination_mv_lib = lib.location(),
+  force_overwrite = FALSE,
+  packages_to_convert = c()
+)
 }
 \arguments{
-\item{lib_location}{The folder containing a structure where all packages in the temp folder must be moved to.
+\item{source_lib}{The temporary library where a package is temporarily installed (having a normal library structure).
+By default, the path is generated using \code{lib.location_install_dir()} on the \code{destination_mv_lib} that is provided which appends \code{/TEMP_install_location}.}
+
+\item{destination_mv_lib}{The folder containing a structure where all packages in the temp folder must be moved to.
 By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
 
 \item{force_overwrite}{If you are experimenting and you would like to overwrite the newly installed package.
 Normally only desired when the package you are experimenting with is a self maintained package and you are sure you increased the version to a new one.}
 
-\item{normalLibrary}{The temporary library where a package is temporarily installed (having a normal library structure).
-By default, the path is generated using \code{lib.location_install_dir()} on the \code{lib_location} that is provided which appends \code{/TEMP_install_location}.}
+\item{packages_to_convert}{A character vector with the names of the packages that need to be converted to the R_MV_library. If missing or empty, all will be converted.}
 }
 \description{
 After this conversion is complete and you set the directory (temporarily by using \code{lib.location(...)}
 or for eternity by setting the equally named environment variable) you are good to go! You can directly use \code{lib.load}
 for loading packages. Thanks for using \code{multiversion}!! \cr
 \cr
-This function creates the VC library structure by moving normaly installed packages to a more parallel oriented library structure.
+This function creates the R_MV_library structure by moving normaly installed packages to a more parallel oriented library structure.
 lib1/BH/DESCRIPTION   becomes  lib2/BH/1.60.0-2/BH/DESCRIPTION
 \cr
-This functionallity is also used for converting installed packages from the temporary installation directory to the final R_VC_library format. \cr
+This functionallity is also used for converting installed packages from the temporary installation directory to the final R_MV_library format. \cr
 \cr
 Note that it is realy no problem to perform a conversion again, it will only move new versions of already present packages and will never overwrite.
 To continue with a clean Temp folder, run \code{lib.clean_install_dir()}, it will remove the folder.
 }
 \examples{
-# As an experiment (or when getting started) you could run this with your complete standard library (not your base library).
-lib.convert(normalLibrary = Sys.getenv("R_LIBS_USER"),
-            lib_location  = "C:/REMOVE_ME_example_library")
+# As an experiment (or when getting started) you could run this with
+# your complete standard library (not your base library).
+lib.convert(source_lib = Sys.getenv("R_LIBS_USER"),
+            destination_mv_lib  = "./REMOVE_ME_example_library")
 
-# Just running it will use the VC library defined by the environment variable and look inside for the Temp folder to use.
+# Running the same operation a second time will result
+# in a notification that all files were already copied.
+
+# Just running it will use the R_MV_library defined by the environment
+# variable and look inside for the Temp folder to use.
+\dontrun{
 lib.convert()
-
-# It is sufficient to only provide the lib_location input, it will look for the temporary folder within automatically.
-lib.convert(lib_location = "M:/R_VC_library")
-
 }
 
+# It is sufficient to only provide the destination_mv_lib input,
+# it will look for the temporary folder within automatically.
+\dontrun{
+lib.convert(destination_mv_lib = "./R_MV_library")
+}
+
+}

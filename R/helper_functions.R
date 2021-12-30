@@ -14,31 +14,31 @@
 # =================================================================
 
 
-# ============= ALIASES =============
-
-#' Alias for \code{\link{lib.load}}
-#' @export
-library_VC <- lib.load
-
-#' Alias for \code{\link{lib.install_tarball}}
-#' @export
-install.packages_VC_tarball <- lib.install_tarball
-
-#' Alias for \code{\link{lib.install}}
-#' @export
-install.packages_VC <- lib.install
-
-#' Alias for \code{\link{lib.dependencies}}
-#' @export
-dependencies <- lib.dependencies
-
-#' Alias for \code{\link{lib.installed_packages}}
-#' @export
-installed.packages_VC <- lib.installed_packages
-
-#' Alias for \code{\link{lib.execute_using_packagelist}}
-#' @export
-execute_with_packages <- lib.execute_using_packagelist
+# # ============= ALIASES =============
+#
+# #' Alias for \code{\link{lib.load}}
+# #' @export
+# library_VC <- lib.load
+#
+# #' Alias for \code{\link{lib.install_tarball}}
+# #' @export
+# install.packages_VC_tarball <- lib.install_tarball
+#
+# #' Alias for \code{\link{lib.install}}
+# #' @export
+# install.packages_VC <- lib.install
+#
+# #' Alias for \code{\link{lib.dependencies}}
+# #' @export
+# dependencies <- lib.dependencies
+#
+# #' Alias for \code{\link{lib.installed_packages}}
+# #' @export
+# installed.packages_VC <- lib.installed_packages
+#
+# #' Alias for \code{\link{lib.execute_using_packagelist}}
+# #' @export
+# execute_with_packages <- lib.execute_using_packagelist
 
 
 # ============== PATHS ==============
@@ -58,7 +58,7 @@ lib.my_location <- function() {
 
     if (length(MV_package_location) == 0 || !file.exists(file.path(MV_package_location, 'INDEX'))) {
         stop(paste0('I need to be able to find the `multiversion` package location. To do that, it must be present in the searchpath `.libPaths()`.',
-                    'Please make sure the library search paths include the location of that package.'))
+                    'Please make sure the library search paths include the location of this package.'))
     }
     return(MV_package_location)
 }
@@ -97,8 +97,8 @@ lib.git_show_untracked <- function(lib_location = lib.location()) {
         return(invisible())
     }
     message(sprintf('\nAnd the following libraries are temporarily installed:\n%s\n%s', sprintf('%20s - %s', 'libs:', 'already converted:'),
-                paste0(sprintf('%20s - %s', temp_installed_libs,
-                               as.character(apply(matrix(sapply(temp_installed_libs, grepl, added_dirs), ncol = length(temp_installed_libs)), 2, any))), collapse = '\n')))
+                    paste0(sprintf('%20s - %s', temp_installed_libs,
+                                   as.character(apply(matrix(sapply(temp_installed_libs, grepl, added_dirs), ncol = length(temp_installed_libs)), 2, any))), collapse = '\n')))
 }
 
 
@@ -186,22 +186,29 @@ clean_download_catch <- function() {
 }
 
 
-#' The R_VC_library location.
+#' The R_MV_library location.
 #'
-#' This function will look for the environment variable \code{R_MV_LIBRARY_LOCATION} indicating the R_VC_library location.
-#' Alternatively you can provide a path for this session only using \code{\link{lib.location}(yourPath)}. This will set the environment variable for you, which will reset on restart.
-#' (Would it be an idea to add it to your .Profile file?)
+#' This function will look for the environment variable \code{R_MV_LIBRARY_LOCATION} indicating the R_MV_library location.
+#' Alternatively you can provide a path for this session only, using \code{\link{lib.location}(yourPath)}.
+#' This will set the environment variable for this session.
+#' (You might want to consider to add this to your \code{.Rprofile} file, see \code{?Startup})
 #'
 #' @param set_session_path (optional) If no environment variable has been set to indicate the library location,
 #' You can call this function and let it set the environment variable for this session only.
 #'
 #' @export
 #'
-lib.location <- function(set_session_path = NULL) {
+lib.location <- function(set_session_path) {
     # If input is provided, set that value as library location.
-    if (!is.null(set_session_path)) {
-        Sys.setenv(R_MV_LIBRARY_LOCATION = set_session_path)
-        return(set_session_path)
+    if (!missing(set_session_path)) {
+        path <- normalizePath(set_session_path, '/', mustWork = T)
+        old <- Sys.getenv('R_MV_LIBRARY_LOCATION')
+        Sys.setenv(R_MV_LIBRARY_LOCATION = path)
+        # Only show this message once per change
+        if (interactive() && old != path) {
+            message('For this session, the environment variable `R_MV_LIBRARY_LOCATION` has been set to:\n"', path, '"')
+        }
+        return(invisible(path))
     }
 
     # Check if environment variable is present (checking 'R_VC_LIBRARY_LOCATION' for backwards compatibility)
@@ -209,7 +216,7 @@ lib.location <- function(set_session_path = NULL) {
     B <- Sys.getenv('R_MV_LIBRARY_LOCATION')
 
     if (!nzchar(A) && !nzchar(B)) {
-        stop(paste('No environment variable has been set for me to find the R_VC_library location.\n',
+        stop(paste('No environment variable has been set for me to find the R_MV_library location.\n',
                    'Please fill the environment variable `R_MV_LIBRARY_LOCATION` with a path to an empty\n',
                    'or already created library base folder, and restart R!!\nAlternatively provide it for\n',
                    'this session using `lib.location(YourPath)`.\n\n'))
@@ -255,7 +262,7 @@ raw_input_parser = function(arguments, varnames_to_exclude) {
     arguments[noName]  <- ''
     arguments[isNum]   <- as.character(arguments[isNum])
     arguments[varName] <- NULL
-    return(unlist(arguments, use.names = TRUE))
+    return(trimws(unlist(arguments, use.names = TRUE)))
 }
 
 
@@ -431,7 +438,7 @@ unique_highest_package_versions <- function(packNameVersion, return_as_df = FALS
 #' Load (but do not attach) the namespaces of a list of packages.
 #'
 #' @param packNameVersion A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.4.0', ggplot = '')`).
-#' @param lib_location The folder which contains the multiversion library. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} to find this directory, see code{lib.location()}.
+#' @param lib_location The folder which contains the multiversion library. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} to find this directory, see \code{lib.location()}.
 #' @param additional_lib A single or multiple paths that must be used in addition to the lib_location for looking up the packages. Non existing paths are silently ignored.
 #'
 lib.load_namespaces <- function(packages_to_load_in_ns, lib_location = lib.location(), additional_lib) {

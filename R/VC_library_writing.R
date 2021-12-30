@@ -18,14 +18,14 @@
 
 # -------------- install.packages --------------
 
-#' Install CRAN package into VC library.
+#' Install CRAN package into the R_MV_library
 #'
-#' This function can be used to install a CRAN package in the (default or specified) multiversion library.
+#' This function can be used to install a CRAN package in the multiversion library. \cr
 #' For installing packages from source use \code{lib.install_tarball}.
 #'
 #' @param installPackages Provide a vector of package names. A version cannot be supplied.
 #' @param lib_location The folder where this package can be installed.
-#' The package will first be installed in a temporary install folder \code{yourLib/TEMP_install_location}
+#' The package will first be installed in a temporary install folder \code{<multiversion lib>/TEMP_install_location}
 #' indicated by the \code{\link{lib.location_install_dir}} function. If \code{install_temporarily} is set to FALSE (the default).
 #' the installed package(s) is moved to the destination location automatically.
 #' @param install_temporarily If FALSE, the installed package(s) is (are) moved to the final destination automatically.
@@ -50,7 +50,7 @@ lib.install <- function(installPackages = NULL, lib_location = lib.location(), i
     # If executing using Rscript, this block is run and calls an R script which will run all except this block.
     if (execute_with_Rscript) {
         temp_install_dir <- lib.location_install_dir()
-        curr_packs <- list.dirs(temp_install_dir, full.names = F, rec = F)
+        curr_packs <- list.dirs(temp_install_dir, full.names = F, recursive = F)
 
         Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
 
@@ -63,7 +63,7 @@ lib.install <- function(installPackages = NULL, lib_location = lib.location(), i
 
         status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib_location, paste(collapse = ',', installPackages), multiversion_location, as.character(overwrite_this_package), as.character(verbose)))
 
-        new_packs <- list.dirs(temp_install_dir, full.names = F, rec = F)
+        new_packs <- list.dirs(temp_install_dir, full.names = F, recursive = F)
         added_packages <- setdiff(new_packs, curr_packs)
 
         message(sprintf('>> Instalation attempt finished with status %s, added were: %s <<\n', as.character(status), paste(collapse = ', ', added_packages)))
@@ -195,7 +195,7 @@ with_build_tools <- function(code) {
 
 # -------------- install.packages [TARBALL] --------------
 
-#' Install Tarball into VC library.
+#' Install Tarball into R_MV_library
 #'
 #' This function can try to install a tarball based on the tarball location and it's dependencies.
 #'
@@ -225,7 +225,7 @@ lib.install_tarball <- function(packagePath, dependencies, lib_location = lib.lo
         multiversion_location <- lib.my_location()
         script_location <- normPath(paste0(multiversion_location, '/exec/lib.install_tarball_script.R'))
         status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib_location, packagePath, lib.packs_vec2str(dependencies, do_return = TRUE), multiversion_location))
-        if (!install_temporarily & status == 0) {lib.convert(lib_location = lib_location, force_overwrite = overwrite_this_package)}
+        if (!install_temporarily & status == 0) {lib.convert(source_lib = lib_location, force_overwrite = overwrite_this_package)}
         return(invisible())
     }
 
@@ -281,52 +281,65 @@ lib.install_tarball <- function(packagePath, dependencies, lib_location = lib.lo
 }
 
 
-# -------- convert  temp_library  to  VC_library ---------
+# -------- convert  temp_library  to  R_MV_library ---------
 
-#' Move normally installed packages to R_VC_library structure.
+#' Move normally installed packages to R_MV_library structure.
 #'
 #' After this conversion is complete and you set the directory (temporarily by using \code{lib.location(...)}
 #' or for eternity by setting the equally named environment variable) you are good to go! You can directly use \code{lib.load}
 #' for loading packages. Thanks for using \code{multiversion}!! \cr
 #' \cr
-#' This function creates the VC library structure by moving normaly installed packages to a more parallel oriented library structure.
+#' This function creates the R_MV_library structure by moving normaly installed packages to a more parallel oriented library structure.
 #' lib1/BH/DESCRIPTION   becomes  lib2/BH/1.60.0-2/BH/DESCRIPTION
 #' \cr
-#' This functionallity is also used for converting installed packages from the temporary installation directory to the final R_VC_library format. \cr
+#' This functionallity is also used for converting installed packages from the temporary installation directory to the final R_MV_library format. \cr
 #' \cr
 #' Note that it is realy no problem to perform a conversion again, it will only move new versions of already present packages and will never overwrite.
 #' To continue with a clean Temp folder, run \code{lib.clean_install_dir()}, it will remove the folder.
 #'
-#' @param normalLibrary The temporary library where a package is temporarily installed (having a normal library structure).
-#' By default, the path is generated using \code{lib.location_install_dir()} on the \code{lib_location} that is provided which appends \code{/TEMP_install_location}.
-#' @param lib_location The folder containing a structure where all packages in the temp folder must be moved to.
+#' @param source_lib The temporary library where a package is temporarily installed (having a normal library structure).
+#' By default, the path is generated using \code{lib.location_install_dir()} on the \code{destination_mv_lib} that is provided which appends \code{/TEMP_install_location}.
+#' @param destination_mv_lib The folder containing a structure where all packages in the temp folder must be moved to.
 #' By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.
 #' @param force_overwrite If you are experimenting and you would like to overwrite the newly installed package.
 #' Normally only desired when the package you are experimenting with is a self maintained package and you are sure you increased the version to a new one.
+#' @param packages_to_convert A character vector with the names of the packages that need to be converted to the R_MV_library. If missing or empty, all will be converted.
 #'
 #' @examples
-#' # As an experiment (or when getting started) you could run this with your complete standard library (not your base library).
-#' lib.convert(normalLibrary = Sys.getenv("R_LIBS_USER"),
-#'             lib_location  = "C:/REMOVE_ME_example_library")
+#' # As an experiment (or when getting started) you could run this with
+#' # your complete standard library (not your base library).
+#' lib.convert(source_lib = Sys.getenv("R_LIBS_USER"),
+#'             destination_mv_lib  = "./REMOVE_ME_example_library")
 #'
-#' # Just running it will use the VC library defined by the environment variable and look inside for the Temp folder to use.
+#' # Running the same operation a second time will result
+#' # in a notification that all files were already copied.
+#'
+#' # Just running it will use the R_MV_library defined by the environment
+#' # variable and look inside for the Temp folder to use.
+#' \dontrun{
 #' lib.convert()
+#' }
 #'
-#' # It is sufficient to only provide the lib_location input, it will look for the temporary folder within automatically.
-#' lib.convert(lib_location = "M:/R_VC_library")
+#' # It is sufficient to only provide the destination_mv_lib input,
+#' # it will look for the temporary folder within automatically.
+#' \dontrun{
+#' lib.convert(destination_mv_lib = "./R_MV_library")
+#' }
 #'
 #' @export
 #'
-lib.convert <- function(installLibrary      = lib.location_install_dir(lib_location),
-                        lib_location        = lib.location(),
+lib.convert <- function(source_lib          = lib.location_install_dir(destination_mv_lib),
+                        destination_mv_lib  = lib.location(),
                         force_overwrite     = FALSE,
                         packages_to_convert = c()) {
 
-    installLibrary <- normPath(installLibrary)
-    lib_location   <- normPath(lib_location)
+    source_lib   <- normPath(source_lib)
+    lib_location <- normPath(destination_mv_lib)
 
-    libContent   <- list.files(installLibrary, all.files = T, recursive = T, no.. = T, full.names = T)
-    packageNames <- strRemain(paste0(installLibrary, '/'), '/.*', libContent)
+    stopifnot(dir.exists(source_lib))
+
+    libContent   <- list.files(source_lib, all.files = T, recursive = T, no.. = T, full.names = T)
+    packageNames <- strRemain(paste0(source_lib, '/'), '/.*', libContent)
 
     uniquePackages <- unique(packageNames)
 
@@ -336,10 +349,10 @@ lib.convert <- function(installLibrary      = lib.location_install_dir(lib_locat
 
     packageVersions <- c()
     for (iPackage in uniquePackages) {
-        packageVersions[grepl(iPackage, packageNames)] <- as.character(numeric_version(packageDescription(iPackage, lib.loc = installLibrary)$Version))
+        packageVersions[grepl(iPackage, packageNames)] <- as.character(numeric_version(packageDescription(iPackage, lib.loc = source_lib)$Version))
     }
 
-    newLocation <- paste(lib_location, packageNames, packageVersions, gsub(libContent, pat = paste0(installLibrary, '/'), rep = ''), sep = '/')
+    newLocation <- paste(lib_location, packageNames, packageVersions, gsub(libContent, pat = paste0(source_lib, '/'), rep = ''), sep = '/')
 
     lapply(unique(dirname(newLocation)), dir.create, recursive = TRUE, showWarnings = FALSE)
     succes <- file.copy(libContent, newLocation, overwrite = force_overwrite)
@@ -494,12 +507,14 @@ reset.libPaths <- function(currentLibs) {
 #' @param packageName The (unquoted) package name for which you would like to print the dependencies.
 #' @param do_print If true (default), prints the dependencies. In both cases, the dependencies are returned invisibly.
 #' @param character.only If TRUE, (FALSE by default), the package names can be provided as character vector. Otherwise, direct unquoted package names are supported.
-#' @param lib_location The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.
+#' @param lib_location The folder containing the R_MV_library structure where this function observes the dependencies. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.
 #'
 #' @examples
-#' lib.dependencies(dplyr)
-#' lib.dependencies('devtools', character.only = T)
-#' devtools_deps <- lib.dependencies(devtools, do_print = F)
+#' \dontrun{
+#'     lib.dependencies(dplyr)
+#'     lib.dependencies('devtools', character.only = T)
+#'     devtools_deps <- lib.dependencies(devtools, do_print = F)
+#' }
 #'
 #' @export
 #'
@@ -565,8 +580,11 @@ lib.packs_vec2str <- function(x, do_return = FALSE) {
 
 #' Show the complete library content.
 #'
-#' Use to print all available packages in the VC_library with all their versions including their dependencies.
+#' Use to print all available packages in the R_MV_library with all their versions including their dependencies.
 #' Simply performs a call to \code{lib.dependsOnMe(all)}.
+#'
+#' @param lib_location The R_MV_library location.
+#'
 #' @export
 #'
 lib.installed_packages <- function(lib_location = lib.location()) {

@@ -44,7 +44,7 @@ lib.available_versions <- function(packageName, lib_location = lib.location()) {
 #' All different version indications should be handled in this function, including:
 #' 1. a version with \code{>} or \code{>=} indicator
 #' 2. a version without \code{>}, so just a version e.g. \code{'0.5.0'} (most specific)
-#' 3. a zero length char e.g. \code{''} (auto determine, based on `pick.last`)
+#' 3. a zero length char e.g. \code{''} (auto determine, based on \code{pick.last})
 #'
 #'
 #' @param packVersion A single named version value. i.e. A package name and it's version requirement like: \code{c(dplyr = '>= 0.4.0')}.
@@ -68,7 +68,7 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
     if (isNamespaceLoaded(packageName)) {
         if (.Platform$GUI == "RStudio" && packageName == 'yaml') {
             # 'yaml' seems to be a strange case. It is loaded by Rstudio from your local library, which is likely a different
-            # version than is present in the VC library. (in my case 2.1.13, where VC version 2.1.14 is present).
+            # version than is present in the R_MV_library (in my case yaml=2.1.13, where the version in my R_MV_library is 2.1.14).
             # I did find a way to unload it so that we can also alter this package his version, even when it is always loaded automatically on startup.
             unloadNamespace(asNamespace('yaml'))
             # Try again after unload is successful.
@@ -79,7 +79,7 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
             # ERROR
             error_packageAlreadyLoaded(packageName, packVersion, alreadyLoadedVersion)
         }
-        # Check if the package version that was already loaded is available in the R_VC_library directory.
+        # Check if the package version that was already loaded is available in the R_MV_library directory.
         if (!numeric_version(alreadyLoadedVersion) %in% num_ver_list) {
             # The most likely location is your default library. This method is build in because `system.file` showed some unpredictable behaviour.
             # It makes use of `.getNamespaceInfo(asNamespace(pkg), "path")` on the background, which found my repository path, not the installed version.
@@ -89,7 +89,7 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
                 loaded_pack_loc <- system.file(package = packageName)
             }
             stop(sprintf(paste('An already loaded package "%s" (version: %s) is compatible with the requested version, but',
-                               '\nwas not loaded from the R_VC_library directory and not available (instead from: "%s").',
+                               '\nwas not loaded from the R_MV_library directory and not available (instead from: "%s").',
                                '\nRequested was %s (available versions: %s).',
                                '\nIf this problem persists, try cleaning the RStudio catch folder as described in DETAILS of ?lib.load.',
                                '\nWe will not try to detach since that could cause unexpected behaviour.',
@@ -195,7 +195,7 @@ lib.check_compatibility <- function(condition, version) {
 #' if no compatible version is found between the available versions, the function 'chooseVersion' will return an error to notify you.
 #'
 #' @param packVersion A named character vector with package names and their version indication (e.g. \code{c(dplyr = '>= 0.4.0', ggplot = '')}).
-#' @param lib_location The location of the R_VC_library folder.
+#' @param lib_location The location of the R_MV_library folder.
 #' @param verbose if TRUE, it will print the choices it makes. If the session is not interactive, or verbose = FALSE, nothing will be printed.
 #' @param pick.last If a version like\code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
 #' By default it will take the first higher version (when it exists, just\code{0.5}, which is often the case).

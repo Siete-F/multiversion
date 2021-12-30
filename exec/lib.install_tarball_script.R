@@ -21,7 +21,7 @@ packagePath         <- args[2]
 dependencies    <- args[3]
 multiversion.location <- args[4]
 
-error_str <- function(prestring, ...) {paste0(sprintf(prestring, ...), '\nExpected input:\n1) a valid VC library location.\n',
+error_str <- function(prestring, ...) {paste0(sprintf(prestring, ...), '\nExpected input:\n1) a valid MV library location.\n',
                                               '2) a character string with the package to install.\n',
                                               '3) a packages string (e.g. "dplyr (0.5.0), ggplot2, tidyr (1.2.3)")',
                                               ' indicating the dependencies that needs to be loaded.\n',
