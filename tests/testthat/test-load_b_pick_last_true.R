@@ -5,11 +5,9 @@ test_outcomes <- callr::r(
         suppressMessages(suppressWarnings(devtools::load_all()))
 
         .initialize_test(desc = 'load package.b, pick.last = TRUE')
-
         .set_test_lib_location()
-
-        .exp_false('package:package.b' %in% search())
-        .exp_false('package:package.c' %in% search())
+        stopifnot(!'package:package.b' %in% search())
+        stopifnot(!'package:package.c' %in% search())
 
         # load package b, with latest version of package c
         .exp_error(package.c::what_version_are_you(), "there is no package called 'package.c'")
