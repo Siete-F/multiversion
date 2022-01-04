@@ -1,8 +1,6 @@
 # READY
 
-test_outcomes1 <- callr::r(
-    function() {
-        suppressMessages(suppressWarnings(devtools::load_all()))
+test_outcomes1 <- with_safe_package_tester({
 
         .initialize_test(desc = 'load different version')
         .set_test_lib_location()
@@ -31,17 +29,14 @@ test_outcomes1 <- callr::r(
         .exp_false('package:package.d' %in% search())
         .exp_false('package:package.e' %in% search())
 
-        return(.get_tests())
-    }
-    ,
-    show = TRUE)
+        .get_tests()
+    })
+
 
 .run_test_batch(test_outcomes1)
 
 
-test_outcomes2 <- callr::r(
-    function() {
-        suppressMessages(suppressWarnings(devtools::load_all()))
+test_outcomes2 <- with_safe_package_tester({
 
         .initialize_test(desc = 'Check package loading messages')
         .set_test_lib_location()
@@ -62,9 +57,7 @@ test_outcomes2 <- callr::r(
         .exp_match(msg4, "Version 15.2.9  is chosen.*(>= 15.2.8)")
         .exp_match(msg5, "Exactly 15.2.9  is used")
 
-        return(.get_tests())
-    }
-    ,
-    show = TRUE)
+        .get_tests()
+    })
 
 .run_test_batch(test_outcomes2)

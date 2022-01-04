@@ -22,6 +22,7 @@ tst_env <- new.env(parent = emptyenv())
 tst_env$desc = ''
 tst_env$tests = list()
 
+
 #' Functions to help with testing inside seperate processes.
 #'
 #' The functions can be used in the following way:\cr\cr
@@ -40,8 +41,8 @@ NULL
 #'
 .initialize_test <- function(desc) {
     stopifnot(is.character(desc), length(desc) == 1)
-    tst_env$desc = desc
-    tst_env$tests = list()
+    assign('desc',  desc,   envir = tst_env)
+    assign('tests', list(), envir = tst_env)
 }
 
 #' @rdname test_helpers
@@ -49,13 +50,12 @@ NULL
 .add_test <- function(type, A, B) {
     call <- as.character(sys.call(-1))
 
-    tst_env$tests[[length(tst_env$tests) + 1]] <<- list(
+    assign('tests', c(get('tests', tst_env), list(list(
         type = type, a = A, b = B,
         # The reference (value of B) is already printed by testthat,
         # so there is no need to include the original value of that one.
         # call[2] refers to the code that produced the first input argument of the .exp... function.
-        call = call[2])
-
+        call = call[2]))), envir = tst_env)
 }
 
 #' @rdname test_helpers
@@ -95,7 +95,7 @@ NULL
 #' @rdname test_helpers
 #'
 .get_tests <- function() {
-    return(as.list(tst_env))
+    as.list(tst_env)
 }
 
 #' @rdname test_helpers
@@ -122,3 +122,31 @@ NULL
         }
     })
 }
+
+with_safe_package_tester <- function(expr) {
+    # Gather the current state
+    old_paths <- .libPaths()
+    old_mv_lib_loc <- Sys.getenv('R_MV_LIBRARY_LOCATION')
+
+    # Define how to reset to unchanged environment (so how to return to the clean slate and undo potential effects done by 'expr')
+    withr::defer({
+        # Sorted in the order of dependencies...
+        detachAll(packageList = c('package.a', 'package.b', 'package.d', 'package.c', 'package.f', 'package.e'))
+        .libPaths(old_paths)
+        Sys.setenv(R_MV_LIBRARY_LOCATION = old_mv_lib_loc)
+    })
+
+    # Define your clean slate:
+    detachAll(packageList = c('package.a', 'package.b', 'package.d', 'package.c', 'package.f', 'package.e'))
+
+    # This sets the environment variable 'R_MV_LIBRARY_LOCATION' to the test_library
+    suppressMessages(lib.location(
+        ifelse(dir.exists('../test_library/'),
+               '../test_library/', 'tests/test_library/'
+        )))
+
+    .libPaths(.Library)
+
+    force(expr)
+}
+

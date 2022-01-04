@@ -377,44 +377,62 @@ lib.convert <- function(source_lib          = lib.location_install_dir(destinati
 #' running \code{detachAll} and then restarting Rstudio. If problems with package loading still persists,
 #' then follow the final alternative solution described in the details section of the documentation of \code{lib.load}.
 #'
+#' @param reload_multiversion If multiversion needs to be loaded again after everything (or all mentionedin \code{packageList}) is unloaded.
+#' @param packageList A character vector with the packages to detach/unload. Defaults to all packages
+#'        (\code{names(sessionInfo()$otherPkgs}). When package X depends on package Y, make sure you first specify X then Y.
 #' @param dryRun If TRUE, lists all packages that will be cleaned up.
-#' @param packageList A character vector with the packages to detach/unload. Defaults to all packages.
 #'
 #' @export
 #'
-detachAll <- function(reload_multiversion = FALSE, dryRun = FALSE, packageList = names(sessionInfo()$otherPkgs)) {
+detachAll <- function(reload_multiversion = FALSE, packageList = 'all', dryRun = FALSE) {
+    do_all <- FALSE
+    if (missing(packageList) || packageList == 'all') {
+        packageList <- names(sessionInfo()$otherPkgs)
+        do_all <- TRUE
+    }
     currentPackageAndVersions <- lib.package_version_loaded(packageList)
 
-    if (is.null(packageList)) {
+    if (missing(packageList) && is.null(packageList)) {
         message('No packages are loaded, nothing to detach.')
 
     } else if (!dryRun) {
-        in_search <- past0('package:', packageList) %in% search()
+        in_search <- paste0('package:', packageList) %in% search()
         lapply(sprintf('package:%s', packageList[in_search]), detach, character.only = TRUE, unload = TRUE)
     }
 
     # also unload all namespaces (not always stable!)
     if (!dryRun) {
-        loadedNS = rev(names(sessionInfo()$loadedOnly))
-        allLoadedPackages = unique(c(packageList, loadedNS))
-        cnt = 1
-        while(length(loadedNS) && cnt < 1000) {
-            sapply(loadedNS, function(x) {
-                result = tryCatch(unloadNamespace(getNamespace(x)), error = function(e) e)
-                # if(!is(result, "error")) {
-                # }
-            })
-            loadedNS = rev(names(sessionInfo()$loadedOnly))
-            cnt = cnt + 1
+
+        if (do_all) {
+            loadedNS <- rev(names(sessionInfo()$loadedOnly))
+            allLoadedPackages <- unique(c(packageList, loadedNS))
+
+            cnt <- 1
+            while(length(loadedNS) && cnt < 1000) {
+                sapply(loadedNS, function(x) {
+                    result <- tryCatch(unloadNamespace(getNamespace(x)), error = function(e) NULL)
+                })
+                loadedNS <- rev(names(sessionInfo()$loadedOnly))
+
+                cnt <- cnt + 1
+            }
+
+            # if while loop never naturally completed
+            if(cnt == 1000)
+                warning("Unable to unload all namespaces")
+        } else {
+            for (itter in 1:10) {
+                sapply(packageList, function(x) {
+                    tryCatch(unloadNamespace(getNamespace(x)), error = function(e) NULL)
+                })
+            }
+            allLoadedPackages <- packageList
         }
 
-        # if while loop never naturally completed
-        if(cnt == 1000)
-            warning("Unable to unload all namespaces")
 
         # deal with all DLLs now that the rest is done.
-        invisible(sapply(allLoadedPackages, function(x) {
-            dll = getLoadedDLLs()[[x]]
+        suppressWarnings(sapply(allLoadedPackages, function(x) {
+            dll <- getLoadedDLLs()[[x]]
 
             if(!is.null(dll))
                 tryCatch(library.dynam.unload(x, dirname(dirname(dll[["path"]]))), error = function(e) NULL)
