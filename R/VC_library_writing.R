@@ -17,161 +17,254 @@
 # ============== MAIN FUNCTIONALITY ==============
 
 # -------------- install.packages --------------
-
-#' Install CRAN package into the R_MV_library
+#' Install packages and tarballs into R_MV_library
 #'
-#' This function can be used to install a CRAN package in the multiversion library. \cr
-#' For installing packages from source use \code{lib.install_tarball}.
+#' @description
 #'
-#' @param installPackages Provide a vector of package names. A version cannot be supplied.
+#' This family of functions can help with installing packages without
+#' the risk of installing every minor package improvement as soon as it is released.
+#'
+#' \enumerate{
+#'   \item{\code{lib.install_tarball} can install a tarball based on the
+#'   tarball location and it's dependencies (like \code{c(dplyr = '> 5.0')}).}
+#'   \item{\code{lib.install_if_not_compatible} can install CRAN package
+#'   depending on a condition. This is especially useful
+#'   (and used on the background) for installing the dependencies for the
+#'   tarball installation.}
+#'   \item{\code{lib.install} can install CRAN packages into the R_MV_library,
+#'   which in return is used by \code{lib.install_if_not_compatible}.}
+#' }
+#'
+#' @param tarball The complete path to the tarball file that you would like to install.
+#' @param package_conditions Provide a vector of package
+#' name/'version condition' specifications. See section
+#' 'limitations for \code{package_conditions}'.
+#' @param package_names Provide a vector of package names.
+#' A version cannot be supplied.
+#' @param dependencies Provide the dependencies like a package version
+#' combination: \code{c(dplyr = '>= 0.5', data.table = '', R6 = '0.1.1')}
+#'
 #' @param lib_location The folder where this package can be installed.
-#' The package will first be installed in a temporary install folder \code{<multiversion lib>/TEMP_install_location}
-#' indicated by the \code{\link{lib.location_install_dir}} function. If \code{install_temporarily} is set to FALSE (the default).
+#' The package will first be installed in a temporary install folder
+#' \code{<multiversion lib>/TEMP_install_location}
+#' indicated by the \code{\link{lib.location_install_dir}()} function.
+#' If \code{install_temporarily} is set to FALSE (the default).
 #' the installed package(s) is moved to the destination location automatically.
-#' @param install_temporarily If FALSE, the installed package(s) is (are) moved to the final destination automatically.
-#' Otherwise it is necessary to run \code{\link{lib.convert}()} manually after the installation into the temporary folder finished. To clean up the temporary folder, run \code{lib.clean_install_dir()}.
-#' When \code{overwrite_this_package} is TRUE, and \code{install_temporarily} is not provided, it will be set to FALSE automatically.
-#' Installing a package temporarily gives you the oppertunity to test the package before adding it to the multiversion library structure.
-#' Loading packages including those in the temporary library (\code{\link{lib.location_install_dir}()}) can be done using: \code{\link{lib.load}(..., also_load_from_temp_lib = TRUE)}.
-#' @param execute_with_Rscript When TRUE (the default), it will try to install the package using a sepparate Rscipt R instance.
-#' This simplifies installing and leaves changing loaded packages etc. to another R instance which we can kill :).
-#' It will run a script which it provides with your list of packages to install.
-#' That script will load this \code{multiversion} package and call \code{\link{lib.install}()} directly.
+#' @param install_temporarily If FALSE, the installed packages are moved
+#' to the final destination automatically. Otherwise it is necessary to run
+#' \code{\link{lib.convert}()} manually after the installation into the temporary
+#' folder finished. To clean up the temporary folder, run \code{lib.clean_install_dir()}.
 #' @param cran_url Will be passed trough to the install.packages command.
 #'
+# @param execute_with_Rscript When TRUE (the default), it will try to install the package using a separate Rscript R instance.
+# This simplifies installing and leaves changing loaded packages etc. to another R instance which we can kill :).
+# It will run a script which it provides with your list of packages to install.
+# That script will load this \code{multiversion} package and call \code{\link{lib.install}()} directly.
+#'
+#' @details
+#'
+#' @section limitations for \code{package_conditions}:
+#' All version specifications are allowed except for the exact version indication
+#' (e.g. don't provide \code{c(dplyr = '1.2.3')}). It is allowed to provide no
+#' specification, which will match any installed version of that package.
+#' \bold{If the condition is met, the package is skipped}, which is the desired
+#' behavior for dependencies. For an empty condition (e.g. \code{c(dplyr = '')}),
+#' it will only install the package when no version is installed at all.
+#'
+#' @section Installing temporarily:
+#' Installing a package temporarily gives you the opportunity to test the package
+#' before adding it to the multiversion library structure. Loading packages, including those in the
+#' temporary library (\code{\link{lib.location_install_dir}()}) can be done using:
+#' \code{\link{lib.load}(..., also_load_from_temp_lib = TRUE)}.
+#'
+#' @name lib.install
+NULL
+
+#' @rdname lib.install
 #' @export
 #'
-lib.install <- function(installPackages = NULL, lib_location = lib.location(), install_temporarily = FALSE,
-                        overwrite_this_package = FALSE, execute_with_Rscript = TRUE, verbose = FALSE, cran_url = "http://cran.us.r-project.org") {
+lib.install <- function(package_names = NULL, lib_location = lib.location(), install_temporarily = FALSE,
+                        overwrite_this_package = FALSE, verbose = FALSE, cran_url = "http://cran.us.r-project.org") {
 
-    if (any(names(installPackages) != '')) stop('Please provide a vector of names, no name-version combinations.')
-    if (length(installPackages) == 0) return(invisible())
-
-    # If executing using Rscript, this block is run and calls an R script which will run all except this block.
-    if (execute_with_Rscript) {
-        temp_install_dir <- lib.location_install_dir()
-        curr_packs <- list.dirs(temp_install_dir, full.names = F, recursive = F)
-
-        Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
-
-        if (grepl('Could not find files for the given pattern(s)', Rscript_dir)) {
-            stop('Please make sure `where Rscript` results in one or more valid paths. First one is used.')
-        }
-
-        multiversion_location <- lib.my_location()
-        script_location <- normPath(paste0(multiversion_location, '/exec/lib.install_script.R'))
-
-        status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib_location, paste(collapse = ',', installPackages), multiversion_location, as.character(overwrite_this_package), as.character(verbose)))
-
-        new_packs <- list.dirs(temp_install_dir, full.names = F, recursive = F)
-        added_packages <- setdiff(new_packs, curr_packs)
-
-        message(sprintf('>> Instalation attempt finished with status %s, added were: %s <<\n', as.character(status), paste(collapse = ', ', added_packages)))
-        if (!install_temporarily & status == 0) {
-            lib.convert(lib_location        = lib_location,
-                        force_overwrite     = overwrite_this_package,
-                        packages_to_convert = added_packages)
-        }
+    if (!is.null(names(package_names))) {
+        stop('Please provide a vector of names, not a vector like c(name = "1.0.0").')
+    }
+    if (length(package_names) == 0) {
         return(invisible())
     }
+
+    # If executing using Rscript, this block is run and calls an R script which will run all except this block.
+    # if (execute_with_Rscript) {
+    #     temp_install_dir <- lib.location_install_dir()
+    #     curr_packs <- list.dirs(temp_install_dir, full.names = F, recursive = F)
+    #
+    #     Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
+    #
+    #     if (grepl('Could not find files for the given pattern(s)', Rscript_dir)) {
+    #         stop('Please make sure `where Rscript` results in one or more valid paths. First one is used.')
+    #     }
+    #
+    #     multiversion_location <- lib.my_location()
+    #     script_location <- normPath(paste0(multiversion_location, '/exec/lib.install_script.R'))
+    #
+    #     status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib_location, paste(collapse = ',', package_names), multiversion_location, as.character(overwrite_this_package), as.character(verbose)))
+    #
+    #     new_packs <- list.dirs(temp_install_dir, full.names = F, recursive = F)
+    #     added_packages <- setdiff(new_packs, curr_packs)
+    #
+    #     message(sprintf('>> Installation attempt finished with status %s, added were: %s <<\n', as.character(status), paste(collapse = ', ', added_packages)))
+    #     if (!install_temporarily & status == 0) {
+    #         lib.convert(lib_location        = lib_location,
+    #                     force_overwrite     = overwrite_this_package,
+    #                     packages_to_convert = added_packages)
+    #     }
+    #     return(invisible())
+    # }
 
     install.location <- normPath(lib.location_install_dir(lib_location))
 
     # loaded packages
-    nms <- names(sessionInfo()$otherPkgs)
-    currentlyLoaded <- detachAll(packageList = nms[!nms %in% c('RVClibrary', 'multiversion')])
+    # nms <- names(sessionInfo()$otherPkgs)
+    # currentlyLoaded <- detachAll(packageList = nms[!nms %in% c('RVClibrary', 'multiversion')])
 
     # The following should only be executed once.
-    if (sum(grepl('^lib.install', sapply(sys.calls(), function(x) {x[[1]]}))) <= 1) {
-        if (!nzchar(Sys.which('make'))) {
-            stop(paste('Please make sure the `make.exe` application of `Rtools` can be',
-                       '\nfound so that packages can be compiled from source if necessary!',
-                       '\nAdd e.g. `C:/Rtools/bin` to the PATH env var if you have the program already installed',
-                       '\nor download Rtools (and check `Add paths` during install, and restart R) from "https://cran.r-project.org/bin/windows/Rtools/".'))
-        }
-        # Just took some
-        if (any(!nzchar(Sys.which(c('aspell', 'basename', 'cat', 'cp'))))) {
-            stop(sprintf(paste('%sAdd e.g. `C:/Rtools/bin` to the PATH env var if you have Rtools already installed',
-                               '\nor download Rtools (and check `Add paths` during install, and restart R) from "https://cran.r-project.org/bin/windows/Rtools/".'),
-                         ifelse(nzchar(Sys.getenv('MAKE')), '',
-                                'The MAKE variable is specified, but this is not sufficient for an Rscript instance to compile from source properly. ')))
-        }
-        if (!grepl('\\$\\(WIN\\)', Sys.getenv('BINPREF'))) {
-            stop(sprintf(paste0('Please make sure you also have the BINPREF environment variable set properly.',
-                                '\nCurrent value: "%s", expected value should be like: "C:/Rtools/mingw_$(WIN)/bin/",',
-                                '\nwhere "$(WIN)" is set by R to either "32" or "64" depending on the target.',
-                                '\nIf your PATH and BINPREF variables are set correctly, we should be ready',
-                                '\nfor compiling from source (being able to install the latest pacakges).'), Sys.getenv('BINPREF')))
-        }
+    # if (sum(grepl('^lib.install', sapply(sys.calls(), function(x) {x[[1]]}))) <= 1) {
+    #     if (!nzchar(Sys.which('make'))) {
+    #         stop(paste('Please make sure the `make.exe` application of `Rtools` can be',
+    #                    '\nfound so that packages can be compiled from source if necessary!',
+    #                    '\nAdd e.g. `C:/Rtools/bin` to the PATH env var if you have the program already installed',
+    #                    '\nor download Rtools (and check `Add paths` during install, and restart R) from "https://cran.r-project.org/bin/windows/Rtools/".'))
+    #     }
+    #     # Just took some
+    #     if (any(!nzchar(Sys.which(c('aspell', 'basename', 'cat', 'cp'))))) {
+    #         stop(sprintf(paste('%sAdd e.g. `C:/Rtools/bin` to the PATH env var if you have Rtools already installed',
+    #                            '\nor download Rtools (and check `Add paths` during install, and restart R) from "https://cran.r-project.org/bin/windows/Rtools/".'),
+    #                      ifelse(nzchar(Sys.getenv('MAKE')), '',
+    #                             'The MAKE variable is specified, but this is not sufficient for an Rscript instance to compile from source properly. ')))
+    #     }
+    #     if (!grepl('\\$\\(WIN\\)', Sys.getenv('BINPREF'))) {
+    #         stop(sprintf(paste0('Please make sure you also have the BINPREF environment variable set properly.',
+    #                             '\nCurrent value: "%s", expected value should be like: "C:/Rtools/mingw_$(WIN)/bin/",',
+    #                             '\nwhere "$(WIN)" is set by R to either "32" or "64" depending on the target.',
+    #                             '\nIf your PATH and BINPREF variables are set correctly, we should be ready',
+    #                             '\nfor compiling from source (being able to install the latest pacakges).'), Sys.getenv('BINPREF')))
+    #     }
+    #
+    #     if (interactive()) {
+    #         on.exit({
+    #             message('\nResetting your loaded packages.')
+    #             invisible(lib.load(loadPackages = currentlyLoaded, lib_location = lib_location, quietly = TRUE))
+    #         }, add = TRUE)
+    #     }
+    #     prev_setting <- getOption("install.packages.compile.from.source")
+    #     options(install.packages.compile.from.source = "always")
+    #
+    #     # library paths
+    #     currentLibs <- .libPaths()
+    #     .libPaths(.Library)
+    #
+    #     on.exit({
+    #         options(install.packages.compile.from.source = prev_setting)
+    #         .libPaths(currentLibs)
+    #     }, add = TRUE)
+    # }
 
-        if (interactive()) {
-            on.exit({
-                message('\nResetting your loaded packages.')
-                invisible(lib.load(loadPackages = currentlyLoaded, lib_location = lib_location, quietly = TRUE))
-            }, add = TRUE)
-        }
-        prev_setting <- getOption("install.packages.compile.from.source")
-        options(install.packages.compile.from.source = "always")
-
-        # library paths
-        currentLibs <- .libPaths()
-        .libPaths(.Library)
-
-        on.exit({
-            options(install.packages.compile.from.source = prev_setting)
-            .libPaths(currentLibs)
-        }, add = TRUE)
-    }
-
+    currentLibs <- lib.set_libPaths('all', lib_location, additional_lib_paths = install.location)
+    on.exit(reset.libPaths(currentLibs), add = TRUE, after = FALSE)
 
 
     # loop through packages to install
-    for (iPackage in installPackages) {
+    for (iPackage in package_names) {
 
-        dependsOn <- lib.dependencies_online(iPackage, cran_url = cran_url)
-
-        # try loading dependencies, so that they're skipped during instalation.
-        succesfullLoads <- lib.testload(dependsOn, lib_location, pick.last = TRUE, msg_str = paste0('"', iPackage, '" his dependencies'), verbose = verbose)
-
-        failedLoads <- !names(dependsOn) %in% names(succesfullLoads) & !lib.is_basepackage(names(dependsOn))
-        failedLoads <- names(dependsOn)[failedLoads]
-
-        if (length(failedLoads) > 0) {
-            message(sprintf('\n - We will install for package "%s" the missing dependencies: %s.\n',
-                            iPackage, paste0(collapse = ',', '"', failedLoads, '"')))
-
-            lib.install(installPackages = failedLoads, lib_location = lib_location, install_temporarily = TRUE, execute_with_Rscript = execute_with_Rscript, verbose = verbose)
-
-            # When dependencies have been installed, try loading them again to create a more complete list of available
-            succesfullLoads <- lib.testload(dependsOn, lib_location, pick.last = TRUE, verbose = verbose)
-        }
-
-
-        # If all dependencies were already there, check if the package is already installed.
-        # When overwriting this package (or installing the latest version) we are not interested in knowing if the package already exists.
-        if (!overwrite_this_package && all(names(dependsOn) %in% names(succesfullLoads) | lib.is_basepackage(names(dependsOn)))) {
-            finalPackSucces <- lib.testload(stats::setNames('', iPackage), lib_location, pick.last = TRUE, verbose = verbose, msg_str = '')
-
-            if (iPackage %in% names(finalPackSucces)) {
-                message(sprintf('\n - The "%s" package seems to be already installed...\n', iPackage))
-                next
-            }
-        }
-
-        # add the succesfully loaded packages to the .libPaths, so the installer knows that they are there.
-        lib.set_libPaths(succesfullLoads, lib_location, additional_lib_paths = install.location)
-
+        # dependsOn <- lib.dependencies_online(iPackage, cran_url = cran_url)
+        #
+        # # try loading dependencies, so that they're skipped during installation.
+        # successfulLoads <- lib.testload(dependsOn, lib_location, pick.last = TRUE, msg_str = paste0('"', iPackage, '" his dependencies'), verbose = verbose)
+        #
+        # failedLoads <- !names(dependsOn) %in% names(successfulLoads) & !lib.is_basepackage(names(dependsOn))
+        # failedLoads <- names(dependsOn)[failedLoads]
+        #
+        # if (length(failedLoads) > 0) {
+        #     message(sprintf('\n - We will install for package "%s" the missing dependencies: %s.\n',
+        #                     iPackage, paste0(collapse = ',', '"', failedLoads, '"')))
+        #
+        #     lib.install(package_names = failedLoads, lib_location = lib_location, install_temporarily = TRUE, execute_with_Rscript = execute_with_Rscript, verbose = verbose)
+        #
+        #     # When dependencies have been installed, try loading them again to create a more complete list of available
+        #     successfulLoads <- lib.testload(dependsOn, lib_location, pick.last = TRUE, verbose = verbose)
+        # }
+        #
+        #
+        # # If all dependencies were already there, check if the package is already installed.
+        # # When overwriting this package (or installing the latest version) we are not interested in knowing if the package already exists.
+        # if (!overwrite_this_package && all(names(dependsOn) %in% names(successfulLoads) | lib.is_basepackage(names(dependsOn)))) {
+        #     finalPackSucces <- lib.testload(stats::setNames('', iPackage), lib_location, pick.last = TRUE, verbose = verbose, msg_str = '')
+        #
+        #     if (iPackage %in% names(finalPackSucces)) {
+        #         message(sprintf('\n - The "%s" package seems to be already installed...\n', iPackage))
+        #         next
+        #     }
+        # }
+        #
+        # # add the successfully loaded packages to the .libPaths, so the installer knows that they are there.
+        # lib.set_libPaths(successfulLoads, lib_location, additional_lib_paths = install.location)
+        #
         message('\nINSTALLING: ', iPackage)
         # because the dependencies are on the libPath, only the not present dependencies will be installed.
         # keeping them loaded would raise a popup of Rstudio.
+
         with_build_tools(install.packages(iPackage, lib = install.location, quiet = TRUE, repos = cran_url))
         message('INSTALLING DONE.')
 
-        if (!install_temporarily) {
-            lib.convert(install.location, lib_location, force_overwrite = overwrite_this_package)
-        }
+    }
+    if (!install_temporarily) {
+        lib.convert(install.location, lib_location, force_overwrite = overwrite_this_package)
+    }
+}
+
+
+#' @rdname lib.install
+#' @export
+#'
+lib.install_if_not_compatible <- function(package_conditions, lib_location = lib.location(), install_temporarily = FALSE,
+                        overwrite_this_package = FALSE, cran_url = "http://cran.us.r-project.org") {
+
+    if (length(package_conditions) == 0) {
+        return(invisible())
+    }
+    if (is.null(names(package_conditions))) {
+        stop('Please provide a vector of named version specifications, like `c(name = "> 1.0.0")`.',
+             'When the condition cannot be met, the package will be installed.\n',
+             'Note that specific versions are not allowed because we cannot install a specific version.')
+    }
+    if (any(grepl('^[-0-9. ]+$', package_conditions) && nchar(package_conditions) != 0)) {
+        stop("It is not possible to provide exact versions like c(package.a = '1.0.0'). ",
+             "This is because this is the only version specification for which installing ",
+             "the latest version from CRAN will likely not solve the dependency.")
     }
 
+    # loop through packages to install
+    for (iPackage in seq_along(package_conditions)) {
+        packVer <- package_conditions[iPackage]
+        packName <- names(packVer)
+
+        av_ver <- lib.available_versions(packName, lib_location = lib_location)
+
+        if (length(av_ver) != 0 && any(lib.check_compatibility(packVer, av_ver))) {
+            message(sprintf('PASS - The version condition "%s" for package "%s" can be matched just fine.\nAvailable versions are: %s',
+                            packVer, packName, paste0(collapse = ', ', '"', av_ver, '"')))
+            next
+        }
+        message(sprintf('INSTALL - The version condition "%s" for package "%s" can not be met.\n(Available versions are: %s)\nInstalling package now...\n',
+                        packVer, packName, paste0(collapse = ', ', '"', av_ver, '"')))
+
+        lib.install(packName, lib_location = lib_location, install_temporarily = TRUE,
+                    overwrite_this_package = overwrite_this_package, verbose = verbose, cran_url = cran_url)
+
+    }
+    if (!install_temporarily) {
+        lib.convert(lib.location_install_dir(lib_location), lib_location, force_overwrite = overwrite_this_package)
+    }
 }
 
 
@@ -195,107 +288,112 @@ with_build_tools <- function(code) {
 
 # -------------- install.packages [TARBALL] --------------
 
-#' Install Tarball into R_MV_library
-#'
-#' This function can try to install a tarball based on the tarball location and it's dependencies.
-#'
-#'
-#' @param packagePath Provide the complete path to the tarball file that you would like to install.
-#' @param dependencies Provide the dependencies like a package version combination: \code{c(dplyr = '>= 0.5', data.table = '', R6 = '0.1.1')}
-#' @param lib_location The folder containing a structure where this package needs to be installed in. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.
-#' @param install_temporarily If FALSE, the installed package(s) is (are) moved to the final destination automatically.
-#' Otherwise it is necessary to run \code{\link{lib.convert}()} manually after the installation into the temporary folder finished. To clean up the temporary folder, run \code{\link{lib.clean_install_dir}()}.
-#' Installing a package temporarily gives you the oppertunity to test the package before adding it to the multiversion library structure.
-#' Loading packages including those in the temporary library (\code{\link{lib.location_install_dir}()}) can be done using: \code{\link{lib.load}(..., also_load_from_temp_lib = TRUE)}.
-#' @param overwrite_this_package If TRUE, the installed package is added and overwrites the existing package.
-#' @param execute_with_Rscript When true, it will try to install a tarball using a sepparate Rscipt R instance. This saves you from the hasle to prepare your Rstudio environment to match the one that the tarball requires (incl. dependencies).
-#' It will run a script provided with the tarball location and it's dependencies. That script will load \code{multiversion} and call \code{\link{lib.install_tarball}} directly.
-#'
-#' @note Hopefully I will be able to implement a method to run this function in a new R instance clear of loaded packages.
-#'       \code{lib.install_tarball_with_Rscript} is a sketch to reach meet that wish.
+#' @rdname lib.install
 #' @export
 #'
-lib.install_tarball <- function(packagePath, dependencies, lib_location = lib.location(),
+lib.install_tarball <- function(tarball, dependencies = c(), lib_location = lib.location(),
                                 install_temporarily = FALSE, overwrite_this_package = FALSE,
-                                execute_with_Rscript = TRUE) {
+                                cran_url = "http://cran.us.r-project.org") {
+                                # execute_with_Rscript = TRUE) {
 
-    if (execute_with_Rscript) {
-        Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
-        if (grepl('Could not find files for the given pattern(s)', Rscript_dir)) {stop('Please make sure `where Rscript` results in one or more valid paths. First one is used.')}
-        multiversion_location <- lib.my_location()
-        script_location <- normPath(paste0(multiversion_location, '/exec/lib.install_tarball_script.R'))
-        status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib_location, packagePath, lib.packs_vec2str(dependencies, do_return = TRUE), multiversion_location))
-        if (!install_temporarily & status == 0) {lib.convert(source_lib = lib_location, force_overwrite = overwrite_this_package)}
-        return(invisible())
-    }
+    stopifnot(file.exists(tarball))
+
+    # if (execute_with_Rscript) {
+    #     Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
+    #     if (grepl('Could not find files for the given pattern(s)', Rscript_dir)) {
+    #         stop('Please make sure `where Rscript` results in one or more valid paths. First one is used.')
+    #     }
+    #     script_location <- system.file(package = 'multiversion', 'lib.install_tarball_script.R')
+    #
+    #     status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location,
+    #                              lib_location, packagePath, lib.packs_vec2str(dependencies, do_return = TRUE),
+    #                              dirname(dirname(script_location))))
+    #
+    #     if (!install_temporarily & status == 0) {
+    #         lib.convert(source_lib = lib_location, force_overwrite = overwrite_this_package)
+    #     }
+    #     return(invisible())
+    # }
 
     install.location <- lib.location_install_dir(lib_location)
 
-    currentLibs <- .libPaths()
-    .libPaths(.Library)
-    on.exit(reset.libPaths(currentLibs), add = TRUE)
+    if (!missing(dependencies) && length(dependencies) > 0) {
+        message('First start with installing the provided dependencies (temporarily): ',
+                paste0(collapse = ', ' , paste0(names(dependencies), ': "', dependencies, '"')))
 
-    succesfullLoads <- lib.testload(dependencies, lib_location, msg_str = paste0('"', basename(packagePath), '" his dependencies'))
-    missingdependencies <- names(dependencies)[!(names(dependencies) %in% names(succesfullLoads))]
+        lib.install_if_not_compatible(dependencies,
+                                      lib_location = lib_location,
+                                      install_temporarily = TRUE,
+                                      overwrite_this_package = overwrite_this_package,
+                                      cran_url = cran_url)
+    }
+
+    currentLibs <- lib.set_libPaths('all', lib_location, additional_lib_paths = install.location)
+    on.exit(reset.libPaths(currentLibs), add = TRUE, after = FALSE)
+
+    # successfulLoads <- lib.testload(dependencies, lib_location, msg_str = paste0('"', basename(packagePath), '" his dependencies'))
+    # missingdependencies <- names(dependencies)[!(names(dependencies) %in% names(successfulLoads))]
 
     # Install all not yet existing dependencies:
-    if (length(missingdependencies) > 0) {
-        message('\nI will install missing dependencies and try again...\n')
-        lib.install(missingdependencies, lib_location = lib_location, install_temporarily = install_temporarily)
-        succesfullLoads <- lib.testload(dependencies, lib_location, msg_str = paste0('"', basename(packagePath), '" his dependencies (second try)'))
-
-        if (all(names(dependencies) %in% names(succesfullLoads))) {
-            message('\nNow we succeeded, continuing... \n')
-        }
-    }
+    # if (length(missingdependencies) > 0) {
+    #     message('\nI will install missing dependencies and try again...\n')
+    #     lib.install(missingdependencies, lib_location = lib_location, install_temporarily = install_temporarily)
+    #     successfulLoads <- lib.testload(dependencies, lib_location, msg_str = paste0('"', basename(packagePath), '" his dependencies (second try)'))
+    #
+    #     if (all(names(dependencies) %in% names(successfulLoads))) {
+    #         message('\nNow we succeeded, continuing... \n')
+    #     }
+    # }
 
     # Check again if all wend well, if not all dependencies are there, reset and abort.
-    isSuccesfull <- names(dependencies) %in% names(succesfullLoads)
+    # isSuccesfull <- names(dependencies) %in% names(successfulLoads)
 
-    if (!all(isSuccesfull | lib.is_basepackage(names(dependencies)))) {
-        stop(paste0('\nThe following dependencies were missing and failed installation:', paste(paste0('\n- "', names(dependencies)[!isSuccesfull], '"'), collapse = ''), '\n\n'))
-    }
+    # if (!all(isSuccesfull | lib.is_basepackage(names(dependencies)))) {
+    #     stop(paste0('\nThe following dependencies were missing and failed installation:', paste(paste0('\n- "', names(dependencies)[!isSuccesfull], '"'), collapse = ''), '\n\n'))
+    # }
 
-    nms <- names(sessionInfo()$otherPkgs)
-    currentlyLoaded <- detachAll(packageList = nms[!nms %in% c('RVClibrary', 'multiversion')])
+    # nms <- names(sessionInfo()$otherPkgs)
+    # currentlyLoaded <- detachAll(packageList = nms[!nms %in% c('RVClibrary', 'multiversion')])
 
-    message('') # (applying a newline)
+    # message('') # (applying a newline)
 
-    if (interactive() && length(sys.calls()) == 1) {
-        on.exit({
-            message('\nResetting your loaded packages...\n');
-            lib.load(loadPackages = currentlyLoaded, lib_location = lib_location, quietly = TRUE)
-        }, add = TRUE)
-    }
+    # if (interactive() && length(sys.calls()) == 1) {
+    #     on.exit({
+    #         message('\nResetting your loaded packages...\n');
+    #         lib.load(loadPackages = currentlyLoaded, lib_location = lib_location, quietly = TRUE)
+    #     }, add = TRUE, after = FALSE)
+    # }
 
     # If all dependencies could be found/installed: add all recursive dependency libraries to the search path.
-    lib.set_libPaths(succesfullLoads, lib_location, additional_lib_paths = install.location)
+    # lib.set_libPaths(successfulLoads, lib_location, additional_lib_paths = install.location)
 
-    # Install the tarbal!
-    install.packages(packagePath, lib = install.location, type = "source", repos = NULL)
-    message('') # (applying a newline)
+    # Install the tarball!
+    install.packages(tarball, lib = install.location, type = "source", repos = NULL)
 
-    if (!install_temporarily) {lib.convert(install.location, lib_location, force_overwrite = overwrite_this_package)}
+    if (!install_temporarily) {
+        lib.convert(install.location, lib_location, force_overwrite = overwrite_this_package)
+    }
 
     return(invisible())
 }
 
 
-# -------- convert  temp_library  to  R_MV_library ---------
+# -------- convert ordinary  (temp_)library  to  R_MV_library ---------
 
 #' Move normally installed packages to R_MV_library structure.
 #'
-#' After this conversion is complete and you set the directory (temporarily by using \code{lib.location(...)}
-#' or for eternity by setting the equally named environment variable) you are good to go! You can directly use \code{lib.load}
+#' After this conversion is completed and you configure (temporarily by using \code{lib.location(...)}
+#' or for eternity by setting the equally named environment variable) the R_MV_LIBRARY_LOCATION env var, you are good to go! You can directly use \code{lib.load}
 #' for loading packages. Thanks for using \code{multiversion}!! \cr
 #' \cr
-#' This function creates the R_MV_library structure by moving normaly installed packages to a more parallel oriented library structure.
-#' lib1/BH/DESCRIPTION   becomes  lib2/BH/1.60.0-2/BH/DESCRIPTION
+#' This function creates the R_MV_library structure by moving normally installed packages to a parallel library structure.
+#' \code{<lib1>/BH/DESCRIPTION} becomes\code{<lib2>/BH/1.60.0-2/BH/DESCRIPTION} so that also \code{1.60.0-3} etc. can be installed.
 #' \cr
-#' This functionallity is also used for converting installed packages from the temporary installation directory to the final R_MV_library format. \cr
+#' This functionality is also used (with it's default values) for converting installed packages from the temporary installation directory to the final R_MV_library.
+#' The TEMP installation directory is in a standard flat library structure.\cr
 #' \cr
-#' Note that it is realy no problem to perform a conversion again, it will only move new versions of already present packages and will never overwrite.
-#' To continue with a clean Temp folder, run \code{lib.clean_install_dir()}, it will remove the folder.
+#' Note that it is really no problem to perform a conversion again, it will only move new versions of already present packages and will never overwrite.
+#' To continue with a clean Temp folder, run \code{lib.clean_install_dir()} which will remove the folder.
 #'
 #' @param source_lib The temporary library where a package is temporarily installed (having a normal library structure).
 #' By default, the path is generated using \code{lib.location_install_dir()} on the \code{destination_mv_lib} that is provided which appends \code{/TEMP_install_location}.
@@ -377,7 +475,7 @@ lib.convert <- function(source_lib          = lib.location_install_dir(destinati
 #' running \code{detachAll} and then restarting Rstudio. If problems with package loading still persists,
 #' then follow the final alternative solution described in the details section of the documentation of \code{lib.load}.
 #'
-#' @param reload_multiversion If multiversion needs to be loaded again after everything (or all mentionedin \code{packageList}) is unloaded.
+#' @param reload_multiversion If multiversion needs to be loaded again after everything (or all mentioned in \code{packageList}) is unloaded.
 #' @param packageList A character vector with the packages to detach/unload. Defaults to all packages
 #'        (\code{names(sessionInfo()$otherPkgs}). When package X depends on package Y, make sure you first specify X then Y.
 #' @param dryRun If TRUE, lists all packages that will be cleaned up.
@@ -386,6 +484,9 @@ lib.convert <- function(source_lib          = lib.location_install_dir(destinati
 #'
 detachAll <- function(reload_multiversion = FALSE, packageList = 'all', dryRun = FALSE) {
     do_all <- FALSE
+    if (!missing(packageList) && length(packageList) == 0) {
+        return()
+    }
     if (missing(packageList) || packageList == 'all') {
         packageList <- names(sessionInfo()$otherPkgs)
         do_all <- TRUE
@@ -454,7 +555,7 @@ detachAll <- function(reload_multiversion = FALSE, packageList = 'all', dryRun =
 #' Test load package list.
 #'
 #' Internally used for 'test loading' a list of dependencies when installing a package.
-#' Returns a list of succesfull load operations.
+#' Returns a list of successful load operations.
 #'
 #' @param packages A named character vector of package/version names. None are really loaded, `lib.load` is used with the `dry.run` turned on.
 #' @param lib_location The folder containing a structure where we will try to find our required packages in.
@@ -670,7 +771,6 @@ lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location
     packageList <- packageList[!packageList %in% c('.git', 'TEMP_install_location')]
 
     for (packageName in packageList) {
-        # message(packageName)
         packVersionList <- list.dirs(paste(lib_location, packageName, sep = '/'), recursive = FALSE, full.names = FALSE)
 
         for (packVersion in packVersionList) {

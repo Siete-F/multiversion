@@ -101,8 +101,6 @@ test_that("lib.location works", {
         expect_message(withr::with_envvar(list('R_MV_LIBRARY_LOCATION' = ''), {lib.location(getwd())},
                                           action = 'replace'),
                        'For this session, the environment variable.*')
-    } else {
-        skip('test for interactive use')
     }
 
     # When the path is configured again to the same value, no message is printed.
@@ -114,4 +112,14 @@ test_that("lib.location works", {
                                     action = 'replace'),
                  'The provided path does not exist.')
 
+})
+
+
+test_that("lib.installed_packages", {
+    .set_test_lib_location()
+
+    msg <- capture.output(lib.installed_packages(), type = 'message')
+
+    expect_true(all(grepl('package.[abcdef] : [0-9.-]{3,6} .*', msg)))
+    expect_true(all(c('a', 'b', 'c','d','e', 'f') %in% sapply(msg, substr, 23, 23, USE.NAMES = F)))
 })

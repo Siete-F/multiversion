@@ -50,13 +50,14 @@
 #' This folder is only there when it is the installed instance of multiversion.
 #'
 lib.my_location <- function() {
+
     MV_package_location <- find.package(package = 'multiversion', lib.loc = .libPaths(), quiet = T, verbose = F)
 
     if (length(MV_package_location) == 0) {
         MV_package_location <- find.package(package = 'multiversion', lib.loc = NULL, quiet = T, verbose = F)
     }
 
-    if (length(MV_package_location) == 0 || !file.exists(file.path(MV_package_location, 'INDEX'))) {
+    if (length(MV_package_location) == 0 || !file.exists(file.path(MV_package_location, 'DESCRIPTION'))) {
         stop(paste0('I need to be able to find the `multiversion` package location. To do that, it must be present in the searchpath `.libPaths()`.',
                     'Please make sure the library search paths include the location of this package.'))
     }
@@ -64,9 +65,9 @@ lib.my_location <- function() {
 }
 
 
-#' List all untracked library folders
+#' List all un-tracked library folders
 #'
-#' List all untracked direcories (libraries) within the multiversion library. The returned untracked directories are cleaned up
+#' List all un-tracked directories (libraries) within the multiversion library. The returned un-tracked directories are cleaned up
 #' and printed so that only the unique combinations of each library and it's version is shown once.
 #'
 #' @param lib_location By default the default library path obtained with \code{lib.location()}.
@@ -340,12 +341,32 @@ normPath <- function(path) {
 #' Adds the path of the package that is specified (and likely loaded before) to the `.libPaths`.
 #'
 #' @param packNameVersion A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.05', ggplot = '')`).
+#' Or the special string 'all', which will add the paths of all directories of the latest versions of every package in the R_MV_library.
 #' The path that is appended to the `.libPaths` is constructed based on the name and version provided.
 #' @param lib_location The multiversion library location path (no default configured here!).
 #'
+#' @return It will invisibly return the old paths.
+#'
 lib.set_libPaths <- function(packNameVersion, lib_location, additional_lib_paths = c()) {
+    old_paths <- .libPaths()
+
+    if (length(packNameVersion) == 1 && packNameVersion == 'all') {
+        packageList <- list.dirs(lib_location, recursive = FALSE, full.names = FALSE)
+        packageList <- packageList[!packageList %in% c('.git', 'TEMP_install_location')]
+
+        packNameVersion <- c()
+        for (packageName in packageList) {
+            packVersionList <- list.dirs(paste(lib_location, packageName, sep = '/'), recursive = FALSE, full.names = FALSE)
+
+            # Pick the highest version...       packVersionList <- c('0.1.0', '0.3-5', '0.2.5-2')
+            packVersion <- packVersionList[numeric_version(packVersionList) == max(numeric_version(packVersionList))]
+            packNameVersion <- c(packNameVersion, stats::setNames(packVersion, packageName))
+        }
+    }
+
     # non existing paths are silently ignored by `.libPaths()`
     .libPaths(c(.Library, paste(lib_location, names(packNameVersion), packNameVersion, sep = '/'), additional_lib_paths))
+    return(invisible(old_paths))
 }
 
 

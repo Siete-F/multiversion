@@ -11,3 +11,11 @@
 # - lib.load_namespaces
 # - lib.printVerboseLibCall
 # - error_packageAlreadyLoaded
+
+
+
+# test_that("xxx", {
+#
+#     .set_test_lib_location()
+#
+# })

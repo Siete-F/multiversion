@@ -8,9 +8,13 @@ lib.set_libPaths(packNameVersion, lib_location, additional_lib_paths = c())
 }
 \arguments{
 \item{packNameVersion}{A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.05', ggplot = '')`).
+Or the special string 'all', which will add the paths of all directories of the latest versions of every package in the R_MV_library.
 The path that is appended to the `.libPaths` is constructed based on the name and version provided.}
 
 \item{lib_location}{The multiversion library location path (no default configured here!).}
+}
+\value{
+It will invisibly return the old paths.
 }
 \description{
 Adds the path of the package that is specified (and likely loaded before) to the `.libPaths`.

@@ -5,3 +5,4 @@
 /..Rcheck
 /multiversion.Rcheck
 /*.tar.gz
+/tests/test_library/TEMP_install_location

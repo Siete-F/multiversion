@@ -1,18 +1,20 @@
 
 test_that("load package.d with shadowed dependencies", {
 
-.set_test_lib_location()
+    .set_test_lib_location()
 
-stopifnot(!'package:package.d' %in% search())
+    stopifnot(!'package:package.d' %in% search())
 
-expect_error(lib.load(package.d, pick.last = FALSE, quietly = TRUE),
-             'The requested version "6.0.0" for package "package.c" is not installed.')
-expect_error(lib.load(package.d, pick.last = TRUE, quietly = TRUE),
-             'The requested version ">= 99.0.0" for package "package.c" is not installed.')
+    expect_error(lib.load(package.d, pick.last = FALSE, quietly = TRUE),
+                 'The requested version "6.0.0" for package "package.c" is not installed.')
+    expect_error(lib.load(package.d, pick.last = TRUE, quietly = TRUE),
+                 'The requested version ">= 99.0.0" for package "package.c" is not installed.')
 
 })
 
 test_that("lib.load errors", {
+
+    .set_test_lib_location()
 
     expect_error(lib.load(package.qqq, quietly = TRUE),
                  'There is no package "package.qqq" installed \\(yet\\). \\(requested version: ""\\)')
@@ -36,6 +38,9 @@ test_that("lib.load errors", {
     expect_error(lib.load(dummy = '<> 5.0.0'), "Not all package versions that are provided seem to be valid version numbers")
     expect_error(lib.load(dummy = '5_0_0'),    "Not all package versions that are provided seem to be valid version numbers")
     expect_error(lib.load(dummy = '5_0_0', package.a = '0.1.0'), "Not all package versions that are provided seem to be valid version numbers")
+
+
+    expect_error(lib.load(c(dummy = '5_0_0', package.a = '0.1.0')), "Please make sure that you call `lib.load\\(loadPackages = c\\(xx = yy\\)\\)`.*")
 
 })
 

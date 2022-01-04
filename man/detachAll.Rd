@@ -7,7 +7,7 @@
 detachAll(reload_multiversion = FALSE, packageList = "all", dryRun = FALSE)
 }
 \arguments{
-\item{reload_multiversion}{If multiversion needs to be loaded again after everything (or all mentionedin \code{packageList}) is unloaded.}
+\item{reload_multiversion}{If multiversion needs to be loaded again after everything (or all mentioned in \code{packageList}) is unloaded.}
 
 \item{packageList}{A character vector with the packages to detach/unload. Defaults to all packages
 (\code{names(sessionInfo()$otherPkgs}). When package X depends on package Y, make sure you first specify X then Y.}

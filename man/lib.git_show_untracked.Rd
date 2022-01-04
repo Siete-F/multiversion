@@ -2,7 +2,7 @@
 % Please edit documentation in R/helper_functions.R
 \name{lib.git_show_untracked}
 \alias{lib.git_show_untracked}
-\title{List all untracked library folders}
+\title{List all un-tracked library folders}
 \usage{
 lib.git_show_untracked(lib_location = lib.location())
 }
@@ -10,6 +10,6 @@ lib.git_show_untracked(lib_location = lib.location())
 \item{lib_location}{By default the default library path obtained with \code{lib.location()}.}
 }
 \description{
-List all untracked direcories (libraries) within the multiversion library. The returned untracked directories are cleaned up
+List all un-tracked directories (libraries) within the multiversion library. The returned un-tracked directories are cleaned up
 and printed so that only the unique combinations of each library and it's version is shown once.
 }

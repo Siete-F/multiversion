@@ -121,10 +121,9 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
     if (grepl('^>', packVersion)) {
         ge_or_gt <- ifelse(grepl('>=', packVersion), `>=`, `>`)
 
+        pref_major <- getOption('mv_prefer_within_major_version', default = 'yes')
+        pref_major <- tolower(pref_major) %in% c('yes', 'true')
 
-        pref_major <- options('mv_prefer_within_major_version')
-        # The 'null' actually defines that the default is 'yes'/'true'
-        pref_major <- tolower(pref_major) %in% c('null', 'yes', 'true')
         if (pref_major) {
             # First try if a valid version can be found within the requested major version.
             validVersions  <- ge_or_gt(num_ver_list, numeric_version(bareVersion(packVersion))) & num_ver_list < first_next_major

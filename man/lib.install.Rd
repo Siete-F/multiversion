@@ -2,40 +2,96 @@
 % Please edit documentation in R/VC_library_writing.R
 \name{lib.install}
 \alias{lib.install}
-\title{Install CRAN package into the R_MV_library}
+\alias{lib.install_if_not_compatible}
+\alias{lib.install_tarball}
+\title{Install packages and tarballs into R_MV_library}
 \usage{
 lib.install(
-  installPackages = NULL,
+  package_names = NULL,
   lib_location = lib.location(),
   install_temporarily = FALSE,
   overwrite_this_package = FALSE,
-  execute_with_Rscript = TRUE,
   verbose = FALSE,
+  cran_url = "http://cran.us.r-project.org"
+)
+
+lib.install_if_not_compatible(
+  package_conditions,
+  lib_location = lib.location(),
+  install_temporarily = FALSE,
+  overwrite_this_package = FALSE,
+  cran_url = "http://cran.us.r-project.org"
+)
+
+lib.install_tarball(
+  tarball,
+  dependencies = c(),
+  lib_location = lib.location(),
+  install_temporarily = FALSE,
+  overwrite_this_package = FALSE,
   cran_url = "http://cran.us.r-project.org"
 )
 }
 \arguments{
-\item{installPackages}{Provide a vector of package names. A version cannot be supplied.}
+\item{package_names}{Provide a vector of package names.
+A version cannot be supplied.}
 
 \item{lib_location}{The folder where this package can be installed.
-The package will first be installed in a temporary install folder \code{<multiversion lib>/TEMP_install_location}
-indicated by the \code{\link{lib.location_install_dir}} function. If \code{install_temporarily} is set to FALSE (the default).
+The package will first be installed in a temporary install folder
+\code{<multiversion lib>/TEMP_install_location}
+indicated by the \code{\link{lib.location_install_dir}()} function.
+If \code{install_temporarily} is set to FALSE (the default).
 the installed package(s) is moved to the destination location automatically.}
 
-\item{install_temporarily}{If FALSE, the installed package(s) is (are) moved to the final destination automatically.
-Otherwise it is necessary to run \code{\link{lib.convert}()} manually after the installation into the temporary folder finished. To clean up the temporary folder, run \code{lib.clean_install_dir()}.
-When \code{overwrite_this_package} is TRUE, and \code{install_temporarily} is not provided, it will be set to FALSE automatically.
-Installing a package temporarily gives you the oppertunity to test the package before adding it to the multiversion library structure.
-Loading packages including those in the temporary library (\code{\link{lib.location_install_dir}()}) can be done using: \code{\link{lib.load}(..., also_load_from_temp_lib = TRUE)}.}
-
-\item{execute_with_Rscript}{When TRUE (the default), it will try to install the package using a sepparate Rscipt R instance.
-This simplifies installing and leaves changing loaded packages etc. to another R instance which we can kill :).
-It will run a script which it provides with your list of packages to install.
-That script will load this \code{multiversion} package and call \code{\link{lib.install}()} directly.}
+\item{install_temporarily}{If FALSE, the installed packages are moved
+to the final destination automatically. Otherwise it is necessary to run
+\code{\link{lib.convert}()} manually after the installation into the temporary
+folder finished. To clean up the temporary folder, run \code{lib.clean_install_dir()}.}
 
 \item{cran_url}{Will be passed trough to the install.packages command.}
+
+\item{package_conditions}{Provide a vector of package
+name/'version condition' specifications. See section
+'limitations for \code{package_conditions}'.}
+
+\item{tarball}{The complete path to the tarball file that you would like to install.}
+
+\item{dependencies}{Provide the dependencies like a package version
+combination: \code{c(dplyr = '>= 0.5', data.table = '', R6 = '0.1.1')}}
 }
 \description{
-This function can be used to install a CRAN package in the multiversion library. \cr
-For installing packages from source use \code{lib.install_tarball}.
+This family of functions can help with installing packages without
+the risk of installing every minor package improvement as soon as it is released.
+
+\enumerate{
+  \item{\code{lib.install_tarball} can install a tarball based on the
+  tarball location and it's dependencies (like \code{c(dplyr = '> 5.0')}).}
+  \item{\code{lib.install_if_not_compatible} can install CRAN package
+  depending on a condition. This is especially useful
+  (and used on the background) for installing the dependencies for the
+  tarball installation.}
+  \item{\code{lib.install} can install CRAN packages into the R_MV_library,
+  which in return is used by \code{lib.install_if_not_compatible}.}
 }
+}
+\details{
+
+}
+\section{limitations for \code{package_conditions}}{
+
+All version specifications are allowed except for the exact version indication
+(e.g. don't provide \code{c(dplyr = '1.2.3')}). It is allowed to provide no
+specification, which will match any installed version of that package.
+\bold{If the condition is met, the package is skipped}, which is the desired
+behavior for dependencies. For an empty condition (e.g. \code{c(dplyr = '')}),
+it will only install the package when no version is installed at all.
+}
+
+\section{Installing temporarily}{
+
+Installing a package temporarily gives you the opportunity to test the package
+before adding it to the multiversion library structure. Loading packages, including those in the
+temporary library (\code{\link{lib.location_install_dir}()}) can be done using:
+\code{\link{lib.load}(..., also_load_from_temp_lib = TRUE)}.
+}
+

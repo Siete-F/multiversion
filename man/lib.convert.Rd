@@ -24,17 +24,18 @@ Normally only desired when the package you are experimenting with is a self main
 \item{packages_to_convert}{A character vector with the names of the packages that need to be converted to the R_MV_library. If missing or empty, all will be converted.}
 }
 \description{
-After this conversion is complete and you set the directory (temporarily by using \code{lib.location(...)}
-or for eternity by setting the equally named environment variable) you are good to go! You can directly use \code{lib.load}
+After this conversion is completed and you configure (temporarily by using \code{lib.location(...)}
+or for eternity by setting the equally named environment variable) the R_MV_LIBRARY_LOCATION env var, you are good to go! You can directly use \code{lib.load}
 for loading packages. Thanks for using \code{multiversion}!! \cr
 \cr
-This function creates the R_MV_library structure by moving normaly installed packages to a more parallel oriented library structure.
-lib1/BH/DESCRIPTION   becomes  lib2/BH/1.60.0-2/BH/DESCRIPTION
+This function creates the R_MV_library structure by moving normally installed packages to a parallel library structure.
+\code{<lib1>/BH/DESCRIPTION} becomes\code{<lib2>/BH/1.60.0-2/BH/DESCRIPTION} so that also \code{1.60.0-3} etc. can be installed.
 \cr
-This functionallity is also used for converting installed packages from the temporary installation directory to the final R_MV_library format. \cr
+This functionality is also used (with it's default values) for converting installed packages from the temporary installation directory to the final R_MV_library.
+The TEMP installation directory is in a standard flat library structure.\cr
 \cr
-Note that it is realy no problem to perform a conversion again, it will only move new versions of already present packages and will never overwrite.
-To continue with a clean Temp folder, run \code{lib.clean_install_dir()}, it will remove the folder.
+Note that it is really no problem to perform a conversion again, it will only move new versions of already present packages and will never overwrite.
+To continue with a clean Temp folder, run \code{lib.clean_install_dir()} which will remove the folder.
 }
 \examples{
 # As an experiment (or when getting started) you could run this with
