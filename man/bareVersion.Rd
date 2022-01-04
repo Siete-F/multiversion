@@ -4,10 +4,10 @@
 \alias{bareVersion}
 \title{Remove `>` or `>=` from version string.}
 \usage{
-bareVersion(packageVersion)
+bareVersion(packVersion)
 }
 \arguments{
-\item{packageVersion}{A version indication you would like to remove `>` and `>=` from.}
+\item{packVersion}{A version indication you would like to remove `>` and `>=` from.}
 }
 \description{
 Remove `>` or `>=` from version string.

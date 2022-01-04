@@ -113,7 +113,7 @@ lib.git_show_untracked <- function(lib_location = lib.location()) {
 #' @export
 #'
 lib.location_install_dir <- function(lib_location = lib.location()) {
-    install.location <- gsub(normalizePath(paste0(lib_location, '/TEMP_install_location'), winslash = '/', mustWork = FALSE), pat = '/$', rep = '')
+    install.location <- gsub(normalizePath(paste0(lib_location, '/TEMP_install_location'), winslash = '/', mustWork = FALSE), pattern = '/$', replace = '')
     dir.create(install.location, showWarnings = FALSE)
     return(install.location)
 }
@@ -201,6 +201,9 @@ clean_download_catch <- function() {
 lib.location <- function(set_session_path) {
     # If input is provided, set that value as library location.
     if (!missing(set_session_path)) {
+        if (!dir.exists(set_session_path)) {
+            stop('The provided path does not exist. Please create an empty folder if the library needs to be created.')
+        }
         path <- normalizePath(set_session_path, '/', mustWork = T)
         old <- Sys.getenv('R_MV_LIBRARY_LOCATION')
         Sys.setenv(R_MV_LIBRARY_LOCATION = path)
@@ -224,7 +227,7 @@ lib.location <- function(set_session_path) {
     lib_location <- ifelse(nzchar(A), A, B)
 
     # force a forward slash and remove an ending slash.
-    lib_location <- gsub(gsub(lib_location, pat = '\\\\', rep = '/'), pat = '/$', rep = '')
+    lib_location <- gsub(gsub(lib_location, pattern = '\\\\', replace = '/'), pattern = '/$', replace = '')
     return(lib_location)
 }
 
@@ -285,7 +288,7 @@ lib.packs_str2vec <- function(deps) {
         return(as.character())
     }
 
-    deps <- gsub(trimws(deps), pat = ',\\s?$|\n|^,\\s?', rep = '') # remove newlines, starting and ending comma's
+    deps <- gsub(trimws(deps), pattern = ',\\s?$|\n|^,\\s?', replace = '') # remove newlines, starting and ending comma's
     deps <- trimws(strsplit(deps, ',')[[1]])     # split on comma's, remove start/end whitespaces
     hasVersions <- grepl('\\(.*\\)', deps)       # get version if applicable
     versions <- strRemain('.*\\s?\\(', '\\)', deps)
@@ -299,10 +302,10 @@ lib.packs_str2vec <- function(deps) {
 
 #' Remove `>` or `>=` from version string.
 #'
-#' @param packageVersion A version indication you would like to remove `>` and `>=` from.
+#' @param packVersion A version indication you would like to remove `>` and `>=` from.
 #'
-bareVersion <- function(packageVersion) {
-    gsub('>?=?\\s?', '', packageVersion)
+bareVersion <- function(packVersion) {
+    trimws(gsub('>?=?\\s?', '', packVersion))
 }
 
 
@@ -350,9 +353,9 @@ lib.set_libPaths <- function(packNameVersion, lib_location, additional_lib_paths
 #'
 #' Excludes all .libPaths other then those needed for lib.load().
 #'
-#' @param lib_location The folder which contains the multiversion library. All directories in .libPaths containing this path will be kept.
+#' @param lib_location The folder which contains the multiversion library. All directories in \code{.libPaths()} containing this path will be kept.
 #' By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} to find this directory.
-#' @param dry.run If TRUE, will not change the paths but will print the paths that would remain after cleaning up the .libPaths() list.
+#' @param dry.run If TRUE, will not change the paths but will print the paths that would remain after cleaning up the \code{.libPaths()} list.
 #'
 #' @export
 #'
@@ -371,7 +374,7 @@ lib.clean_libPaths <- function(lib_location = lib.location(), dry.run = FALSE) {
 #' Will install devtools and it's dependencies into the multiversion library provided by `lib.location()`.
 #' An alternative library location can optionally be specified.
 #'
-#' @param lib_location The library (can be an empty folder) to install Devtools in.
+#' @param lib_location The library (can be an empty folder) to install Devtools in. Defaults to \code{lib.location()}
 #' @param force_install FALSE by default, if the package `devTools` is already installed, it will return silently.
 #'
 #' @export
@@ -490,15 +493,15 @@ lib.load_namespaces <- function(packages_to_load_in_ns, lib_location = lib.locat
 #' @export
 #'
 lib.printVerboseLibCall <- function(packNameVersion) {
-    if (!interactive()) {return(invisible())}
-    if (length(packNameVersion) == 0) {return(invisible())}
+    if (!interactive() || length(packNameVersion) == 0) {
+        return(invisible())
+    }
 
     nameVer <- unique_highest_package_versions(packNameVersion, return_as_df = TRUE)
 
-    p  = paste
-    p0 = paste0
+    p = paste; p0 = paste0
     message('\nVerbose example call to the library (use `quetly = T` to supress this message):')
-    message(p0('lib.load( ', p(p(nameVer$names, p0("'", nameVer$version, "'"), sep = ' = '), collapse = ', '), ')\n'))
+    message('lib.load( ', p(collapse = ', ', p(sep = ' = ', nameVer$names, p0("'", nameVer$version, "'"))), ')\n')
 }
 
 
@@ -520,7 +523,7 @@ detachIfExisting <- function(packageNames) {
     # detach these:
     for(iPackage in presentPackages) {
         detach(pos = which(search() %in% iPackage))
-        dll <- getLoadedDLLs()[[gsub(iPackage, pattern = 'package:', rep = '')]]
+        dll <- getLoadedDLLs()[[gsub(iPackage, pattern = 'package:', replace = '')]]
 
         if (!is.null(dll)) {
             tryCatch(library.dynam.unload(iPackage, dirname(dirname(dll[["path"]]))), error = function(e) NULL)

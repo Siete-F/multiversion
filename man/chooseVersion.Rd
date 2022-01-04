@@ -9,7 +9,7 @@ chooseVersion(
   versionList,
   packageName = "",
   pick.last = FALSE,
-  quietly = FALSE
+  warn_for_major_diff = TRUE
 )
 }
 \arguments{
@@ -19,17 +19,27 @@ chooseVersion(
 
 \item{packageName}{It is used for clear error handling. It should be the package name it is trying to load so we can mention it when crashing.}
 
-\item{pick.last}{If a version like \code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
-By default it will take the same or first higher version (when it exists, just \code{0.5}, which is often the case).
-This because this is most likely to not change the behaviour of the code. Alternatively, picking the latest version is most
-likely to be accepted by other packages their dependencies (e.g. if a package that is loaded later on depends on this package but asks for \code{> 0.6}, it will crash).
-The downside of this is that an update could be a major one, going from \code{0.5} to \code{2.0}, where allot of things can have changed and your workable code is at risk.}
+\item{pick.last}{See details.}
+
+\item{warn_for_major_diff}{If true, it will throw a warning when the requested package is a major release higher than that is specified.}
 }
 \description{
 Obtains the correct version based on the version instruction provided (e.g. \code{>= 0.5}), the package name and it's available versions.
 If no compatible version is found between the available versions a suitable error is thrown.
 All different version indications should be handled in this function, including:
-1. a version with \code{>} or \code{>=} indicator
-2. a version without \code{>}, so just a version e.g. \code{'0.5.0'} (most specific)
-3. a zero length char e.g. \code{''} (auto determine, based on \code{pick.last})
+\enumerate{
+  \item{a version with \code{>} or \code{>=} indicator.}
+  \item{just a version e.g. \code{'0.5.0'} (most specific)}
+  \item{a zero length char e.g. \code{''}}
+}
+}
+\details{
+Note that both (1) and (3) are effected by 'pick.last'.
+
+
+If a version like \code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
+By default it will take the same or first higher version (when it exists, just \code{0.5} in the example).
+This most likely leads to not changing the behaviour of the code. Alternatively, picking the latest version is most
+likely to be accepted by other packages their dependencies (e.g. if a package that is loaded in the future depends on this package but asks for \code{> 0.6}, it will likely fail).
+The downside of this is that an update could be a major one, going from \code{0.5} to \code{2.0}, where allot of things can have changed and your code that used to work fine is at risk.
 }

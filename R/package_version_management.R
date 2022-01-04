@@ -42,21 +42,28 @@ lib.available_versions <- function(packageName, lib_location = lib.location()) {
 #' Obtains the correct version based on the version instruction provided (e.g. \code{>= 0.5}), the package name and it's available versions.
 #' If no compatible version is found between the available versions a suitable error is thrown.
 #' All different version indications should be handled in this function, including:
-#' 1. a version with \code{>} or \code{>=} indicator
-#' 2. a version without \code{>}, so just a version e.g. \code{'0.5.0'} (most specific)
-#' 3. a zero length char e.g. \code{''} (auto determine, based on \code{pick.last})
+#' \enumerate{
+#'   \item{a version with \code{>} or \code{>=} indicator.}
+#'   \item{just a version e.g. \code{'0.5.0'} (most specific)}
+#'   \item{a zero length char e.g. \code{''}}
+#' }
 #'
+#' Note that both (1) and (3) are effected by 'pick.last'.
 #'
 #' @param packVersion A single named version value. i.e. A package name and it's version requirement like: \code{c(dplyr = '>= 0.4.0')}.
 #' @param versionList A list of available versions for this package to choose from. It is the list to choose from and check availability. Created with \code{lib.available_versions}.
 #' @param packageName  It is used for clear error handling. It should be the package name it is trying to load so we can mention it when crashing.
-#' @param pick.last If a version like \code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
-#' By default it will take the same or first higher version (when it exists, just \code{0.5}, which is often the case).
-#' This because this is most likely to not change the behaviour of the code. Alternatively, picking the latest version is most
-#' likely to be accepted by other packages their dependencies (e.g. if a package that is loaded later on depends on this package but asks for \code{> 0.6}, it will crash).
-#' The downside of this is that an update could be a major one, going from \code{0.5} to \code{2.0}, where allot of things can have changed and your workable code is at risk.
+#' @param pick.last See details.
+#' @param warn_for_major_diff If true, it will throw a warning when the requested package is a major release higher than that is specified.
 #'
-chooseVersion <- function(packVersion, versionList, packageName = '', pick.last = FALSE, quietly = FALSE) {
+#' @details
+#' If a version like \code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
+#' By default it will take the same or first higher version (when it exists, just \code{0.5} in the example).
+#' This most likely leads to not changing the behaviour of the code. Alternatively, picking the latest version is most
+#' likely to be accepted by other packages their dependencies (e.g. if a package that is loaded in the future depends on this package but asks for \code{> 0.6}, it will likely fail).
+#' The downside of this is that an update could be a major one, going from \code{0.5} to \code{2.0}, where allot of things can have changed and your code that used to work fine is at risk.
+#'
+chooseVersion <- function(packVersion, versionList, packageName = '', pick.last = FALSE, warn_for_major_diff = TRUE) {
 
     compliantVersions <- c()
     num_ver_list <- numeric_version(versionList)
@@ -66,19 +73,26 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
 
     # It is possible that this package is already loaded as a dependency of another package.
     if (isNamespaceLoaded(packageName)) {
+
+        if (grepl('^[0-9.\\\\-]+', packVersion) && !numeric_version(packVersion) %in% num_ver_list) {
+            stop(sprintf('The requested version "%s" for package "%s" is not installed.', packVersion, packageName))
+        }
         if (.Platform$GUI == "RStudio" && packageName == 'yaml') {
             # 'yaml' seems to be a strange case. It is loaded by Rstudio from your local library, which is likely a different
             # version than is present in the R_MV_library (in my case yaml=2.1.13, where the version in my R_MV_library is 2.1.14).
             # I did find a way to unload it so that we can also alter this package his version, even when it is always loaded automatically on startup.
+
             unloadNamespace(asNamespace('yaml'))
             # Try again after unload is successful.
-            return(chooseVersion(packVersion, versionList, packageName = 'yaml', pick.last = pick.last, quietly = quietly))
+            return(chooseVersion(packVersion, versionList, packageName = 'yaml', pick.last = pick.last, warn_for_major_diff = warn_for_major_diff))
         }
         alreadyLoadedVersion <- lib.package_version_loaded(packageName)
+
         if (!lib.check_compatibility(packVersion, alreadyLoadedVersion)) {
             # ERROR
             error_packageAlreadyLoaded(packageName, packVersion, alreadyLoadedVersion)
         }
+
         # Check if the package version that was already loaded is available in the R_MV_library directory.
         if (!numeric_version(alreadyLoadedVersion) %in% num_ver_list) {
             # The most likely location is your default library. This method is build in because `system.file` showed some unpredictable behaviour.
@@ -97,25 +111,34 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
                          packageName, alreadyLoadedVersion, loaded_pack_loc, packVersion,
                          paste0(collapse = ', ', "'", as.character(num_ver_list), "'"), packageName,
                          paste(collapse = ', ', paste0("'", getNamespaceUsers(packageName), "'"))))
-        }
+        }  # `getNamespaceUsers` returns the packages that use a certain namespace.
+
+        # When the already loaded version simply complies, just return that version.
         return(alreadyLoadedVersion)
     }
 
-    if (grepl('>=', packVersion)) {
-        validVersions  <- num_ver_list >= numeric_version(bareVersion(packVersion)) & num_ver_list < first_next_major
-        if (!any(validVersions)) {
-            validVersions  <- num_ver_list > numeric_version(bareVersion(packVersion))
-            if (any(validVersions) & !quietly) warning(sprintf('For package "%s" the lowest optional version is a major release higher. Requested: "%s", first option "%s".', packageName, packVersion, versionList[validVersions][[1]]))
-        }
-        compliantVersions <- versionList[validVersions]
+    # First case covers '>=' and '>'
+    if (grepl('^>', packVersion)) {
+        ge_or_gt <- ifelse(grepl('>=', packVersion), `>=`, `>`)
 
-    } else if (grepl('>', packVersion)) {
-        validVersions  <- num_ver_list >  numeric_version(bareVersion(packVersion)) & num_ver_list < first_next_major
-        # If no valid versions found within this major release, look for all versions above the minimal version.
-        if (!any(validVersions)) {
-            validVersions  <- num_ver_list > numeric_version(bareVersion(packVersion))
-            if (any(validVersions) & !quietly) warning(sprintf('For package "%s" the lowest optional version is a major release higher. Requested: "%s", first option "%s".', packageName, packVersion, versionList[validVersions][[1]]))
+
+        pref_major <- options('mv_prefer_within_major_version')
+        # The 'null' actually defines that the default is 'yes'/'true'
+        pref_major <- tolower(pref_major) %in% c('null', 'yes', 'true')
+        if (pref_major) {
+            # First try if a valid version can be found within the requested major version.
+            validVersions  <- ge_or_gt(num_ver_list, numeric_version(bareVersion(packVersion))) & num_ver_list < first_next_major
         }
+
+        if (!pref_major || !any(validVersions)) {
+            # Otherwise pick from complete list (throw optional warning).
+            validVersions <- ge_or_gt(num_ver_list, numeric_version(bareVersion(packVersion)))
+            if (pref_major && any(validVersions) && warn_for_major_diff) {
+                warning(sprintf('For package "%s" the lowest optional version is a major release higher. Requested: "%s", first option "%s".',
+                                packageName, packVersion, versionList[validVersions][[1]]))
+            }
+        }
+
         compliantVersions <- versionList[validVersions]
 
     } else if (is.na(packVersion) || nchar(packVersion) == 0) {
@@ -136,7 +159,7 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
         stop(sprintf('The requested version "%s" for package "%s" is not installed.', packVersion, packageName))
     }
 
-    # Decide on the version after the (>=, >) coice is made and multiple choices remain.
+    # Decide on the version after the (>=, >) choice is made and multiple choices remain.
     # This should only be the case when `>` or `>=` scenarios are dealt with.
     # Other scenarios should be checked (stopped) above.
     # For more details on this choice, read the instruction for the `pick.last` parameter.
@@ -165,12 +188,12 @@ lib.check_compatibility <- function(condition, version) {
     }
 
     # If no reference was supplied, all conditions are acceptable.
-    if (is.null(version) || is.na(version)) return(TRUE)
+    if (is.null(version) || is.na(version)) {
+        return(TRUE)
+    }
 
     # If '', NA or an equal version as the existing version is returned, pass.
-    if (is.na(condition) || nchar(condition) == 0) {
-        return(TRUE)
-    } else if (trimws(condition) == version) {
+    if (is.na(condition) || nchar(condition) == 0 || trimws(condition) == version) {
         return(TRUE)
     }
 
@@ -183,7 +206,7 @@ lib.check_compatibility <- function(condition, version) {
     } else if (grepl('>', condition)) {
         return(numVersion > numCondition)
     } else {
-        # normally a case of (condition != version) where condition is an exact number.
+        # normally a case where `condition == version` is required and the versions differ.
         return(FALSE)
     }
 }
@@ -196,33 +219,38 @@ lib.check_compatibility <- function(condition, version) {
 #'
 #' @param packVersion A named character vector with package names and their version indication (e.g. \code{c(dplyr = '>= 0.4.0', ggplot = '')}).
 #' @param lib_location The location of the R_MV_library folder.
-#' @param verbose if TRUE, it will print the choices it makes. If the session is not interactive, or verbose = FALSE, nothing will be printed.
+#' @param print_version_choice if true, it will print the choices it made.
 #' @param pick.last If a version like\code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
 #' By default it will take the first higher version (when it exists, just\code{0.5}, which is often the case).
 #' This because this is most likely to not change the behaviour of the code. Picking the latest version is most
 #' compatible with matching other packages their dependencies (e.g. if a later package depends on this package but asks for\code{> 0.6}, it will crash).
 #' The downside of this is that an update could be a major one, going from\code{0.5} to\code{2.0}, where allot of things can change and code is likely to not work anymore.
-#' @param quietly If FALSE, the default, will return warnings if the loaded package is a major release higher then the package that was requested.
+#' @param warn_for_major_diff If true, the default, will return warnings if the loaded package is a major release higher then the package that was requested.
 #'
-lib.decide_version <- function(packVersion, lib_location, verbose = TRUE, pick.last = FALSE, quietly = FALSE) {
+lib.decide_version <- function(packVersion, lib_location, pick.last = FALSE, print_version_choice = TRUE, warn_for_major_diff = TRUE) {
     packageName <- names(packVersion)
     origVersion <- unname(packVersion)
 
-    if (length(packVersion) == 0)
+    if (length(packVersion) == 0) {
         stop("The length of packVersion cannot be 0, if it is desired to not specify the version specifically, use e.g. `dplyr = ''`.")
+    }
 
     # handle higher then, higher-or-equal, equal to (just a version) or '' (auto determine) version indications:
     packVersionList <- lib.available_versions(packageName, lib_location)
-    packVersion <- chooseVersion(packVersion, versionList = packVersionList, packageName, pick.last = pick.last, quietly = quietly)
+    packVersion <- chooseVersion(packVersion, versionList = packVersionList, packageName, pick.last = pick.last, warn_for_major_diff = warn_for_major_diff)
 
     # print instructive message:
-    if (verbose || !interactive()) {
+    if (print_version_choice) {
         if (!is.na(origVersion) && strtrim(origVersion, 1) == '>') {
-            message(sprintf("Version %-7s is chosen  for package '%s'", packVersion, packageName))
+            message(sprintf("Version %-7s is chosen  for package '%s' (%s)", packVersion, packageName, origVersion))
 
+            # When no version was specified:
         } else if (is.na(origVersion) || nchar(origVersion) == 0) {
-            message(sprintf("Only    %-7s is there   for package '%s'", packVersion, packageName))
-
+            if (length(packVersionList) > 1) {
+                message(sprintf("Version %-7s is picked  for package '%s'", packVersion, packageName))
+            } else {
+                message(sprintf("Only    %-7s is there   for package '%s'", packVersion, packageName))
+            }
         } else if (packVersion == origVersion)
             message(sprintf("Exactly %-7s is used    for package '%s'", packVersion, packageName))
     }
@@ -266,7 +294,7 @@ lib.package_version_loaded <- function(packageNames, dont_exclude_not_loaded = F
     # determines the versions of the loaded packages given
     version <- c()
     for (iPackage in packageNames) {
-        version <- append(version, setNames(as.character(packageVersion(iPackage)), iPackage))
+        version <- append(version, stats::setNames(as.character(utils::packageVersion(iPackage)), iPackage))
     }
     return(version)
 }

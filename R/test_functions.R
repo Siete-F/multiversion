@@ -2,6 +2,12 @@
 #' Set lib.location to test_library
 #'
 .set_test_lib_location <- function() {
+    # Reset the value after finishing in the parent function
+    old <- Sys.getenv('R_MV_LIBRARY_LOCATION')
+    do.call(on.exit,
+            list(substitute(Sys.setenv(R_MV_LIBRARY_LOCATION = old)),
+                 add = TRUE), envir = parent.frame())
+
     suppressMessages(lib.location(
         ifelse(dir.exists('../test_library/'),
                '../test_library/', 'tests/test_library/'
@@ -12,9 +18,9 @@
 # Test functions to help testing in seperate processes. -------------------
 
 
-tst_list <- new.env(parent = emptyenv())
-tst_list$desc = ''
-tst_list$tests = list()
+tst_env <- new.env(parent = emptyenv())
+tst_env$desc = ''
+tst_env$tests = list()
 
 #' Functions to help with testing inside seperate processes.
 #'
@@ -34,8 +40,8 @@ NULL
 #'
 .initialize_test <- function(desc) {
     stopifnot(is.character(desc), length(desc) == 1)
-    tst_list$desc = desc
-    tst_list$tests = list()
+    tst_env$desc = desc
+    tst_env$tests = list()
 }
 
 #' @rdname test_helpers
@@ -43,10 +49,13 @@ NULL
 .add_test <- function(type, A, B) {
     call <- as.character(sys.call(-1))
 
-    tst_list$tests[[length(tst_list$tests) + 1]] <<- list(
+    tst_env$tests[[length(tst_env$tests) + 1]] <<- list(
         type = type, a = A, b = B,
-        # (I couldn't find a better way to create a nice call string)
-        call = paste0(call[1], '(', paste0(collapse = ', ', call[2:length(call)]), ')'))
+        # The reference (value of B) is already printed by testthat,
+        # so there is no need to include the original value of that one.
+        # call[2] refers to the code that produced the first input argument of the .exp... function.
+        call = call[2])
+
 }
 
 #' @rdname test_helpers
@@ -86,12 +95,12 @@ NULL
 #' @rdname test_helpers
 #'
 .get_tests <- function() {
-    return(as.list(tst_list))
+    return(as.list(tst_env))
 }
 
 #' @rdname test_helpers
 #'
-.run_test_batch <- function(test_outcomes) {
+.run_test_batch <- function(test_outcomes = .get_tests()) {
     testthat::test_that(test_outcomes$desc, {
         for (test in test_outcomes$tests) {
 
@@ -101,12 +110,13 @@ NULL
                 with(test, expect_equal(a, b, label = call))
 
             } else if (test$type == 'true') {
-                expect_true( test$a, label = test$call)
+                expect_true(test$a, label = test$call)
 
             } else if (test$type == 'false') {
                 expect_false(test$a, label = test$call)
 
             } else if (test$type %in% c('match', 'error')) {
+
                 with(test, expect_match(a, b, label = call))
             }
         }

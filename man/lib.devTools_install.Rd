@@ -7,7 +7,7 @@
 lib.devTools_install(lib_location = lib.location(), force_install = FALSE)
 }
 \arguments{
-\item{lib_location}{The library (can be an empty folder) to install Devtools in.}
+\item{lib_location}{The library (can be an empty folder) to install Devtools in. Defaults to \code{lib.location()}}
 
 \item{force_install}{FALSE by default, if the package `devTools` is already installed, it will return silently.}
 }

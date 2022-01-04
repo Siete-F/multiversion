@@ -10,14 +10,16 @@ lib.dependsOnMe(..., checkMyDeps = NULL, lib_location = lib.location())
 \item{...}{All packages and their versions you would like to load e.g. \code{lib.dependsOnMe(DBI = '0.5', assertthat, R6 = '0.6', quietly = TRUE)}.}
 
 \item{checkMyDeps}{Supports providing a named character vector of packages and their versions instead of the direct input.
-Use it like this when calling it via another function. It is the shape that is supported by all other functions in this package.
-e.g. \code{c(DBI = '0.5', assertthat = '', R6 = '')}}
+Use it like this when calling it via another function.}
 
 \item{lib_location}{The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
+}
+\value{
+It returns a is the shape that is supported by all other functions in this package e.g. \code{c(DBI = '0.5', assertthat = '', R6 = '')}
 }
 \description{
 Can be called without using quotes like \code{lib.dependsOnMe(dplyr)}. A second very usefull feature would be the \code{lib.dependsOnMe(all)},
 which will print a list of all packages available with their dependencies. \cr
 \cr
-A simple wrapper to do precisely that is "\code{lib.installed_packages}".
+A simple wrapper "\code{lib.installed_packages}", will do precisely that.
 }

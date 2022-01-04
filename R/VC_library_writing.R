@@ -92,16 +92,16 @@ lib.install <- function(installPackages = NULL, lib_location = lib.location(), i
         # Just took some
         if (any(!nzchar(Sys.which(c('aspell', 'basename', 'cat', 'cp'))))) {
             stop(sprintf(paste('%sAdd e.g. `C:/Rtools/bin` to the PATH env var if you have Rtools already installed',
-                       '\nor download Rtools (and check `Add paths` during install, and restart R) from "https://cran.r-project.org/bin/windows/Rtools/".'),
-                       ifelse(nzchar(Sys.getenv('MAKE')), '',
-                              'The MAKE variable is specified, but this is not sufficient for an Rscript instance to compile from source properly. ')))
+                               '\nor download Rtools (and check `Add paths` during install, and restart R) from "https://cran.r-project.org/bin/windows/Rtools/".'),
+                         ifelse(nzchar(Sys.getenv('MAKE')), '',
+                                'The MAKE variable is specified, but this is not sufficient for an Rscript instance to compile from source properly. ')))
         }
         if (!grepl('\\$\\(WIN\\)', Sys.getenv('BINPREF'))) {
             stop(sprintf(paste0('Please make sure you also have the BINPREF environment variable set properly.',
-                               '\nCurrent value: "%s", expected value should be like: "C:/Rtools/mingw_$(WIN)/bin/",',
-                               '\nwhere "$(WIN)" is set by R to either "32" or "64" depending on the target.',
-                               '\nIf your PATH and BINPREF variables are set correctly, we should be ready',
-                               '\nfor compiling from source (being able to install the latest pacakges).'), Sys.getenv('BINPREF')))
+                                '\nCurrent value: "%s", expected value should be like: "C:/Rtools/mingw_$(WIN)/bin/",',
+                                '\nwhere "$(WIN)" is set by R to either "32" or "64" depending on the target.',
+                                '\nIf your PATH and BINPREF variables are set correctly, we should be ready',
+                                '\nfor compiling from source (being able to install the latest pacakges).'), Sys.getenv('BINPREF')))
         }
 
         if (interactive()) {
@@ -138,7 +138,7 @@ lib.install <- function(installPackages = NULL, lib_location = lib.location(), i
 
         if (length(failedLoads) > 0) {
             message(sprintf('\n - We will install for package "%s" the missing dependencies: %s.\n',
-                        iPackage, paste0(collapse = ',', '"', failedLoads, '"')))
+                            iPackage, paste0(collapse = ',', '"', failedLoads, '"')))
 
             lib.install(installPackages = failedLoads, lib_location = lib_location, install_temporarily = TRUE, execute_with_Rscript = execute_with_Rscript, verbose = verbose)
 
@@ -150,7 +150,7 @@ lib.install <- function(installPackages = NULL, lib_location = lib.location(), i
         # If all dependencies were already there, check if the package is already installed.
         # When overwriting this package (or installing the latest version) we are not interested in knowing if the package already exists.
         if (!overwrite_this_package && all(names(dependsOn) %in% names(succesfullLoads) | lib.is_basepackage(names(dependsOn)))) {
-            finalPackSucces <- lib.testload(setNames('', iPackage), lib_location, pick.last = TRUE, verbose = verbose, msg_str = '')
+            finalPackSucces <- lib.testload(stats::setNames('', iPackage), lib_location, pick.last = TRUE, verbose = verbose, msg_str = '')
 
             if (iPackage %in% names(finalPackSucces)) {
                 message(sprintf('\n - The "%s" package seems to be already installed...\n', iPackage))
@@ -352,7 +352,7 @@ lib.convert <- function(source_lib          = lib.location_install_dir(destinati
         packageVersions[grepl(iPackage, packageNames)] <- as.character(numeric_version(packageDescription(iPackage, lib.loc = source_lib)$Version))
     }
 
-    newLocation <- paste(lib_location, packageNames, packageVersions, gsub(libContent, pat = paste0(source_lib, '/'), rep = ''), sep = '/')
+    newLocation <- paste(lib_location, packageNames, packageVersions, gsub(libContent, pattern = paste0(source_lib, '/'), replace = ''), sep = '/')
 
     lapply(unique(dirname(newLocation)), dir.create, recursive = TRUE, showWarnings = FALSE)
     succes <- file.copy(libContent, newLocation, overwrite = force_overwrite)
@@ -389,7 +389,8 @@ detachAll <- function(reload_multiversion = FALSE, dryRun = FALSE, packageList =
         message('No packages are loaded, nothing to detach.')
 
     } else if (!dryRun) {
-        lapply(sprintf('package:%s', packageList), detach, character.only = TRUE, unload = TRUE)
+        in_search <- past0('package:', packageList) %in% search()
+        lapply(sprintf('package:%s', packageList[in_search]), detach, character.only = TRUE, unload = TRUE)
     }
 
     # also unload all namespaces (not always stable!)
@@ -540,7 +541,7 @@ lib.dependencies <- function(packageName, do_print = TRUE, character.only = FALS
             dependingPackages <- lib.packs_str2vec(readChar(overrideFile, file.info(overrideFile)$size))
         } else {
             packDesc <- packageDescription(packageName, lib.loc = package.location)
-            dependingPackages <- lib.packs_str2vec(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pat = ',,', rep = ','))
+            dependingPackages <- lib.packs_str2vec(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pattern = ',,', replace = ','))
         }
         listed_dependencies[[packVersion]] <- dependingPackages
 
@@ -573,7 +574,7 @@ lib.dependencies <- function(packageName, do_print = TRUE, character.only = FALS
 #'
 lib.packs_vec2str <- function(x, do_return = FALSE) {
     if (!is.null(x)) {x <- x[!is.na(x)]} else if (do_return) {return('')} else {message('')}
-    str <- gsub(pat = '\\s\\(\\)', rep = '',paste(paste(names(x), paste0("(", x, ")")), collapse = '   '))
+    str <- gsub(pattern = '\\s\\(\\)', replace = '',paste(paste(names(x), paste0("(", x, ")")), collapse = '   '))
     if (do_return) {return(gsub('   ', ', ', str))} else {message(str)}
 }
 
@@ -597,13 +598,15 @@ lib.installed_packages <- function(lib_location = lib.location()) {
 #' Can be called without using quotes like \code{lib.dependsOnMe(dplyr)}. A second very usefull feature would be the \code{lib.dependsOnMe(all)},
 #' which will print a list of all packages available with their dependencies. \cr
 #' \cr
-#' A simple wrapper to do precisely that is "\code{lib.installed_packages}".
+#' A simple wrapper "\code{lib.installed_packages}", will do precisely that.
 #'
 #' @param ... All packages and their versions you would like to load e.g. \code{lib.dependsOnMe(DBI = '0.5', assertthat, R6 = '0.6', quietly = TRUE)}.
 #' @param checkMyDeps Supports providing a named character vector of packages and their versions instead of the direct input.
-#' Use it like this when calling it via another function. It is the shape that is supported by all other functions in this package.
-#' e.g. \code{c(DBI = '0.5', assertthat = '', R6 = '')}
+#' Use it like this when calling it via another function.
 #' @param lib_location The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.
+#'
+#' @return
+#' It returns a is the shape that is supported by all other functions in this package e.g. \code{c(DBI = '0.5', assertthat = '', R6 = '')}
 #'
 #' @export
 #'
@@ -612,12 +615,38 @@ lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location
     if (is.null(checkMyDeps)) {
         checkMyDeps <- raw_input_parser(as.list(match.call()), varnames_to_exclude = c('lib_location', 'checkMyDeps'))
     }
+    if (length(checkMyDeps) > 1 && 'all' %in% checkMyDeps) {
+        stop('When requesting `all` dependencies (equal to `lib.installed_packages()`),',
+             ' no other package names can be requested in the same call to `lib.dependsOnMe`.')
+    }
+    if (length(checkMyDeps) > 1) {
+        for (icheck in seq_along(checkMyDeps)) {
+            lib.dependsOnMe(checkMyDeps = checkMyDeps[icheck], lib_location = lib_location)
+        }
+        return(invisible())
+    }
 
-    if (is.null(names(checkMyDeps))) {checkMyDeps <- setNames('> 0.0.0', checkMyDeps); message('The latest version,')}
+    if (is.null(names(checkMyDeps))) {
+        av_ver <- lib.available_versions(checkMyDeps)
+        checkMyDeps <- stats::setNames('999999.99.99', checkMyDeps)
+        message('Showing all that depends on `', names(checkMyDeps), '`, (available are: ', paste0(collapse = ', ', '"', av_ver, '"'), '):')
+    }
 
-    # check if input package is realistic. if no version is selected (no name value pair is provided) the oldest version is used.
-    if (!names(checkMyDeps) == 'all') checkMyDeps <- setNames(lib.decide_version(checkMyDeps, lib_location, pick.last = TRUE), names(checkMyDeps))
-
+    # check if input package is realistic.
+    # if no version is selected (no name value pair is provided) all packages that depend on any version of 'checkMyDeps' will be shown.
+    if (!names(checkMyDeps) == 'all' && !checkMyDeps == '999999.99.99') {
+        av_ver <- lib.available_versions(names(checkMyDeps))
+        av_ver_apply <- sapply(av_ver, FUN = function(x) {lib.check_compatibility(checkMyDeps, x)})
+        if (any(av_ver_apply)) {
+            checkMyDeps <- stats::setNames(av_ver[max(which(av_ver_apply))], names(checkMyDeps))
+            message('Showing all that depends on `',
+                    names(checkMyDeps), '`, version "', checkMyDeps, '":')
+        } else {  # show all for this version
+            message('Cannot match dependency...\nShowing all that depends on `',
+                    names(checkMyDeps), '`, (available are: ', paste0(collapse = ', ', '"', av_ver, '"'), '):')
+            checkMyDeps <- stats::setNames('999999.99.99', names(checkMyDeps))
+        }
+    }
 
     packageList <- list.dirs(lib_location, recursive = FALSE, full.names = FALSE)
     packageList <- packageList[!packageList %in% c('.git', 'TEMP_install_location')]
@@ -635,35 +664,32 @@ lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location
                 dependingPackages <- lib.packs_str2vec(readChar(overrideFile, file.info(overrideFile)$size))
             } else {
                 packDesc <- packageDescription(packageName, lib.loc = package.location)
-                dependingPackages <- lib.packs_str2vec(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pat = ',,', rep = ','))
+                dependingPackages <- lib.packs_str2vec(gsub(paste(packDesc$Depends, packDesc$Imports, sep = ','), pattern = ',,', replace = ','))
             }
 
             dependingPackages <- dependingPackages[!lib.is_basepackage(names(dependingPackages))]
 
             if (!names(checkMyDeps) == 'all') {
-                depThatMatters <- dependingPackages[names(dependingPackages) %in% names(checkMyDeps)]
+                depThatMatters <- dependingPackages[names(dependingPackages) == names(checkMyDeps)]
                 if (length(depThatMatters) == 0) {next}
+                valid <- lib.check_compatibility(depThatMatters, checkMyDeps)
 
-                if        (grepl('>=', depThatMatters)) {
-                    valid <- numeric_version(checkMyDeps) >= numeric_version(gsub('>=\\s?', '', depThatMatters))
-                } else if (grepl('>' , depThatMatters)) {
-                    valid <- numeric_version(checkMyDeps) >  numeric_version(gsub('>\\s?', '', depThatMatters))
-                } else if (depThatMatters == '') {
-                    valid = TRUE
-                } else { # if dependency version is just a version (probably only possible when dependency is shadowed)
-                    valid <- numeric_version(checkMyDeps) == numeric_version(depThatMatters)
-                }
             } else { # in case 'all' is requested.
                 valid = TRUE
             }
 
             if (valid) {
                 message(sprintf('%23s : %-8s ', packageName, packVersion), appendLF = F)
-                if (file.exists(overrideFile)) {message('(shadowed)| ', appendLF = F)} else {message('          | ', appendLF = F)}
+                if (file.exists(overrideFile)) {
+                    message('(shadowed)| ', appendLF = F)
+                } else {
+                    message('          | ', appendLF = F)
+                }
                 lib.packs_vec2str(dependingPackages[1:3])
                 if (length(dependingPackages) > 3) {
                     for (index in 2: ceiling(length(dependingPackages)/3)) {
-                        message(strrep(' ', 45), '... ', appendLF = F); lib.packs_vec2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
+                        message(strrep(' ', 45), '... ', appendLF = F)
+                        lib.packs_vec2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
                     }
                 }
             }
