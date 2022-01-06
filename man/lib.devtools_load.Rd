@@ -11,6 +11,6 @@ lib.devtools_load(lib_location = lib.location())
 Use lib.devTools_install to install devtools, if you have not done so already.}
 }
 \description{
-During the library call, `appendLibPaths` is TRUE, making sure that some devtools functionallity
+During the library call, \code{appendLibPaths} is TRUE, making sure that some devtools functionality
 (like running tests) in child R instances will still work and know where to load their libraries from.
 }

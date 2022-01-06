@@ -80,7 +80,7 @@ One reason to use \code{appendLibPaths = TRUE} is to make these packages accessi
 by using \code{cntrl} + \code{shift} + \code{T} in Rstudio. When running it directly, it will use the packages it can find in the available libraries (\code{.libPath()}) and return an error if they cannot be found. \cr
 
 The inputs .packNameVersionList [vector of named versions] and .skipDependencies [vector of names] can be
-left blank in general. They are used by other functionallity like \code{\link{lib.testload}()} and \code{\link{lib.install}}.
+left blank in general. They are used internally and might be depricated in the future.
 }
 \section{Major version differences}{
 

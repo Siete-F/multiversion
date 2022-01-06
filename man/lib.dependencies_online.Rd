@@ -2,7 +2,7 @@
 % Please edit documentation in R/package_version_management.R
 \name{lib.dependencies_online}
 \alias{lib.dependencies_online}
-\title{Check if an package belongs to the standard R packages}
+\title{Check a package his online dependencies}
 \usage{
 lib.dependencies_online(packageName, cran_url = "https://cran.rstudio.com/")
 }
@@ -12,5 +12,6 @@ lib.dependencies_online(packageName, cran_url = "https://cran.rstudio.com/")
 \item{cran_url}{Defaults to 'https://cran.rstudio.com/'.}
 }
 \description{
-Check if an package belongs to the standard R packages
+Returns a name = '<version spec>' array which can be used for \code{lib.load()}
+or \code{lib.install_if_not_compatible()}.
 }

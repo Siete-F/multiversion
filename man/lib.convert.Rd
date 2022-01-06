@@ -8,7 +8,7 @@ lib.convert(
   source_lib = lib.location_install_dir(destination_mv_lib),
   destination_mv_lib = lib.location(),
   force_overwrite = FALSE,
-  packages_to_convert = c()
+  packages_to_convert
 )
 }
 \arguments{
@@ -40,22 +40,22 @@ To continue with a clean Temp folder, run \code{lib.clean_install_dir()} which w
 \examples{
 # As an experiment (or when getting started) you could run this with
 # your complete standard library (not your base library).
-lib.convert(source_lib = Sys.getenv("R_LIBS_USER"),
-            destination_mv_lib  = "./REMOVE_ME_example_library")
+
+#> lib.convert(source_lib = Sys.getenv("R_LIBS_USER"),
+#>             destination_mv_lib  = "./REMOVE_ME_example_library")
 
 # Running the same operation a second time will result
 # in a notification that all files were already copied.
 
 # Just running it will use the R_MV_library defined by the environment
 # variable and look inside for the Temp folder to use.
-\dontrun{
-lib.convert()
-}
 
-# It is sufficient to only provide the destination_mv_lib input,
-# it will look for the temporary folder within automatically.
-\dontrun{
-lib.convert(destination_mv_lib = "./R_MV_library")
-}
+#> lib.convert()
+
+# It is sufficient to only provide the destination_mv_lib,
+# it will look for the "/TEMP_install_location" folder as the 'source_lib' by default.
+
+#> lib.convert(destination_mv_lib = "./R_MV_library")
+
 
 }

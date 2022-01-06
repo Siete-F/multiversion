@@ -179,6 +179,7 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
 #' @export
 #'
 lib.check_compatibility <- function(condition, version) {
+    stopifnot(length(condition) != 0)
     if (length(condition) > 1) {
         stop('Please provide one condition only in `lib.check_compatibility`!')
     }
@@ -281,13 +282,20 @@ lib.is_basepackage <- function(packageName) {
 
 #' Check the versions of an already loaded package.
 #'
-#' @param packageName The name or a vector of names of the packages for which to obtain the version.
+#' This works for both packages within the R_MV_library (which are loaded) and
+#' for packages outside the library.
 #'
+#' @param packageNames The name or a vector of names of the packages for which to obtain the version.
+#' @param exclude_not_loaded If true, the default, it will not try to find a 'loaded version' of a package that is not loaded.
+#'
+#' @importFrom stats setNames
+#' @importFrom utils sessionInfo
 #' @export
 #'
-lib.package_version_loaded <- function(packageNames, dont_exclude_not_loaded = F) {
-    if (!dont_exclude_not_loaded) {
-        packageNames <- packageNames[packageNames %in% unique(c(names(sessionInfo()$otherPkgs), names(sessionInfo()$loadedOnly)))]
+lib.package_version_loaded <- function(packageNames, exclude_not_loaded = TRUE) {
+    if (exclude_not_loaded) {
+        packageNames <- packageNames[packageNames %in% unique(
+            c(names(utils::sessionInfo()$otherPkgs), names(utils::sessionInfo()$loadedOnly)))]
     }
 
     # determines the versions of the loaded packages given
@@ -299,19 +307,27 @@ lib.package_version_loaded <- function(packageNames, dont_exclude_not_loaded = F
 }
 
 
-#' Check if an package belongs to the standard R packages
+#' Check a package his online dependencies
+#'
+#' Returns a name = '<version spec>' array which can be used for \code{lib.load()}
+#' or \code{lib.install_if_not_compatible()}.
 #'
 #' @param packageName The package name to check.
 #' @param cran_url Defaults to 'https://cran.rstudio.com/'.
 #'
+#' @importFrom stats na.omit
+#' @importFrom utils available.packages
 #' @export
 #'
 lib.dependencies_online <- function(packageName, cran_url = 'https://cran.rstudio.com/'){
-    packList <- available.packages(repos = cran_url)
+
+    # It reads fields = c('Depends', 'Imports') by default.
+    # It won't read less data when providing this argument. The packages list is cached.
+    packList <- utils::available.packages(repos = cran_url)
     if (!(packageName %in% packList)) {
         stop(sprintf('Package "%s" is not available on CRAN (%s). Install from source using "lib.install_tarball(path, depends)".', packageName, cran_url))
     }
-    dependsOn <- paste(na.omit(packList[packageName, "Depends"]), na.omit(packList[packageName, "Imports"]), sep = ', ')
+    dependsOn <- paste(stats::na.omit(packList[packageName, "Depends"]), na.omit(packList[packageName, "Imports"]), sep = ', ')
     dependingPackages <- lib.packs_str2vec(dependsOn)
 
     return(dependingPackages)

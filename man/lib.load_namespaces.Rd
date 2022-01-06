@@ -11,11 +11,11 @@ lib.load_namespaces(
 )
 }
 \arguments{
+\item{packages_to_load_in_ns}{A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.4.0', ggplot = '')`).}
+
 \item{lib_location}{The folder which contains the multiversion library. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} to find this directory, see \code{lib.location()}.}
 
 \item{additional_lib}{A single or multiple paths that must be used in addition to the lib_location for looking up the packages. Non existing paths are silently ignored.}
-
-\item{packNameVersion}{A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.4.0', ggplot = '')`).}
 }
 \description{
 Load (but do not attach) the namespaces of a list of packages.

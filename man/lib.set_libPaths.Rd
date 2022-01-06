@@ -2,20 +2,24 @@
 % Please edit documentation in R/helper_functions.R
 \name{lib.set_libPaths}
 \alias{lib.set_libPaths}
-\title{Append all package locations to `.libPaths()`, including .Library, but leaving out old values.}
+\title{Set \code{.libPaths()} to the provided version specific package locations.}
 \usage{
 lib.set_libPaths(packNameVersion, lib_location, additional_lib_paths = c())
 }
 \arguments{
-\item{packNameVersion}{A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.05', ggplot = '')`).
+\item{packNameVersion}{A named character vector with package names and their version indication (e.g. \code{c(dplyr = '>= 0.05', ggplot = '')}).
 Or the special string 'all', which will add the paths of all directories of the latest versions of every package in the R_MV_library.
-The path that is appended to the `.libPaths` is constructed based on the name and version provided.}
+The path that is appended to the \code{.libPaths()} is constructed based on the name and version provided.}
 
 \item{lib_location}{The multiversion library location path (no default configured here!).}
+
+\item{additional_lib_paths}{Any additional \code{.libPaths()} that needs to be set. Namely used for the temporary installation directory.}
 }
 \value{
-It will invisibly return the old paths.
+The old \code{.libPaths()} content is returned invisibly.
 }
 \description{
-Adds the path of the package that is specified (and likely loaded before) to the `.libPaths`.
+Adds \code{.Library} and the paths of the specific versions of the provided
+packages that are specified (and likely loaded before) to the \code{.libPaths}.
+Note that this function will erase any current \code{.libPaths()} configuration.
 }

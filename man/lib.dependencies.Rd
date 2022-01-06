@@ -22,7 +22,7 @@ lib.dependencies(
 }
 \description{
 Provide a package name (can be without quotes) to show its dependencies.
-To list all dependencies of the complete library, use the inversed function "\code{lib.dependsOnMe(all)}" with the value 'all'.
+To list all dependencies of the complete library, use the inverse function "\code{lib.dependsOnMe(all)}" with the value 'all'.
 That function also does not require quotes.
 }
 \examples{

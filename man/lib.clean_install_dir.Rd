@@ -7,7 +7,7 @@
 lib.clean_install_dir(temp_install.location = lib.location_install_dir())
 }
 \arguments{
-\item{temp_install.location}{By default the default temporary directory path obtained with \code{lib.location_install_dir()}.}
+\item{temp_install.location}{By default the temporary installation path obtained with \code{lib.location_install_dir()}.}
 }
 \description{
 The temporary installation folder (indicated by \code{lib.location_install_dir()}) is used to install the package before moving ('converting') it to the final location.

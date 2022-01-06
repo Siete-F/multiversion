@@ -1,4 +1,7 @@
-#READY
+# To work on tests and to understand testcases better, run:
+#
+# .set_test_lib_location()
+# lib.installed_packages()
 
 test_that("lib.dependencies", {
     empty_named_char <- structure(character(), .Names = character())

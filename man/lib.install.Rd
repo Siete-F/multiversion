@@ -10,8 +10,8 @@ lib.install(
   package_names = NULL,
   lib_location = lib.location(),
   install_temporarily = FALSE,
-  overwrite_this_package = FALSE,
-  verbose = FALSE,
+  allow_overwrite_on_convert = FALSE,
+  quiet = TRUE,
   cran_url = "http://cran.us.r-project.org"
 )
 
@@ -19,7 +19,8 @@ lib.install_if_not_compatible(
   package_conditions,
   lib_location = lib.location(),
   install_temporarily = FALSE,
-  overwrite_this_package = FALSE,
+  allow_overwrite_on_convert = FALSE,
+  quiet = TRUE,
   cran_url = "http://cran.us.r-project.org"
 )
 
@@ -28,7 +29,7 @@ lib.install_tarball(
   dependencies = c(),
   lib_location = lib.location(),
   install_temporarily = FALSE,
-  overwrite_this_package = FALSE,
+  allow_overwrite_on_convert = c("tarball", "dependencies"),
   cran_url = "http://cran.us.r-project.org"
 )
 }
@@ -47,6 +48,11 @@ the installed package(s) is moved to the destination location automatically.}
 to the final destination automatically. Otherwise it is necessary to run
 \code{\link{lib.convert}()} manually after the installation into the temporary
 folder finished. To clean up the temporary folder, run \code{lib.clean_install_dir()}.}
+
+\item{allow_overwrite_on_convert}{Can be used if you are experimenting and
+you would like to overwrite the installed (tarball) package. See details below.}
+
+\item{quiet}{Will affect \code{install.packages(..., quiet = quiet)}.}
 
 \item{cran_url}{Will be passed trough to the install.packages command.}
 
@@ -74,9 +80,6 @@ the risk of installing every minor package improvement as soon as it is released
   which in return is used by \code{lib.install_if_not_compatible}.}
 }
 }
-\details{
-
-}
 \section{limitations for \code{package_conditions}}{
 
 All version specifications are allowed except for the exact version indication
@@ -85,6 +88,22 @@ specification, which will match any installed version of that package.
 \bold{If the condition is met, the package is skipped}, which is the desired
 behavior for dependencies. For an empty condition (e.g. \code{c(dplyr = '')}),
 it will only install the package when no version is installed at all.
+}
+
+\section{Allow overwrite on convert}{
+
+When an installed package is converted to the R_MV_library, it would normally
+show that it failed to copy the packages of which that version was already present.
+This means that these packages were already converted from the temporary library
+to the R_MV_library structure before, and no \code{lib.clean_install_dir()} was performed yet.
+In case you are experimenting with a self made tarball package, and you are
+developing the package within the same package version,
+it is some times desired to overwrite the already present installed package with a new installation.
+For CRAN packages, this options doesn't make sense.\cr\cr
+Only for \code{lib.install_tarball}, the options \code{TRUE}, \code{FALSE}, and additionally
+\code{"tarball"} \code{"dependencies"} are allowed. 'dependencies' will affect
+all packages that are in the temporary installation location except for the tarball package.
+'tarball' will only overwrite the tarball package.
 }
 
 \section{Installing temporarily}{

@@ -13,6 +13,8 @@ LazyData: true
 RoxygenNote: 7.1.1
 Suggests: 
     testthat (>= 3.0.0),
+    waldo,
     devtools,
-    withr
+    withr,
+    callr
 Config/testthat/edition: 3

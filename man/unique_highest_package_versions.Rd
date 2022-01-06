@@ -7,10 +7,16 @@
 unique_highest_package_versions(packNameVersion, return_as_df = FALSE)
 }
 \arguments{
-\item{packNameVersion}{provide a packageNameVersion list like so: `lib.printVerboseLibCall(c(dplyr = '0.5.0', R6 = '', R6 = 0.5))`}
+\item{packNameVersion}{provide a package name list like so: \code{c(dplyr = '0.5.0', R6 = '', R6 = 0.5)}}
 
 \item{return_as_df}{{FALSE} if the output should remain a structured dataframe, or if it should return a named character vector.}
 }
 \description{
-Will uniquify the named character vector with package versions to remain the highest functions. (for now only used for printing)
+Creates a vector with the unique set of with package name = versions and will keep
+the highest version when multiple versions of one package are defined.
+}
+\examples{
+unique_highest_package_versions(
+    c(pack.a = '0.1.0', pack.c = '5.2', package.b = '1.9',   pack.c = '99.99'))
+
 }

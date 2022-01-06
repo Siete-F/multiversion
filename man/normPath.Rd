@@ -7,9 +7,9 @@
 normPath(path)
 }
 \arguments{
-\item{path}{The path which needs to be normalized. Will make `C:/PROGRA~1/R/R-33~1.1/library` into `C:/Program Files/R/R-3.3.1/library`.}
+\item{path}{The path which needs to be normalized. Will make \code{C:/PROGRA~1/R/R-33~1.1/library} into \code{C:/Program Files/R/R-3.3.1/library}.}
 }
 \description{
 This short-hand function normalizes the path and makes sure only forward slashes are used.
-Other slashes are not usable in `grepl` statements directly for example, the '\\' is parsed to '\' before being used as regex.
+Other slashes are not usable in \code{grepl} statements directly for example, the '\\' is parsed to '\' before being used as regexp.
 }

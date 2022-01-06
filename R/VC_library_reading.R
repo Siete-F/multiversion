@@ -56,7 +56,7 @@
 #' by using \code{cntrl} + \code{shift} + \code{T} in Rstudio. When running it directly, it will use the packages it can find in the available libraries (\code{.libPath()}) and return an error if they cannot be found. \cr
 #'
 #' The inputs .packNameVersionList [vector of named versions] and .skipDependencies [vector of names] can be
-#' left blank in general. They are used by other functionallity like \code{\link{lib.testload}()} and \code{\link{lib.install}}.
+#' left blank in general. They are used internally and might be depricated in the future.
 #'
 #' @section Major version differences:
 #' By default, when chosing the right version to load, only versions are looked up within the same major version.
@@ -89,6 +89,9 @@
 #'
 #' @param .packNameVersionList See main description. Should be left blank.
 #' @param .skipDependencies See main description. Should be left blank.
+#'
+#' @importFrom stats setNames
+#' @importFrom utils packageDescription sessionInfo
 #'
 #' @export
 #'
@@ -197,7 +200,7 @@ lib.load <- function(..., loadPackages = NULL, lib_location = lib.location(),
         if (!quietly) {message(stackStr, appendLF = F)}
 
         # Compose the installation dir
-        temp_lib_dir <- lib.location_install_dir(lib_location)
+        temp_lib_dir <- lib.location_install_dir(lib_location, FALSE)
         additional_lib <- c()
         # If (only temporarily) installed packages must also be loaded, add them to the search path in the load operation.
         if (also_load_from_temp_lib) {
@@ -209,7 +212,7 @@ lib.load <- function(..., loadPackages = NULL, lib_location = lib.location(),
         if (also_load_from_temp_lib && (length(av_versions) == 0 ||
                                         !any(lib.check_compatibility(loadPackages[iPackage], av_versions))) && file.exists(file.path(temp_lib_dir, iPackage))) {
             package_loc <- temp_lib_dir
-            packVersion <- packageDescription(iPackage, package_loc)$Version
+            packVersion <- utils::packageDescription(iPackage, package_loc)$Version
             if (!quietly) message(sprintf("Version %-7s INSTALLED  for package '%s'", packVersion, iPackage))
         } else {
             # Messages like: "Version ... is chosen  for package '...'" are printed here.
@@ -227,12 +230,13 @@ lib.load <- function(..., loadPackages = NULL, lib_location = lib.location(),
         if (file.exists(overrideFile)) {
             dependingPackages <- lib.packs_str2vec(readChar(overrideFile, file.info(overrideFile)$size))
         } else {
-            packDesc <- packageDescription(iPackage, lib.loc = package_loc)
-            dependingPackages <- lib.packs_str2vec(gsub(paste0(packDesc$Depends, ',', packDesc$Imports), pattern = ',,', replace = ','))
+            packDesc <- utils::packageDescription(iPackage, lib.loc = package_loc)
+            dependingPackages <- lib.packs_str2vec(gsub(paste0(packDesc$Depends, ',', packDesc$Imports), pattern = ',,', replacement = ','))
         }
 
         # recusively load dependencies
-        # The .skipDependencies is necessary for `dry.run=TRUE`. With `dry.run=FALSE` the dependency is loaded and skipped in the next itteration.
+        # The .skipDependencies is necessary for `dry.run=TRUE`.
+        # With `dry.run=FALSE` the dependency is loaded and skipped in the next iteration.
         .packNameVersionList <- lib.load(loadPackages            = dependingPackages,
                                          lib_location            = lib_location,
                                          .packNameVersionList    = .packNameVersionList,
@@ -280,7 +284,7 @@ lib.load <- function(..., loadPackages = NULL, lib_location = lib.location(),
     # and these packages will not be confused with local packages when `.libPath` changes. This way, the package will be found,
     # even when the user library is still in the search path.)
     if (!dry.run) {
-        current_status <- sessionInfo()
+        current_status <- utils::sessionInfo()
         ns_to_load <- .packNameVersionList[!names(.packNameVersionList) %in% c(names(current_status$loadedOnly), names(current_status$otherPkgs), names(loadPackages))]
         lib.load_namespaces(ns_to_load, lib_location, additional_lib)
     }

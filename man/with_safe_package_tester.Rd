@@ -8,6 +8,8 @@ with_safe_package_tester(expr, also_clean_install_dir = FALSE)
 }
 \arguments{
 \item{expr}{The expression that needs to be evaluated in this protected environment.}
+
+\item{also_clean_install_dir}{If \code{lib.clean_install_dir()} must be run before and after the test.}
 }
 \description{
 Will reset the .libPaths, the 'R_MV_LIBRARY_LOCATION' environment variable to their old values

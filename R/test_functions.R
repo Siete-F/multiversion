@@ -135,14 +135,11 @@
 #' }
 #'
 #' @param expr The expression that needs to be evaluated in this protected environment.
-#'
+#' @param also_clean_install_dir If \code{lib.clean_install_dir()} must be run before and after the test.
 #'
 with_safe_package_tester <- function(expr, also_clean_install_dir = FALSE) {
     # Gather the current state
     old_paths <- .libPaths()
-
-    # The following is already done in with_safe_package_tester
-    # > lib.clean_install_dir()
 
     # Define how to reset to unchanged environment (so how to return to the clean slate and undo potential effects done by 'expr')
     withr::defer({
@@ -154,15 +151,18 @@ with_safe_package_tester <- function(expr, also_clean_install_dir = FALSE) {
         .libPaths(old_paths)
     })
 
-    # Define your clean slate:
-    detachAll(packageList = c('package.a', 'package.b', 'package.d', 'package.c', 'package.f', 'package.e'))
-
     # This sets the environment variable 'R_MV_LIBRARY_LOCATION' to the test_library, and reverts it when finished here.
     .set_test_lib_location()
 
+    # Define your clean slate:
+    detachAll(packageList = c('package.a', 'package.b', 'package.d', 'package.c', 'package.f', 'package.e'))
+    if (also_clean_install_dir) {
+        lib.dependencies
+    }
+
     # It seems that testthat wants to find other packages like 'waldo' (for comparison) during execution
     # Therefore we cannot set the .libPaths to only '.Library'
-    .libPaths(c(.Library, Sys.getenv('R_LIBS_USER')))
+    .libPaths(c(dirname(system.file(package = 'testthat')), .Library))
 
     force(expr)
 }

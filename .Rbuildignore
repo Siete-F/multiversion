@@ -1,5 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^.*packages_for_testing.*$
+^.*package_for_install_testing[/\\]package_[abcdefgh][0-9.-]+$
 COPYING.LESSER
 .*\.tar\.gz$

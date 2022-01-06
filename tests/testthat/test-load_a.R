@@ -1,5 +1,7 @@
-# source('../test_helpers.R')
-# READY
+# To work on tests and to understand testcases better, run:
+#
+# .set_test_lib_location()
+# lib.installed_packages()
 
 with_safe_package_tester({
 
@@ -26,4 +28,3 @@ with_safe_package_tester({
 
 })
 })
-

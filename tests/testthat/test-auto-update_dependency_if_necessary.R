@@ -1,5 +1,7 @@
+# To work on tests and to understand testcases better, run:
+#
+# .set_test_lib_location()
 # lib.installed_packages()
-# READY
 
 # when loading package.a 0.3.0 (makes e == 1.5) then package.f (e > 1.6.0), e must be updated.
 with_safe_package_tester({

@@ -4,11 +4,14 @@
 \alias{lib.package_version_loaded}
 \title{Check the versions of an already loaded package.}
 \usage{
-lib.package_version_loaded(packageNames, dont_exclude_not_loaded = F)
+lib.package_version_loaded(packageNames, exclude_not_loaded = TRUE)
 }
 \arguments{
-\item{packageName}{The name or a vector of names of the packages for which to obtain the version.}
+\item{packageNames}{The name or a vector of names of the packages for which to obtain the version.}
+
+\item{exclude_not_loaded}{If true, the default, it will not try to find a 'loaded version' of a package that is not loaded.}
 }
 \description{
-Check the versions of an already loaded package.
+This works for both packages within the R_MV_library (which are loaded) and
+for packages outside the library.
 }
