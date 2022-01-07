@@ -40,7 +40,8 @@ test_that("lib.load errors", {
     expect_error(lib.load(dummy = '5_0_0', package.a = '0.1.0'), "Not all package versions that are provided seem to be valid version numbers")
 
 
-    expect_error(lib.load(c(dummy = '5_0_0', package.a = '0.1.0')), "Please make sure that you call `lib.load\\(loadPackages = c\\(xx = yy\\)\\)`.*")
+    expect_error(lib.load(c(dummy = '5_0_0', package.a = '0.1.0')), "Please make sure that you call `lib.load\\(loadPackages = c\\(pack = 'version'\\)\\)`.*")
+    expect_error(lib.load(loadPackages = 'dummy'), "Please make sure that you call `lib.load\\(loadPackages = c\\(pack = 'version'\\)\\)`.*")
 
 })
 

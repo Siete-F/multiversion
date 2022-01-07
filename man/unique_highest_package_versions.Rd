@@ -16,7 +16,7 @@ Creates a vector with the unique set of with package name = versions and will ke
 the highest version when multiple versions of one package are defined.
 }
 \examples{
-unique_highest_package_versions(
+multiversion:::unique_highest_package_versions(
     c(pack.a = '0.1.0', pack.c = '5.2', package.b = '1.9',   pack.c = '99.99'))
 
 }

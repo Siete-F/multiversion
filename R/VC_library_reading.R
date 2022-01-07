@@ -121,8 +121,8 @@ lib.load <- function(..., loadPackages = NULL, lib_location = lib.location(),
         loadPackages <- raw_input_parser(as.list(match.call()), varnames_to_exclude = c('loadPackages', 'lib_location', 'dry.run', 'quietly', 'verbose', 'appendLibPaths', 'pick.last', 'also_load_from_temp_lib', '.packNameVersionList', '.skipDependencies'))
     }
 
-    if (length(loadPackages) == 1 && strtrim(names(loadPackages), 2) == 'c(') {
-        stop('Please make sure that you call `lib.load(loadPackages = c(xx = yy))` when you would like to use a named character vector.\nAlternatively, remove the vector elements and call `lib.load(xx = yy)` directly.')
+    if (length(loadPackages) == 1 && (is.null(names(loadPackages)) || strtrim(names(loadPackages), 2) == 'c(')) {
+        stop('Please make sure that you call `lib.load(loadPackages = c(pack = \'version\'))` when you would like to use a named character vector.\nAlternatively, remove the vector elements and call `lib.load(pack = \'version\')` directly.')
     }
 
     # If still other libraries are set as active libraries, reset the library to just 1 lib for the build in functions (= `.Library`).
@@ -134,7 +134,7 @@ lib.load <- function(..., loadPackages = NULL, lib_location = lib.location(),
     # }
 
     # check if the package version that is provided is a correct version (this catches a wrong input like `lib.load(dplyr = '< 0.5.0')`)
-    if (length(loadPackages) != 0 && !is.na(loadPackages) &&
+    if (length(loadPackages) != 0 && !any(is.na(loadPackages)) &&
         any(sapply(loadPackages, function(x) {attributes(regexpr('>?=?\\s?\\d+(\\.\\d+){1,3}', x))$match.length != nchar(x) && nchar(x) > 0}) & !lib.is_basepackage(names(loadPackages)))) {
         stop(sprintf('Not all package versions that are provided seem to be valid version numbers. The following was received:\n%s', paste(paste0(names(loadPackages), ' (', loadPackages, ')'), collapse = ', ')))
     }

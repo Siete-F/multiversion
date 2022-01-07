@@ -12,18 +12,25 @@ lib.dependencies(
 )
 }
 \arguments{
-\item{packageName}{The (unquoted) package name for which you would like to print the dependencies.}
+\item{packageName}{The (unquoted) package name for which you would like to
+print the dependencies.}
 
-\item{do_print}{If true (default), prints the dependencies. In both cases, the dependencies are returned invisibly.}
+\item{do_print}{If true (default), prints the dependencies. In both cases,
+the dependencies are returned invisibly.}
 
-\item{character.only}{If TRUE, (FALSE by default), the package names can be provided as character vector. Otherwise, direct unquoted package names are supported.}
+\item{character.only}{If TRUE, (FALSE by default), the package names can be
+provided as character vector. Otherwise, direct unquoted package names are supported.}
 
-\item{lib_location}{The folder containing the R_MV_library structure where this function observes the dependencies. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
+\item{lib_location}{The folder containing the R_MV_library structure where
+this function observes the dependencies. By default, it checks the environment
+variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
 }
 \description{
 Provide a package name (can be without quotes) to show its dependencies.
-To list all dependencies of the complete library, use the inverse function "\code{lib.dependsOnMe(all)}" with the value 'all'.
-That function also does not require quotes.
+To list all dependencies of the complete library, use the inverse function
+"\code{lib.dependsOnMe(all)}" with the value 'all'.
+That function also does not require quotes when calling it.
+So \code{lib.dependencies(package.a)} will work.
 }
 \examples{
 \dontrun{

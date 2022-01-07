@@ -4,10 +4,16 @@
 \alias{lib.clean_install_dir}
 \title{Clear the temp install folder.}
 \usage{
-lib.clean_install_dir(temp_install.location = lib.location_install_dir())
+lib.clean_install_dir(
+  lib_location = lib.location(),
+  temp_install_location = lib.location_install_dir(lib_location)
+)
 }
 \arguments{
-\item{temp_install.location}{By default the temporary installation path obtained with \code{lib.location_install_dir()}.}
+\item{lib_location}{By default the library path returned by \code{lib.location()} is used.
+It is only used to build the temp_install.location when that argument is not provided.}
+
+\item{temp_install_location}{The folder that is emptied by this function.}
 }
 \description{
 The temporary installation folder (indicated by \code{lib.location_install_dir()}) is used to install the package before moving ('converting') it to the final location.

@@ -4,21 +4,36 @@
 \alias{lib.dependsOnMe}
 \title{Shows the dependencies of (all or) a certain function(s).}
 \usage{
-lib.dependsOnMe(..., checkMyDeps = NULL, lib_location = lib.location())
+lib.dependsOnMe(
+  ...,
+  checkMyDeps = NULL,
+  lib_location = lib.location(),
+  dont_print = FALSE
+)
 }
 \arguments{
-\item{...}{All packages and their versions you would like to load e.g. \code{lib.dependsOnMe(DBI = '0.5', assertthat, R6 = '0.6', quietly = TRUE)}.}
+\item{...}{All packages and their versions you would like to check e.g.
+\code{lib.dependsOnMe(DBI = '0.5', assertthat, R6 = '0.6', quietly = TRUE)}.}
 
-\item{checkMyDeps}{Supports providing a named character vector of packages and their versions instead of the direct input.
+\item{checkMyDeps}{Supports providing a named character vector of packages
+and their versions instead of the direct input.
 Use it like this when calling it via another function.}
 
-\item{lib_location}{The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
+\item{lib_location}{The folder containing a structure where this function
+observe the dependencies from. By default, it checks the environment
+variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
+
+\item{dont_print}{When true, will not print anything, but will expect you
+to make use of the invisibly returned package character vector.}
 }
 \value{
-It returns a is the shape that is supported by all other functions in this package e.g. \code{c(DBI = '0.5', assertthat = '', R6 = '')}
+It returns a special character array with package:version names for every
+package that has a dependency on the provided \code{checkMyDeps} or
+\code{...} condition.
 }
 \description{
-Can be called without using quotes like \code{lib.dependsOnMe(dplyr)}. A second very usefull feature would be the \code{lib.dependsOnMe(all)},
+Can be called without using quotes like \code{lib.dependsOnMe(dplyr)}.
+It supports the special feature \code{lib.dependsOnMe(all)},
 which will print a list of all packages available with their dependencies. \cr
 \cr
 A simple wrapper "\code{lib.installed_packages}", will do precisely that.

@@ -7,11 +7,9 @@
 lib.clean(lib_location = lib.location(), clean_temp_lib = TRUE)
 }
 \arguments{
-\item{lib_location}{By default the library path returned by \code{lib.location()} is used.}
+\item{lib_location}{By default the library path returned by \code{lib.location()} is used. See Note.}
 
-\item{clean_temp_lib}{If true, will also run \code{lib.clean_install_dir()}.
-Note that it will build the most likely temp_dir location based on the
-lib_location you provide. See \code{\link{lib.location_install_dir}}.}
+\item{clean_temp_lib}{If true, will also run \code{lib.clean_install_dir()}.}
 }
 \description{
 Clean up all un-tracked (not committed) installed libraries in the multiversion library.
@@ -19,4 +17,8 @@ Will additionally also clean up the TEMP_install_location directory (this is an 
 }
 \details{
 Since it involves a quite invasive operation, it asks for permission when being called in an interactive session.
+}
+\note{
+It will build the most likely installation directory based on the
+\code{lib_location} you provide. See \code{\link{lib.location_install_dir}}. Which is \code{<your lib>/TEMP_install_location}.
 }

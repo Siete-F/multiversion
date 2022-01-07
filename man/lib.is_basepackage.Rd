@@ -10,8 +10,11 @@ lib.is_basepackage(packageName)
 \item{packageName}{The package name to check.}
 }
 \description{
-To check if the package is a basepackage, we look it up among all packages in the \code{.Library} directory (\code{list.dirs(.Library, full.names = FALSE, recursive = FALSE)}).
-We cannot version control packages which are located in this library since the \code{.Library} will always be added to the \code{.libPaths}.
-For base packages, this is acceptable, but it apears that this directory is not always as clean as we would wish.
-Because of this reason, we do not check the more widely accepted \code{rownames(installed.packages(priority="base"))}.
+To check if the package is a base package, we look it up among all packages
+in the \code{.Library} directory (\code{list.dirs(.Library, full.names = FALSE, recursive = FALSE)}).
+We cannot version control packages which are located in this library since
+the \code{.Library} will always be added to the \code{.libPaths}.
+For base packages, this is acceptable, but it appears that this directory
+is not always as clean as we would wish. Because of this reason, we do not
+check the more widely accepted \code{rownames(installed.packages(priority="base"))}.
 }

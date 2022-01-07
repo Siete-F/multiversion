@@ -41,13 +41,13 @@ A version cannot be supplied.}
 The package will first be installed in a temporary install folder
 \code{<multiversion lib>/TEMP_install_location}
 indicated by the \code{\link{lib.location_install_dir}()} function.
-If \code{install_temporarily} is set to FALSE (the default).
-the installed package(s) is moved to the destination location automatically.}
+If \code{install_temporarily} is set to FALSE (the default),
+the installed package(s) is moved to the lib_location automatically.}
 
 \item{install_temporarily}{If FALSE, the installed packages are moved
-to the final destination automatically. Otherwise it is necessary to run
-\code{\link{lib.convert}()} manually after the installation into the temporary
-folder finished. To clean up the temporary folder, run \code{lib.clean_install_dir()}.}
+to the R_MV_library, specified by the \code{lib_location} argument, automatically.
+Otherwise it is necessary to run \code{\link{lib.convert}()} manually after
+the installation into the temporary folder finished.}
 
 \item{allow_overwrite_on_convert}{Can be used if you are experimenting and
 you would like to overwrite the installed (tarball) package. See details below.}
@@ -79,6 +79,9 @@ the risk of installing every minor package improvement as soon as it is released
   \item{\code{lib.install} can install CRAN packages into the R_MV_library,
   which in return is used by \code{lib.install_if_not_compatible}.}
 }
+}
+\note{
+To clean up the installation directory, run \code{lib.clean_install_dir()}.
 }
 \section{limitations for \code{package_conditions}}{
 

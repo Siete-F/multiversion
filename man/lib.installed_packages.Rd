@@ -4,12 +4,19 @@
 \alias{lib.installed_packages}
 \title{Show the complete library content.}
 \usage{
-lib.installed_packages(lib_location = lib.location())
+lib.installed_packages(lib_location = lib.location(), dont_print = FALSE)
 }
 \arguments{
 \item{lib_location}{The R_MV_library location.}
+
+\item{dont_print}{When true, will not print anything, but will expect you to
+make use of the invisibly returned package character vector.}
+}
+\value{
+It returns a special character array with package:version names for every
+package and package version in the library.
 }
 \description{
-Use to print all available packages in the R_MV_library with all their versions including their dependencies.
-Simply performs a call to \code{lib.dependsOnMe(all)}.
+Use to print all available packages in the R_MV_library with all their versions
+including their dependencies. Simply performs a call to \code{lib.dependsOnMe(all)}.
 }

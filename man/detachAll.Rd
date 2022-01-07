@@ -7,10 +7,12 @@
 detachAll(reload_multiversion = FALSE, packageList = "all", dryRun = FALSE)
 }
 \arguments{
-\item{reload_multiversion}{If multiversion needs to be loaded again after everything (or all mentioned in \code{packageList}) is unloaded.}
+\item{reload_multiversion}{If multiversion needs to be loaded again after
+everything (or all mentioned in \code{packageList}) is unloaded.}
 
-\item{packageList}{A character vector with the packages to detach/unload. Defaults to all packages
-(\code{names(sessionInfo()$otherPkgs}). When package X depends on package Y, make sure you first specify X then Y.}
+\item{packageList}{A character vector with the packages to detach/unload.
+Defaults to all packages (\code{names(sessionInfo()$otherPkgs}).
+When package X depends on package Y, make sure you first specify X then Y.}
 
 \item{dryRun}{If TRUE, lists all packages that will be cleaned up.}
 }
@@ -19,7 +21,7 @@ Tries to detach all loaded packages and namespaces. Not always stable (within Rs
 A restart of Rstudio might be required since it will often hold on to certain namespaces.
 A proper reset of all libraries is not possible, this is the best we can do. \cr
 \cr
-In general, it is possible to create a complete clean environment by clearing your workspace,
+In general, it is possible to create a complete clean environment by clearing your work space,
 running \code{detachAll} and then restarting Rstudio. If problems with package loading still persists,
 then follow the final alternative solution described in the details section of the documentation of \code{lib.load}.
 }

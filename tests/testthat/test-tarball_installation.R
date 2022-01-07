@@ -66,6 +66,7 @@ with_safe_package_tester({
 
         # INSTALL
         targz_path <- test_path('..', 'package_for_install_testing', 'package.a_0.4.0.tar.gz')
+
         suppressMessages(
             lib.install_tarball(tarball = targz_path,
                                 dependencies = c(testit = ''),

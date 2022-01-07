@@ -1,12 +1,12 @@
 # multiversion
 `multiversion` adds support for installing multiple versions of an R package in parallel and loading a specific version and its related dependencies. The only package that you need to install is this package providing the support for the complete library management.
 
-`multiversion` helps to solve the problem of reproducability, but leaves the smallest footprint possible. With practically no overhead (besides the need to install this package, which by the way has no dependencies at all) you can install new versions of a package and keep using the older versions with other applications.
+`multiversion` helps to solve the problem of reproducibility, but leaves the smallest footprint possible. With practically no overhead (besides the need to install this package, which by the way has no dependencies at all) you can install new versions of a package and keep using the older versions with other applications.
 
-Now you might think, "and what about packrat?", well, next to the major overhead, it does also lack the possibility to load older versions without checking out (git) an older state, removing all installed packages, and installing the older versions again... 
+Now you might think, "and what about packrat?", well, next to the major overhead, it does also lack the possibility to load older versions on-the-fly. It would require you to remove all installed packages, and install the older versions again... `multiversion` provides `lib.execute_using_packagelist()` which allows you to execute code with any combination of dependencies that you specify.
 
-Using this library structure (in my case placed on a shared drive) and library management tool (`multiversion`) I was able to build a GUI (shiny app) that could launch an application that would execute a specific version of an analysis using a `multiversion` library.
-Reproducability is a major requirement for my company, and there was no package or working method I could find that could provide us with a development method in which we could develop quickly and release rappidly while still maintaining 100% reproducability by supporting also all older versions of the packages we developed in-house. Therefore I build it.
+Using this library structure (can also be placed on a shared drive) and library management tool (`multiversion`) I am able to build a GUI (shiny app) that can launch a specific version of an analysis as a stand-alone process. It can then monitor it's status by using the log file and launch multiple processes in parallel.
+Reproducibility is a major requirement for a company, and there is no package or working method I could find that could provide us with a development method in which we could develop quickly and release rapidly while still maintaining 100% reproducibility by continuously supporting full backwards compatibility.
 
 # Getting started
 
@@ -45,6 +45,9 @@ lib.location("C:/example_library_location")
 
 # Install a package:
 lib.install("devtools")
+
+# Cleanup the temp install dir:
+lib.clean_install_dir()
 ```
 
 Congratulations with installing your first package! Now try to load it:
@@ -58,6 +61,6 @@ lib.devtools_load()
 ```
 
 To list all packages that were installed in the library, try running `lib.installed_packages()`.
-For the ones that are familiar with Git, I highly recommend placing the created multiversion library under git version control. Sometimes it can be hard to keep track of what packages were actually installed, or someone accidentally threw away a package which breaks your reproducability... potentially forever.
+For the ones that are familiar with Git, I highly recommend placing the created multiversion library under git version control. Sometimes it can be hard to keep track of what packages were actually installed, or someone accidentally threw away a package which breaks your reproducibility... potentially forever.
 
 I hope I could assist you with getting started. Please contact me if you have any questions!

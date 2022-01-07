@@ -4,10 +4,12 @@
 \alias{lib.location_install_dir}
 \title{Temporary directory location.}
 \usage{
-lib.location_install_dir(lib_location = lib.location())
+lib.location_install_dir(lib_location = lib.location(), do_create = TRUE)
 }
 \arguments{
 \item{lib_location}{By default the default library path obtained with \code{lib.location()}.}
+
+\item{do_create}{When it doesn't exist yet, create the folder.}
 }
 \description{
 Indicates the default directory for initially installing a package before it is 'converted' to the final multiversion library structure (see: \code{lib.convert()}).

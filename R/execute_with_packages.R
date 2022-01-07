@@ -16,66 +16,139 @@
 
 #' Perform operation with a certain set of packages.
 #'
-#' This function can be used to perform some R operation with a configured set of loaded packages.
+#' This function can be used to perform R operations with a configured set of packages to load in a separate R process.
+#' The package \code{callr} is required to use this functionality.
+#' It will start a new process, then load the provided packages and execute your function.
+#' The \code{callr} package may be provided via the R_MV_library or your standard library,
+#' in which case it must be in a library where \code{.libPaths} is pointing to.
 #'
-#' @param packages_to_load A sting indicating which packages must be loaded (e.g. `"dplyr (0.5.0), ggplot2, tidyr (1.2.3)"`).
-#' It is shaped the way like `depends` field is showing the dependencies of the different packages in `available.packages()`, which is equal to the `DESCRIPTION` file.
-#' It will be parsed using `lib.packs_str2vec` to become an offten used format looking like: `"c(dplyr = '0.5.0', ggplot2 = '', tidyr = '1.2.3')"`, converting back can be done using `lib.packs_vec2str()`.
+#' @param packages_to_load An array indicating which packages must be loaded
+#'   like "\code{c(dplyr = '0.5.0', ggplot2 = '', tidyr = '> 1.2.3')}".
 #' @param func_handle A function object or the function name as a character string.
 #' @param ... Provide all the remaining arguments which will be arguments for the function handle.
-#' @param lib_location The location of the version controlled library. Defaults to lib.location(), which is the directory provided by the environment variable.
-#' @param execute_quietly The complete process content will be printed when the process is finished. If FALSE, only the returned file name will be printed.
+#' Note that every argument must be named and must match an argument in your func_handle.
+#' @param .lib_location The location of the version controlled library.
+#'   Defaults to lib.location(), which is the directory provided by the environment variable.
+#' @param .wait_for_response If false, it will fire and forget and return immediately
+#'  using \code{callr::r_process}, otherwise will use \code{callr::r}.
+#' @param .run_quietly Controls the 'show' parameter of \code{callr::r} or \code{callr::r_process}.
+#' @param .callr_arguments List specifying additional arguments for \code{callr::r} or \code{callr::r_process}
+#' (depending on the \code{.wait_for_response} value). Note that \code{func}, \code{args},
+#' \code{show} and \code{libpath} are already in use. Every parameter must be named.
+#' @param .pick_last Passed to \code{lib.load(packages_to_load, ...)} inside the fired \code{callr} process.
+#' @param .also_load_from_temp_lib Passed to \code{lib.load(packages_to_load, ...)} inside the fired \code{callr} process.
+#'
+#' @details
+#' The additional arguments to callr: \code{.callr_arguments}, can for example be used
+#' to keep a log of a detached process. By including the following
+#' \code{.callr_arguments} for example: \cr
+#' \preformatted{lib.execute_using_packagelist(
+#'     ...,
+#'     .callr_arguments   = list(stdout = paste0('./execution_', gsub('\\s|-|:', '_', format(Sys.time())), '.log'), stderr = "2>&1")
+#' )
+#' }
+#' See the example below for a complete example.
+#' When you do this, it somehow swallows the first character of every \code{stderr}
+#' that is directly returned (also from \code{message} calls) when
+#' \code{run_quietly = F}, but the log file seems intact.
+#'
+#' @section Example:
+#' If you would like to log the outcomes, provide the .callr_arguments:
+#' \preformatted{
+#' lib.execute_using_packagelist(
+#'     packages_to_load   = c(package.a =  '0.1.0'),
+#'     func_handle        = function() {an_important_value(); package_a1(5, 10)},
+#'     .wait_for_response = TRUE,
+#'     .callr_arguments   = list(stdout = paste0('./execution_', gsub('\\s|-|:', '_', format(Sys.time())), '.log'), stderr = "2>&1"),
+#'     .run_quietly       = TRUE
+#' )
+#' }
+#' Another more simple example:
+#' \preformatted{
+#' lib.execute_using_packagelist(
+#'     packages_to_load   = c(dplyr =  ''),
+#'     func_handle        = function() {mtcars}
+#' )
+#' }
+#'
+#' @return
+#' Will return the outcome of your \code{func_handle}.
 #'
 #' @export
 #'
-lib.execute_using_packagelist <- function(packages_to_load = NULL, func_handle, ...,
-                                  execution_log_location = normPath(paste0('./execution_logs/execution_', gsub('\\s|-|:', '_', format(Sys.time())), '.txt')),
-                                  lib_location = lib.location(), wait_for_response = TRUE, execute_quietly = FALSE) {
-        Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
-        if (grepl('Could not find files for the given pattern(s)', Rscript_dir)) {stop('Please make sure `where Rscript` results in one or more valid paths. First one is used.')}
+lib.execute_using_packagelist <- function(packages_to_load = c(),
+                                          func_handle,
+                                          ...,
+                                          .lib_location = lib.location(),
+                                          .pick_last = FALSE,
+                                          .also_load_from_temp_lib = FALSE,
+                                          .wait_for_response = TRUE,
+                                          .run_quietly = FALSE,
+                                          .callr_arguments = list()) {
 
-        multiversion_package_location <- lib.my_location()
-        script_location <- normPath(file.path(multiversion_package_location, 'exec/execute_with_packages_script.R'))
-        # stdout_assistent <- normPath(file.path(multiversion_package_location, 'exec/wtee.exe'))
-        # if (!file.exists(stdout_assistent)) {stop('The tiny executable `wtee.exe` within the `exec` folder of the installed `multiversion` package could not be found.')}
-
-        # Save the input as list on a temporary location
-        temp_input_save_location <- paste0(dirname(tempdir()), '/R_execute_with_packages_input_', gsub('\\s|-|:', '_', format(Sys.time())), '.Rds')
-        function_input <- list(func_handle, ...)
-        saveRDS(function_input, file = temp_input_save_location)
-
-        cmd <- sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib_location, packages_to_load, temp_input_save_location, multiversion_package_location, execution_log_location)
-        # cmd <- sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s" | "%s" "cmd_std_out.log"', Rscript_dir, script_location, lib_location, packages_to_load, temp_input_save_location, multiversion_package_location, stdout_assistent)
-
-        message(sprintf("\nExecuting command...\n%s\n", cmd))
-        system(cmd, wait = wait_for_response)
-
-        # If the application is fired off solely to finish a task on it's own, just continue.
-        if (!wait_for_response) {return()}
-
-        # Print the output to the console if desired.
-        return_str <- readChar(execution_log_location, file.info(execution_log_location)$size)
-        if (!execute_quietly) {
-            message(paste0(collapse = '\n', c(return_str, '\n')))
+    # Check where to obtain the callr package.
+    callr_available <- length(lib.available_versions('callr', lib_location = .lib_location)) > 0
+    if (!callr_available) {
+        callr_available <- requireNamespace("callr", quietly = TRUE)
+        if (!callr_available) {
+            stop('For this feature to work, callr needs to be installed.',
+                 ' This can be installed in your R_MV_library or your standard library.')
         }
-        return_str <- strsplit(return_str, '\r?\n|\r')[[1]]
-        output_index <- which(grepl('output file:<.:[/\\].*>', return_str))
-        if (length(output_index) == 1) {
+    } else {
+        lib.load(loadPackages = c(callr = ''), lib_location = .lib_location)
+    }
 
-            returned_str <- gsub('output file:<|>$', '', return_str[output_index])
-            message(sprintf('loading results file: "%s".', returned_str))
-            if (!file.exists(returned_str)) {stop(sprintf('The returned path: "%s" does not exist!', returned_str))}
-            output_data <- readRDS(returned_str)
-        } else if (length(output_index) > 1) {
+    # Check whether to use `r` or `r_process`
+    callr_r <- if (!.wait_for_response) {
+        callr::r_process
+    } else {
+        callr::r
+    }
 
-            stop(paste0(collapse = '\n', c(return_str, '\n\n!!!Furthermore, it seems that 2 return strings were printed. This process might be called recursively, which is not supported!!!')))
-        } else {
+    # Gather func_handle arguments
+    func_args <- list(...)
 
-            stop(paste0(collapse = '\n', return_str))
-        }
+    # call callr with `.callr_arguments` and inside: func_handle with `...` (`func_args`) args
+    do.call(
+        args = .callr_arguments,
+        function(...) {
+            callr_r(
+                function(packages_to_load, .lib_location, func_handle, .multiversion_package_path
+                         , .pick_last, .also_load_from_temp_lib
+                         , ...) {  # Refers to '...' input, for your custom function_handle.
 
-        # not caught in an `on.exit` statement because this is preferred for debugging and the files are in general very small.
-        file.remove(temp_input_save_location)
+                    chck <- require(multiversion, lib.loc = .multiversion_package_path, warn.conflicts = FALSE)
 
-        return(output_data)
+                    # When no installed instance is present (but it is loaded
+                    # with devtools::load_all), just source it for development purposes.
+                    if (!chck && dir.exists(paste0(.multiversion_package_path, '/multiversion/.git'))) {
+                        message('Sourcing the locally checked out multiversion package.')
+                        sapply(list.files(recursive = TRUE, full.names = TRUE, pattern = '.*\\.R',
+                                          paste0(.multiversion_package_path, '/multiversion/R')), source)
+                    }
+
+                    # Load required packages
+                    lib.load(loadPackages = packages_to_load,
+                             lib_location = .lib_location,
+                             pick.last    = .pick_last,
+                             also_load_from_temp_lib = .also_load_from_temp_lib)
+
+                    # EXECUTE
+                    message('Executing your code...\n')
+                    func_handle(...)
+                }
+                ,
+                args = c(
+                    list(.lib_location              = .lib_location,
+                         packages_to_load           = packages_to_load,
+                         func_handle                = func_handle,
+                         .pick_last                 = .pick_last,
+                         .also_load_from_temp_lib   = .also_load_from_temp_lib,
+                         .multiversion_package_path = dirname(system.file(package = 'multiversion'))),
+                    func_args),  # Refers to '...' input, for your custom function_handle.
+
+                show    = !.run_quietly,
+                libpath = .Library,
+                ...)  # End "callr::r"    '...' refers to 'callr_arguments'
+        })
 }

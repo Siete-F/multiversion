@@ -13,5 +13,5 @@ By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} to f
 \item{dry.run}{If TRUE, will not change the paths but will print the paths that would remain after cleaning up the \code{.libPaths()} list.}
 }
 \description{
-Excludes all .libPaths other then those needed for lib.load().
+Excludes all \code{.libPaths} other then those needed for lib.load().
 }

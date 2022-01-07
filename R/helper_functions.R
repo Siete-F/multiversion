@@ -14,55 +14,33 @@
 # =================================================================
 
 
-# # ============= ALIASES =============
-#
-# #' Alias for \code{\link{lib.load}}
-# #' @export
-# library_VC <- lib.load
-#
-# #' Alias for \code{\link{lib.install_tarball}}
-# #' @export
-# install.packages_VC_tarball <- lib.install_tarball
-#
-# #' Alias for \code{\link{lib.install}}
-# #' @export
-# install.packages_VC <- lib.install
-#
-# #' Alias for \code{\link{lib.dependencies}}
-# #' @export
-# dependencies <- lib.dependencies
-#
-# #' Alias for \code{\link{lib.installed_packages}}
-# #' @export
-# installed.packages_VC <- lib.installed_packages
-#
-# #' Alias for \code{\link{lib.execute_using_packagelist}}
-# #' @export
-# execute_with_packages <- lib.execute_using_packagelist
+# ============= ALIASES =============
+# The following functions are deprecated:
+# library_VC, install.packages_VC_tarball, install.packages_VC, dependencies, installed.packages_VC, execute_with_packages
 
 
 # ============== PATHS ==============
 
-#' Return the `multiversion` installation directory.
-#'
-#' Returns the location of the `multiversion` package. It is a more complicated search than expected since it will find the development folder in a few cases.
-#' The only way to guarantee that the correct folder is found is by checking if the `INDEX` folder is present in the `multiversion` folder.
-#' This folder is only there when it is the installed instance of multiversion.
-#'
-lib.my_location <- function() {
-
-    MV_package_location <- find.package(package = 'multiversion', lib.loc = .libPaths(), quiet = T, verbose = F)
-
-    if (length(MV_package_location) == 0) {
-        MV_package_location <- find.package(package = 'multiversion', lib.loc = NULL, quiet = T, verbose = F)
-    }
-
-    if (length(MV_package_location) == 0 || !file.exists(file.path(MV_package_location, 'DESCRIPTION'))) {
-        stop(paste0('I need to be able to find the `multiversion` package location. To do that, it must be present in the searchpath `.libPaths()`.',
-                    'Please make sure the library search paths include the location of this package.'))
-    }
-    return(MV_package_location)
-}
+# #' Return the `multiversion` installation directory.
+# #'
+# #' Returns the location of the `multiversion` package. It is a more complicated search than expected since it will find the development folder in a few cases.
+# #' The only way to guarantee that the correct folder is found is by checking if the `INDEX` folder is present in the `multiversion` folder.
+# #' This folder is only there when it is the installed instance of multiversion.
+# #'
+# lib.my_location <- function() {
+#
+#     MV_package_location <- find.package(package = 'multiversion', lib.loc = .libPaths(), quiet = T, verbose = F)
+#
+#     if (length(MV_package_location) == 0) {
+#         MV_package_location <- find.package(package = 'multiversion', lib.loc = NULL, quiet = T, verbose = F)
+#     }
+#
+#     if (length(MV_package_location) == 0 || !file.exists(file.path(MV_package_location, 'DESCRIPTION'))) {
+#         stop(paste0('I need to be able to find the `multiversion` package location. To do that, it must be present in the searchpath `.libPaths()`.',
+#                     'Please make sure the library search paths include the location of this package.'))
+#     }
+#     return(MV_package_location)
+# }
 
 
 #' List all un-tracked library folders
@@ -130,10 +108,11 @@ lib.location_install_dir <- function(lib_location = lib.location(), do_create = 
 #'
 #' Since it involves a quite invasive operation, it asks for permission when being called in an interactive session.
 #'
-#' @param lib_location By default the library path returned by \code{lib.location()} is used.
+#' @param lib_location By default the library path returned by \code{lib.location()} is used. See Note.
 #' @param clean_temp_lib If true, will also run \code{lib.clean_install_dir()}.
-#' Note that it will build the most likely temp_dir location based on the
-#' lib_location you provide. See \code{\link{lib.location_install_dir}}.
+#'
+#' @note It will build the most likely installation directory based on the
+#' \code{lib_location} you provide. See \code{\link{lib.location_install_dir}}. Which is \code{<your lib>/TEMP_install_location}.
 #'
 #' @importFrom utils menu
 #' @export
@@ -163,7 +142,7 @@ lib.clean <- function(lib_location = lib.location(), clean_temp_lib = TRUE) {
     if (clean_temp_lib) {
         # Additionally clear the temp_install directory:
         # The temp lib location is based on the main lib location. The folder 'TEMP_install_location' is appended to it.
-        lib.clean_install_dir(lib.location_install_dir(lib_location))
+        lib.clean_install_dir(lib_location = lib_location)
     }
 }
 
@@ -174,12 +153,15 @@ lib.clean <- function(lib_location = lib.location(), clean_temp_lib = TRUE) {
 #' This function removes this temporary folder. Make sure that all installed packages that are desired to keep are converted.
 #' You can run the \code{\link{lib.convert}()} once again to make sure this is the case.
 #'
-#' @param temp_install.location By default the temporary installation path obtained with \code{lib.location_install_dir()}.
+#' @param temp_install_location The folder that is emptied by this function.
+#' @param lib_location By default the library path returned by \code{lib.location()} is used.
+#' It is only used to build the temp_install.location when that argument is not provided.
 #'
 #' @export
 #'
-lib.clean_install_dir <- function(temp_install.location = lib.location_install_dir()) {
-    return(unlink(temp_install.location, recursive = TRUE, force = TRUE))
+lib.clean_install_dir <- function(lib_location = lib.location(),
+                                  temp_install_location = lib.location_install_dir(lib_location)) {
+    return(unlink(temp_install_location, recursive = TRUE, force = TRUE))
 }
 
 
@@ -386,7 +368,7 @@ lib.set_libPaths <- function(packNameVersion, lib_location, additional_lib_paths
 
 #' Exclude not relevant search paths.
 #'
-#' Excludes all .libPaths other then those needed for lib.load().
+#' Excludes all \code{.libPaths} other then those needed for lib.load().
 #'
 #' @param lib_location The folder which contains the multiversion library. All directories in \code{.libPaths()} containing this path will be kept.
 #' By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} to find this directory.
@@ -421,10 +403,10 @@ lib.devTools_install <- function(lib_location = lib.location(), force_install = 
     }
     if (length(packs <- list.dirs(lib_dir <- lib.location_install_dir(lib_location), FALSE, FALSE)) > 0) {
         lib.git_show_untracked(lib_location)
-        stop(sprintf('These libraries are still present in the install directory "%s":\n%s.\nPlease run `lib.clean_install_dir(yourLib)` to clean up if possible and run me again.', lib_dir, paste0(collapse = ', ', "'", packs, "'")))
+        stop(sprintf('These libraries are still present in the install directory "%s":\n%s.\nPlease run `lib.clean_install_dir()` to clean up if possible and run me again.', lib_dir, paste0(collapse = ', ', "'", packs, "'")))
     }
     lib.install('devtools', lib_location = lib_location, allow_overwrite_on_convert = TRUE)
-    lib.clean_install_dir(lib_location)
+    lib.clean_install_dir(lib_location = lib_location)
 }
 
 
@@ -440,10 +422,10 @@ lib.devTools_install <- function(lib_location = lib.location(), force_install = 
 #'
 lib.devtools_load <- function(lib_location = lib.location()) {
     lib.load(loadPackages = c(devtools = '', testthat = ''),
-             appendLibPaths = TRUE, pick.last = T, quietly = T)
+             appendLibPaths = TRUE, pick.last = T, quietly = T, lib_location = lib_location)
     if (numeric_version(lib.package_version_loaded('testthat')) >= '3.0.0') {
         lib.load(loadPackages = c(waldo = ''),
-                 appendLibPaths = TRUE, pick.last = T, quietly = T)
+                 appendLibPaths = TRUE, pick.last = T, quietly = T, lib_location = lib_location)
     }
 }
 
@@ -457,10 +439,11 @@ lib.devtools_load <- function(lib_location = lib.location()) {
 #' @param return_as_df {FALSE} if the output should remain a structured dataframe, or if it should return a named character vector.
 #'
 #' @examples
-#' unique_highest_package_versions(
+#' multiversion:::unique_highest_package_versions(
 #'     c(pack.a = '0.1.0', pack.c = '5.2', package.b = '1.9',   pack.c = '99.99'))
 #'
 #' @importFrom stats setNames
+#'
 unique_highest_package_versions <- function(packNameVersion, return_as_df = FALSE) {
     if (length(packNameVersion) == 0) {
         return(if (return_as_df) {data.frame(names = '', version = '')[0,]} else {c()})

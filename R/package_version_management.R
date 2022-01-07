@@ -25,7 +25,9 @@
 #' @export
 #'
 lib.available_versions <- function(packageName, lib_location = lib.location()) {
-    if (is.na(packageName) || length(packageName) == 0 || nchar(packageName) == 0) {stop('The package name cannot be empty.')}
+    if (is.na(packageName) || length(packageName) == 0 || nchar(packageName) == 0) {
+        stop('The package name cannot be empty.')
+    }
 
     available_pack_versions <- list.dirs(paste(lib_location, packageName, sep = '/'), recursive = FALSE, full.names = FALSE)
     if (any(available_pack_versions %in% c("data", "doc", "help", "html", "Meta", "R"))) {
@@ -212,7 +214,7 @@ lib.check_compatibility <- function(condition, version) {
 }
 
 
-#' Choose correct package version, and print decission.
+#' Choose correct package version, and print decision.
 #'
 #' Obtains the correct version based on the version instruction provided (e.g. \code{>= 0.5}). It will print which version is chosen if `verbose = TRUE`.
 #' if no compatible version is found between the available versions, the function 'chooseVersion' will return an error to notify you.
@@ -222,7 +224,7 @@ lib.check_compatibility <- function(condition, version) {
 #' @param print_version_choice if true, it will print the choices it made.
 #' @param pick.last If a version like\code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
 #' By default it will take the first higher version (when it exists, just\code{0.5}, which is often the case).
-#' This because this is most likely to not change the behaviour of the code. Picking the latest version is most
+#' This because this is most likely to not change the behavior of the code. Picking the latest version is most
 #' compatible with matching other packages their dependencies (e.g. if a later package depends on this package but asks for\code{> 0.6}, it will crash).
 #' The downside of this is that an update could be a major one, going from\code{0.5} to\code{2.0}, where allot of things can change and code is likely to not work anymore.
 #' @param warn_for_major_diff If true, the default, will return warnings if the loaded package is a major release higher then the package that was requested.
@@ -261,10 +263,13 @@ lib.decide_version <- function(packVersion, lib_location, pick.last = FALSE, pri
 
 #' Check if a package belongs to the standard R (base) packages.
 #'
-#' To check if the package is a basepackage, we look it up among all packages in the \code{.Library} directory (\code{list.dirs(.Library, full.names = FALSE, recursive = FALSE)}).
-#' We cannot version control packages which are located in this library since the \code{.Library} will always be added to the \code{.libPaths}.
-#' For base packages, this is acceptable, but it apears that this directory is not always as clean as we would wish.
-#' Because of this reason, we do not check the more widely accepted \code{rownames(installed.packages(priority="base"))}.
+#' To check if the package is a base package, we look it up among all packages
+#' in the \code{.Library} directory (\code{list.dirs(.Library, full.names = FALSE, recursive = FALSE)}).
+#' We cannot version control packages which are located in this library since
+#' the \code{.Library} will always be added to the \code{.libPaths}.
+#' For base packages, this is acceptable, but it appears that this directory
+#' is not always as clean as we would wish. Because of this reason, we do not
+#' check the more widely accepted \code{rownames(installed.packages(priority="base"))}.
 #'
 #' @param packageName The package name to check.
 #'
@@ -309,8 +314,8 @@ lib.package_version_loaded <- function(packageNames, exclude_not_loaded = TRUE) 
 
 #' Check a package his online dependencies
 #'
-#' Returns a name = '<version spec>' array which can be used for \code{lib.load()}
-#' or \code{lib.install_if_not_compatible()}.
+#' Returns a \code{c(name = '<version spec>')} array which can be used for \code{lib.load()},
+#' \code{lib.install_if_not_compatible()} or \code{lib.dependsOnMe()}.
 #'
 #' @param packageName The package name to check.
 #' @param cran_url Defaults to 'https://cran.rstudio.com/'.

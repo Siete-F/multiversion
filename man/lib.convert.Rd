@@ -12,29 +12,40 @@ lib.convert(
 )
 }
 \arguments{
-\item{source_lib}{The temporary library where a package is temporarily installed (having a normal library structure).
-By default, the path is generated using \code{lib.location_install_dir()} on the \code{destination_mv_lib} that is provided which appends \code{/TEMP_install_location}.}
+\item{source_lib}{The temporary library where a package is temporarily
+installed (having a normal library structure).
+By default, the path is generated using \code{lib.location_install_dir()}
+on the \code{destination_mv_lib} that is provided which appends \code{/TEMP_install_location}.}
 
-\item{destination_mv_lib}{The folder containing a structure where all packages in the temp folder must be moved to.
-By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
+\item{destination_mv_lib}{The folder containing a structure where all packages
+in the temp folder must be moved to. By default, it checks the environment
+variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
 
-\item{force_overwrite}{If you are experimenting and you would like to overwrite the newly installed package.
-Normally only desired when the package you are experimenting with is a self maintained package and you are sure you increased the version to a new one.}
+\item{force_overwrite}{If you are experimenting and you would like to overwrite
+the newly installed package. Normally only desired when the package you are
+experimenting with is a self maintained package and you are sure you
+increased the version to a new one.}
 
-\item{packages_to_convert}{A character vector with the names of the packages that need to be converted to the R_MV_library. If missing or empty, all will be converted.}
+\item{packages_to_convert}{A character vector with the names of the packages
+that need to be converted to the R_MV_library. If missing or empty, all will be converted.}
 }
 \description{
 After this conversion is completed and you configure (temporarily by using \code{lib.location(...)}
-or for eternity by setting the equally named environment variable) the R_MV_LIBRARY_LOCATION env var, you are good to go! You can directly use \code{lib.load}
+or for eternity by setting the equally named environment variable)
+the R_MV_LIBRARY_LOCATION env var, you are good to go! You can directly use \code{lib.load}
 for loading packages. Thanks for using \code{multiversion}!! \cr
 \cr
-This function creates the R_MV_library structure by moving normally installed packages to a parallel library structure.
-\code{<lib1>/BH/DESCRIPTION} becomes\code{<lib2>/BH/1.60.0-2/BH/DESCRIPTION} so that also \code{1.60.0-3} etc. can be installed.
+This function creates the R_MV_library structure by moving normally
+installed packages to a parallel library structure.
+\code{<lib1>/BH/DESCRIPTION} becomes\code{<lib2>/BH/1.60.0-2/BH/DESCRIPTION}
+so that also \code{1.60.0-3} etc. can be installed.
 \cr
-This functionality is also used (with it's default values) for converting installed packages from the temporary installation directory to the final R_MV_library.
+This functionality is also used (with it's default values) for converting
+installed packages from the temporary installation directory to the final R_MV_library.
 The TEMP installation directory is in a standard flat library structure.\cr
 \cr
-Note that it is really no problem to perform a conversion again, it will only move new versions of already present packages and will never overwrite.
+Note that it is really no problem to perform a conversion again, it will
+only move new versions of already present packages and will never overwrite.
 To continue with a clean Temp folder, run \code{lib.clean_install_dir()} which will remove the folder.
 }
 \examples{

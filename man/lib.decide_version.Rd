@@ -2,7 +2,7 @@
 % Please edit documentation in R/package_version_management.R
 \name{lib.decide_version}
 \alias{lib.decide_version}
-\title{Choose correct package version, and print decission.}
+\title{Choose correct package version, and print decision.}
 \usage{
 lib.decide_version(
   packVersion,
@@ -19,7 +19,7 @@ lib.decide_version(
 
 \item{pick.last}{If a version like\code{>= 0.5} is given and multiple versions exist, a choice needs to be made.
 By default it will take the first higher version (when it exists, just\code{0.5}, which is often the case).
-This because this is most likely to not change the behaviour of the code. Picking the latest version is most
+This because this is most likely to not change the behavior of the code. Picking the latest version is most
 compatible with matching other packages their dependencies (e.g. if a later package depends on this package but asks for\code{> 0.6}, it will crash).
 The downside of this is that an update could be a major one, going from\code{0.5} to\code{2.0}, where allot of things can change and code is likely to not work anymore.}
 

@@ -49,20 +49,17 @@
 #' The package will first be installed in a temporary install folder
 #' \code{<multiversion lib>/TEMP_install_location}
 #' indicated by the \code{\link{lib.location_install_dir}()} function.
-#' If \code{install_temporarily} is set to FALSE (the default).
-#' the installed package(s) is moved to the destination location automatically.
+#' If \code{install_temporarily} is set to FALSE (the default),
+#' the installed package(s) is moved to the lib_location automatically.
 #' @param install_temporarily If FALSE, the installed packages are moved
-#' to the final destination automatically. Otherwise it is necessary to run
-#' \code{\link{lib.convert}()} manually after the installation into the temporary
-#' folder finished. To clean up the temporary folder, run \code{lib.clean_install_dir()}.
+#' to the R_MV_library, specified by the \code{lib_location} argument, automatically.
+#' Otherwise it is necessary to run \code{\link{lib.convert}()} manually after
+#' the installation into the temporary folder finished.
 #' @param cran_url Will be passed trough to the install.packages command.
 #' @param allow_overwrite_on_convert Can be used if you are experimenting and
 #' you would like to overwrite the installed (tarball) package. See details below.
 #'
-# @param execute_with_Rscript When TRUE (the default), it will try to install the package using a separate Rscript R instance.
-# This simplifies installing and leaves changing loaded packages etc. to another R instance which we can kill :).
-# It will run a script which it provides with your list of packages to install.
-# That script will load this \code{multiversion} package and call \code{\link{lib.install}()} directly.
+#' @note To clean up the installation directory, run \code{lib.clean_install_dir()}.
 #'
 #' @section limitations for \code{package_conditions}:
 #' All version specifications are allowed except for the exact version indication
@@ -253,7 +250,7 @@ lib.install_if_not_compatible <- function(package_conditions, lib_location = lib
              'When the condition cannot be met, the package will be installed.\n',
              'Note that specific versions are not allowed because we cannot install a specific version.')
     }
-    if (any(grepl('^[-0-9. ]+$', package_conditions) && nchar(package_conditions) != 0)) {
+    if (any(grepl('^[-0-9. ]+$', package_conditions) & nchar(package_conditions) != 0)) {
         stop("It is not possible to provide exact versions like c(package.a = '1.0.0'). ",
              "This is because this is the only version specification for which installing ",
              "the latest version from CRAN will likely not solve the dependency.")
@@ -424,25 +421,36 @@ lib.install_tarball <- function(tarball, dependencies = c(), lib_location = lib.
 #' Move normally installed packages to R_MV_library structure.
 #'
 #' After this conversion is completed and you configure (temporarily by using \code{lib.location(...)}
-#' or for eternity by setting the equally named environment variable) the R_MV_LIBRARY_LOCATION env var, you are good to go! You can directly use \code{lib.load}
+#' or for eternity by setting the equally named environment variable)
+#' the R_MV_LIBRARY_LOCATION env var, you are good to go! You can directly use \code{lib.load}
 #' for loading packages. Thanks for using \code{multiversion}!! \cr
 #' \cr
-#' This function creates the R_MV_library structure by moving normally installed packages to a parallel library structure.
-#' \code{<lib1>/BH/DESCRIPTION} becomes\code{<lib2>/BH/1.60.0-2/BH/DESCRIPTION} so that also \code{1.60.0-3} etc. can be installed.
+#' This function creates the R_MV_library structure by moving normally
+#' installed packages to a parallel library structure.
+#' \code{<lib1>/BH/DESCRIPTION} becomes\code{<lib2>/BH/1.60.0-2/BH/DESCRIPTION}
+#' so that also \code{1.60.0-3} etc. can be installed.
 #' \cr
-#' This functionality is also used (with it's default values) for converting installed packages from the temporary installation directory to the final R_MV_library.
+#' This functionality is also used (with it's default values) for converting
+#' installed packages from the temporary installation directory to the final R_MV_library.
 #' The TEMP installation directory is in a standard flat library structure.\cr
 #' \cr
-#' Note that it is really no problem to perform a conversion again, it will only move new versions of already present packages and will never overwrite.
+#' Note that it is really no problem to perform a conversion again, it will
+#' only move new versions of already present packages and will never overwrite.
 #' To continue with a clean Temp folder, run \code{lib.clean_install_dir()} which will remove the folder.
 #'
-#' @param source_lib The temporary library where a package is temporarily installed (having a normal library structure).
-#' By default, the path is generated using \code{lib.location_install_dir()} on the \code{destination_mv_lib} that is provided which appends \code{/TEMP_install_location}.
-#' @param destination_mv_lib The folder containing a structure where all packages in the temp folder must be moved to.
-#' By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.
-#' @param force_overwrite If you are experimenting and you would like to overwrite the newly installed package.
-#' Normally only desired when the package you are experimenting with is a self maintained package and you are sure you increased the version to a new one.
-#' @param packages_to_convert A character vector with the names of the packages that need to be converted to the R_MV_library. If missing or empty, all will be converted.
+#' @param source_lib The temporary library where a package is temporarily
+#' installed (having a normal library structure).
+#' By default, the path is generated using \code{lib.location_install_dir()}
+#' on the \code{destination_mv_lib} that is provided which appends \code{/TEMP_install_location}.
+#' @param destination_mv_lib The folder containing a structure where all packages
+#' in the temp folder must be moved to. By default, it checks the environment
+#' variable \code{R_MV_LIBRARY_LOCATION} for this directory.
+#' @param force_overwrite If you are experimenting and you would like to overwrite
+#' the newly installed package. Normally only desired when the package you are
+#' experimenting with is a self maintained package and you are sure you
+#' increased the version to a new one.
+#' @param packages_to_convert A character vector with the names of the packages
+#' that need to be converted to the R_MV_library. If missing or empty, all will be converted.
 #'
 #' @examples
 #' # As an experiment (or when getting started) you could run this with
@@ -528,13 +536,15 @@ lib.convert <- function(source_lib          = lib.location_install_dir(destinati
 #' A restart of Rstudio might be required since it will often hold on to certain namespaces.
 #' A proper reset of all libraries is not possible, this is the best we can do. \cr
 #' \cr
-#' In general, it is possible to create a complete clean environment by clearing your workspace,
+#' In general, it is possible to create a complete clean environment by clearing your work space,
 #' running \code{detachAll} and then restarting Rstudio. If problems with package loading still persists,
 #' then follow the final alternative solution described in the details section of the documentation of \code{lib.load}.
 #'
-#' @param reload_multiversion If multiversion needs to be loaded again after everything (or all mentioned in \code{packageList}) is unloaded.
-#' @param packageList A character vector with the packages to detach/unload. Defaults to all packages
-#'        (\code{names(sessionInfo()$otherPkgs}). When package X depends on package Y, make sure you first specify X then Y.
+#' @param reload_multiversion If multiversion needs to be loaded again after
+#'  everything (or all mentioned in \code{packageList}) is unloaded.
+#' @param packageList A character vector with the packages to detach/unload.
+#' Defaults to all packages (\code{names(sessionInfo()$otherPkgs}).
+#' When package X depends on package Y, make sure you first specify X then Y.
 #' @param dryRun If TRUE, lists all packages that will be cleaned up.
 #'
 #' @importFrom utils sessionInfo
@@ -545,7 +555,7 @@ detachAll <- function(reload_multiversion = FALSE, packageList = 'all', dryRun =
     if (!missing(packageList) && length(packageList) == 0) {
         return()
     }
-    if (missing(packageList) || packageList == 'all') {
+    if (missing(packageList) || any(packageList == 'all')) {
         packageList <- names(utils::sessionInfo()$otherPkgs)
         do_all <- TRUE
     }
@@ -673,13 +683,20 @@ detachAll <- function(reload_multiversion = FALSE, packageList = 'all', dryRun =
 #' List the dependencies of a package.
 #'
 #' Provide a package name (can be without quotes) to show its dependencies.
-#' To list all dependencies of the complete library, use the inverse function "\code{lib.dependsOnMe(all)}" with the value 'all'.
-#' That function also does not require quotes.
+#' To list all dependencies of the complete library, use the inverse function
+#' "\code{lib.dependsOnMe(all)}" with the value 'all'.
+#' That function also does not require quotes when calling it.
+#' So \code{lib.dependencies(package.a)} will work.
 #'
-#' @param packageName The (unquoted) package name for which you would like to print the dependencies.
-#' @param do_print If true (default), prints the dependencies. In both cases, the dependencies are returned invisibly.
-#' @param character.only If TRUE, (FALSE by default), the package names can be provided as character vector. Otherwise, direct unquoted package names are supported.
-#' @param lib_location The folder containing the R_MV_library structure where this function observes the dependencies. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.
+#' @param packageName The (unquoted) package name for which you would like to
+#' print the dependencies.
+#' @param do_print If true (default), prints the dependencies. In both cases,
+#' the dependencies are returned invisibly.
+#' @param character.only If TRUE, (FALSE by default), the package names can be
+#' provided as character vector. Otherwise, direct unquoted package names are supported.
+#' @param lib_location The folder containing the R_MV_library structure where
+#' this function observes the dependencies. By default, it checks the environment
+#' variable \code{R_MV_LIBRARY_LOCATION} for this directory.
 #'
 #' @examples
 #' \dontrun{
@@ -744,11 +761,14 @@ lib.dependencies <- function(packageName, do_print = TRUE, character.only = FALS
 
 #' Convert package name/version vector to single string.
 #'
-#' Used to print a set of package names and their version criteria in a way that \code{lib.packs_str2vec()} can parse it again to a package vector.
+#' Used to print a set of package names and their version criteria in a way that
+#'  \code{lib.packs_str2vec()} can parse it again to a package vector.
 #' This way we can list the dependencies of a function easily and support better commandline interaction.
 #'
-#' @param x A named character vector with package names/versions. `c(dplyr = '>= 1.5.0', data.table = '')`
-#' @param do_return If FALSE (the default) the package sting is printed, if TRUE, it is returned as a character string and not printed.
+#' @param x A named character vector with package names/versions.
+#' \code{c(dplyr = '>= 1.5.0', data.table = '')}
+#' @param do_return If FALSE (the default) the package sting is printed, if TRUE,
+#'  it is returned as a character string and not printed.
 #'
 #' @export
 #'
@@ -761,43 +781,59 @@ lib.packs_vec2str <- function(x, do_return = FALSE) {
 
 #' Show the complete library content.
 #'
-#' Use to print all available packages in the R_MV_library with all their versions including their dependencies.
-#' Simply performs a call to \code{lib.dependsOnMe(all)}.
+#' Use to print all available packages in the R_MV_library with all their versions
+#' including their dependencies. Simply performs a call to \code{lib.dependsOnMe(all)}.
 #'
 #' @param lib_location The R_MV_library location.
+#' @param dont_print When true, will not print anything, but will expect you to
+#' make use of the invisibly returned package character vector.
+#'
+#' @return
+#' It returns a special character array with package:version names for every
+#' package and package version in the library.
 #'
 #' @export
 #'
-lib.installed_packages <- function(lib_location = lib.location()) {
-    lib.dependsOnMe(all, lib_location = lib_location)
+lib.installed_packages <- function(lib_location = lib.location(), dont_print = FALSE) {
+    lib.dependsOnMe(all, lib_location = lib_location, dont_print = dont_print)
 }
 
 
 #' Shows the dependencies of (all or) a certain function(s).
 #'
-#' Can be called without using quotes like \code{lib.dependsOnMe(dplyr)}. A second very usefull feature would be the \code{lib.dependsOnMe(all)},
+#' Can be called without using quotes like \code{lib.dependsOnMe(dplyr)}.
+#' It supports the special feature \code{lib.dependsOnMe(all)},
 #' which will print a list of all packages available with their dependencies. \cr
 #' \cr
 #' A simple wrapper "\code{lib.installed_packages}", will do precisely that.
 #'
-#' @param ... All packages and their versions you would like to load e.g. \code{lib.dependsOnMe(DBI = '0.5', assertthat, R6 = '0.6', quietly = TRUE)}.
-#' @param checkMyDeps Supports providing a named character vector of packages and their versions instead of the direct input.
+#' @param ... All packages and their versions you would like to check e.g.
+#' \code{lib.dependsOnMe(DBI = '0.5', assertthat, R6 = '0.6', quietly = TRUE)}.
+#' @param checkMyDeps Supports providing a named character vector of packages
+#' and their versions instead of the direct input.
 #' Use it like this when calling it via another function.
-#' @param lib_location The folder containing a structure where this function observe the dependencies from. By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.
+#' @param lib_location The folder containing a structure where this function
+#' observe the dependencies from. By default, it checks the environment
+#' variable \code{R_MV_LIBRARY_LOCATION} for this directory.
+#' @param dont_print When true, will not print anything, but will expect you
+#' to make use of the invisibly returned package character vector.
 #'
 #' @return
-#' It returns a is the shape that is supported by all other functions in this package e.g. \code{c(DBI = '0.5', assertthat = '', R6 = '')}
+#' It returns a special character array with package:version names for every
+#' package that has a dependency on the provided \code{checkMyDeps} or
+#' \code{...} condition.
 #'
 #' @importFrom stats setNames
 #' @importFrom utils packageDescription
 #'
 #' @export
 #'
-lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location()) {
+lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location(), dont_print = FALSE) {
 
     if (is.null(checkMyDeps)) {
-        checkMyDeps <- raw_input_parser(as.list(match.call()), varnames_to_exclude = c('lib_location', 'checkMyDeps'))
+        checkMyDeps <- raw_input_parser(as.list(match.call()), varnames_to_exclude = c('lib_location', 'checkMyDeps', 'dont_print'))
     }
+
     stopifnot(length(checkMyDeps) > 0)
 
     if (length(checkMyDeps) > 1 && 'all' %in% checkMyDeps) {
@@ -805,16 +841,19 @@ lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location
              ' no other package names can be requested in the same call to `lib.dependsOnMe`.')
     }
     if (length(checkMyDeps) > 1) {
+        # a loop makes sure that the name of the checkMyDeps value is also passed through.
+        return_array <- c()
         for (icheck in seq_along(checkMyDeps)) {
-            lib.dependsOnMe(checkMyDeps = checkMyDeps[icheck], lib_location = lib_location)
+            return_array <- c(return_array, lib.dependsOnMe(checkMyDeps = checkMyDeps[icheck], lib_location = lib_location))
         }
-        return(invisible())
+        return(invisible(return_array))
     }
+    msg <- function(...) {if (!dont_print) {message(...)}}
 
     if (is.null(names(checkMyDeps))) {
         av_ver <- lib.available_versions(checkMyDeps)
         checkMyDeps <- stats::setNames('999999.99.99', checkMyDeps)
-        message('Showing all that depends on `', names(checkMyDeps), '`, (available are: ', paste0(collapse = ', ', '"', av_ver, '"'), '):')
+        msg('Showing all that depends on `', names(checkMyDeps), '`, (available are: ', paste0(collapse = ', ', '"', av_ver, '"'), '):')
     }
 
     # check if input package is realistic.
@@ -824,13 +863,13 @@ lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location
         av_ver_apply <- sapply(av_ver, FUN = function(x) {lib.check_compatibility(checkMyDeps, x)})
         if (any(av_ver_apply)) {
             checkMyDeps <- stats::setNames(av_ver[max(which(av_ver_apply))], names(checkMyDeps))
-            message('Showing all that depends on `',
+            msg('Showing all that depends on `',
                     names(checkMyDeps), '`, version "', checkMyDeps, '":')
         } else if (length(av_ver_apply) == 0) {
-            message('Cannot match dependency... it appears that this package is not installed.')
+            msg('Cannot match dependency... it appears that this package is not installed.')
         } else {
             # show all for this version
-            message('Cannot match dependency...\nShowing all that depends on `',
+            msg('Cannot match dependency...\nShowing all that depends on `',
                     names(checkMyDeps), '`, (available are: ', paste0(collapse = ', ', '"', av_ver, '"'), '):')
             checkMyDeps <- stats::setNames('999999.99.99', names(checkMyDeps))
         }
@@ -839,6 +878,7 @@ lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location
     packageList <- list.dirs(lib_location, recursive = FALSE, full.names = FALSE)
     packageList <- packageList[!packageList %in% c('.git', 'TEMP_install_location')]
 
+    return_array <- c()
     for (packageName in packageList) {
         packVersionList <- list.dirs(paste(lib_location, packageName, sep = '/'), recursive = FALSE, full.names = FALSE)
 
@@ -866,16 +906,18 @@ lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location
             }
 
             if (valid) {
-                message(sprintf('%23s : %-8s ', packageName, packVersion), appendLF = F)
-                message(ifelse(file.exists(overrideFile), '(shadowed)| ', '          | '), appendLF = F)
-                lib.packs_vec2str(dependingPackages[1:3])
+                return_array <- c(return_array, paste0(packageName, ':', packVersion))
+                msg(sprintf('%23s : %-8s ', packageName, packVersion), appendLF = F)
+                msg(ifelse(file.exists(overrideFile), '(shadowed)| ', '          | '), appendLF = F)
+                lib.packs_vec2str(dependingPackages[1:3], do_return = dont_print)
                 if (length(dependingPackages) > 3) {
                     for (index in 2: ceiling(length(dependingPackages)/3)) {
-                        message(strrep(' ', 45), '... ', appendLF = F)
-                        lib.packs_vec2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
+                        msg(strrep(' ', 45), '... ', appendLF = F)
+                        lib.packs_vec2str(dependingPackages[(((index-1)*3):(index*3-1))+1], do_return = dont_print)
                     }
                 }
             }
         }
     }
+    return(invisible(return_array))
 }
