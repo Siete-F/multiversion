@@ -100,8 +100,10 @@ lib.execute_using_packagelist <- function(packages_to_load = c(),
 
     # Check whether to use `r` or `r_process`
     callr_r <- if (!.wait_for_response) {
-        callr::r_process
+        callr::r_bg
     } else {
+        # Add 'show' if running while waiting on the process
+        .callr_arguments <- c(list(show = !.run_quietly), .callr_arguments)
         callr::r
     }
 
@@ -147,7 +149,6 @@ lib.execute_using_packagelist <- function(packages_to_load = c(),
                          .multiversion_package_path = dirname(system.file(package = 'multiversion'))),
                     func_args),  # Refers to '...' input, for your custom function_handle.
 
-                show    = !.run_quietly,
                 libpath = .Library,
                 ...)  # End "callr::r"    '...' refers to 'callr_arguments'
         })
