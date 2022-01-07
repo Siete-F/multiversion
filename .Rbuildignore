@@ -3,4 +3,7 @@
 ^.*packages_for_testing.*$
 ^.*package_for_install_testing[/\\]package_[abcdefgh][0-9.-]+$
 COPYING.LESSER
+NEWS.md
+cran-comments.md
+README.md
 ^[^/\\]+\.tar\.gz$
