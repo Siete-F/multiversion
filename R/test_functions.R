@@ -8,10 +8,11 @@
             list(substitute(Sys.setenv(R_MV_LIBRARY_LOCATION = old)),
                  add = TRUE), envir = parent.frame())
 
+    lib <- paste0('test_library_R', R.version$major)
     suppressMessages(lib.location(
-        ifelse(dir.exists('../test_library/'),
-               '../test_library/', 'tests/test_library/'
-        )))
+        paste0(ifelse(dir.exists(paste0('../', lib)),
+               '../', 'tests/'), lib)
+        ))
 }
 
 
