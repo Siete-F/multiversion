@@ -10,6 +10,7 @@ Description: Supports installing of multiple versions of a package and loading
 License: LGPL-2
 Encoding: UTF-8
 RoxygenNote: 7.1.2
+Depends: R (>= 3.5.0)
 Suggests: 
     testthat (>= 3.0.0),
     waldo,
