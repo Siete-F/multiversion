@@ -264,7 +264,7 @@ lib.load <- function(..., loadPackages = NULL, lib_location = lib.location(),
         if (!dry.run) {
             lib.set_libPaths(.packNameVersionList, lib_location, additional_lib)
             # Will remove all paths but those that are part of the R_MV_library
-            lib.clean_libPaths()
+            lib.clean_libPaths(lib_location = lib_location)
 
             if (verbose) {
                 library(iPackage, lib.loc = package_loc, character.only = TRUE)

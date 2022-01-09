@@ -24,7 +24,20 @@ with_safe_package_tester({
         expect_false('package:package.e' %in% search())
 
         expect_error(lib.load(package.a = '>=  0.1.0'),
-                   'Not all package versions that are provided seem to be valid version numbers.')
+                     'Not all package versions that are provided seem to be valid version numbers.')
 
+    })
 })
+
+
+with_safe_package_tester({
+
+    test_that(desc = "Load package.a with manual path provided", {
+        stopifnot(!'package:package.a' %in% search())
+        var <- 'R_MV_LIBRARY_LOCATION'
+        lib_loc <- withr::with_envvar(setNames('', var), {.set_test_lib_location(); Sys.getenv(var)})
+
+        # load package a
+        expect_silent(lib.load(package.a, lib_location = lib_loc, quietly = TRUE))
+    })
 })
