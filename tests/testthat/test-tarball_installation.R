@@ -93,7 +93,7 @@ with_safe_package_tester({
             type = 'message')
 
         expect_match(msg[2], "Succesfully copied files:")
-        expect_match(msg[3], "package.a: 24$")  # only package.a should be converted
+        expect_match(msg[3], "package.a: [0-9]+$")  # only package.a should be converted
         expect_match(msg[5], "Failed copying files.*")
         expect_equal(msg[6], "")  # no files should have failed.
 
@@ -109,9 +109,9 @@ with_safe_package_tester({
             type = 'message')
 
         expect_match(msg[2], "Succesfully copied files:")
-        expect_match(msg[3], "testit: 22$")  # testit should be found and converted.
+        expect_match(msg[3], "testit: [0-9]+$")  # testit should be found and converted.
         expect_match(msg[5], "Failed copying files.*")
-        expect_match(msg[6], "package.a: 24$")
+        expect_match(msg[6], "package\\.a: [0-9]+$")
 
         # success - convert all two packages and overwrite.
         msg <- capture.output(lib.convert(
@@ -120,7 +120,7 @@ with_safe_package_tester({
             type = 'message')
 
         expect_match(msg[2], "Succesfully copied files:")
-        expect_match(msg[3], "package.a: 24, testit: 22$")  # testit should be found and converted.
+        expect_match(msg[3], "package\\.a: [0-9]+, testit: [0-9]+$")  # testit should be found and converted.
         expect_match(msg[5], "Failed copying files.*")
         expect_equal(msg[6], "")
 

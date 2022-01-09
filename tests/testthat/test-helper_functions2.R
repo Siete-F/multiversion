@@ -16,7 +16,8 @@ test_that("lib.location_install_dir", {
 })
 
 test_that("normPath", {
-    expect_match(normPath('.'), gsub('\\\\', '/', getwd()))
+    # I have to use tolower because the drive letter was returned in a different case on CRAN.
+    expect_match(tolower(normPath('.')), tolower(gsub('\\\\', '/', getwd())))
     expect_silent(normPath('.\\nonex1stendd1r'))  # no error, so mustWork = F.
 })
 
