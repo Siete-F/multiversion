@@ -42,7 +42,9 @@
 #' @param package_names Provide a vector of package names.
 #' A version cannot be supplied.
 #' @param dependencies Provide the dependencies like a package version
-#' combination: \code{c(dplyr = '>= 0.5', data.table = '', R6 = '0.1.1')}
+#' combination: \code{c(dplyr = '>= 0.5', data.table = '', R6 = '0.1.1')}.
+#' Note that all dependencies must refer to packages on CRAN. Otherwise install
+#' the dependency manually somewhere and use \code{lib.convert} to include it.
 #'
 #' @param quiet Will affect \code{install.packages(..., quiet = quiet)}.
 #' @param lib_location The folder where this package can be installed.
@@ -54,10 +56,12 @@
 #' @param install_temporarily If FALSE, the installed packages are moved
 #' to the R_MV_library, specified by the \code{lib_location} argument, automatically.
 #' Otherwise it is necessary to run \code{\link{lib.convert}()} manually after
-#' the installation into the temporary folder finished.
+#' the installation into the temporary folder finished. When multiple tarballs
+#' are provided, this is set to \code{FALSE} with no warning.
 #' @param cran_url Will be passed trough to the install.packages command.
 #' @param allow_overwrite_on_convert Can be used if you are experimenting and
-#' you would like to overwrite the installed (tarball) package. See details below.
+#' you would like to overwrite the installed (tarball) package.
+#' Only makes sense with \code{install_temporarily} on \code{FALSE}. See details below.
 #'
 #' @note To clean up the installation directory, run \code{lib.clean_install_dir()}.
 #'
@@ -312,8 +316,9 @@ lib.install_tarball <- function(tarball, dependencies = c(), lib_location = lib.
     if (missing(allow_overwrite_on_convert)) {
         allow_overwrite_on_convert <- 'tarball'
     }
-
-    stopifnot(file.exists(tarball))
+    if (length(tarball) == 0) {
+        return(invisible())
+    }
     stopifnot(is.logical(allow_overwrite_on_convert) || is.character(allow_overwrite_on_convert))
 
     overwrite <- if (is.character(allow_overwrite_on_convert)) {
@@ -327,6 +332,33 @@ lib.install_tarball <- function(tarball, dependencies = c(), lib_location = lib.
                    dep     = allow_overwrite_on_convert)
     }
 
+    # Install multiple tarballs in one go
+    if (length(tarball) > 1) {
+        message('Multiple tarball files are provided simultaniously, ',
+                'please make sure if tarball A depends on B, B is installed first.',
+                '\nSince you might install different versions of a tarball at once, ',
+                'I am forced to perform a `lib.clean_install_dir` after every installation.',
+                '\nThe provided (CRAN) dependencies will be installed once.\n')
+
+        # Install the first one incl. dependencies.
+        lib.install_tarball(tarball[1], dependencies, lib_location,
+                            install_temporarily = FALSE, cran_url = cran_url)
+
+        lib.clean_install_dir(lib_location)
+        tarballs <- tarball[2 : length(tarball)]
+
+        # Install all other tarballs.
+        sapply(tarballs, function(x, ...) {
+            lib.install_tarball(x, dependencies = c(), lib_location = lib_location,
+                                install_temporarily = FALSE,
+                                allow_overwrite_on_convert = allow_overwrite_on_convert,
+                                cran_url = cran_url)
+            lib.clean_install_dir(lib_location)
+        })
+        return(invisible())
+    }
+
+    stopifnot(file.exists(tarball))
     # if (execute_with_Rscript) {
     #     Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
     #     if (grepl('Could not find files for the given pattern(s)', Rscript_dir)) {
@@ -490,7 +522,6 @@ lib.convert <- function(source_lib          = lib.location_install_dir(destinati
         packages_to_convert <- all_present_packages
     } else {
         if (length(packages_to_convert) == 0) {
-            message('Nothing to convert.')
             return(invisible())
         }
         # Crash if non existing.
@@ -519,11 +550,18 @@ lib.convert <- function(source_lib          = lib.location_install_dir(destinati
     lapply(unique(dirname(newLocation)), dir.create, recursive = TRUE, showWarnings = FALSE)
     succes <- file.copy(libContent, newLocation, overwrite = force_overwrite)
 
+    show_n_files <- function(nms) {
+        msg <- c()
+        for (x in unique(nms)) {
+            msg <- c(msg, paste0(x, ': ', sum(nms == x)))
+        }
+        paste0(collapse = ', ', msg)
+    }
     message('\nSuccesfully copied files:')
-    message(summary(data.frame(dummy = packageNames[ succes]), maxsum = 80))
+    message(show_n_files(packageNames[ succes]))
     message('\nFailed copying files (might be already installed or `TEMP_install_location`',
             ' was not cleaned up, can be done by running `lib.clean_install_dir()`):')
-    message(summary(data.frame(dummy = packageNames[!succes]), maxsum = 80))
+    message(show_n_files(packageNames[!succes]))
     message('')
 }
 
@@ -864,13 +902,13 @@ lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location
         if (any(av_ver_apply)) {
             checkMyDeps <- stats::setNames(av_ver[max(which(av_ver_apply))], names(checkMyDeps))
             msg('Showing all that depends on `',
-                    names(checkMyDeps), '`, version "', checkMyDeps, '":')
+                names(checkMyDeps), '`, version "', checkMyDeps, '":')
         } else if (length(av_ver_apply) == 0) {
             msg('Cannot match dependency... it appears that this package is not installed.')
         } else {
             # show all for this version
             msg('Cannot match dependency...\nShowing all that depends on `',
-                    names(checkMyDeps), '`, (available are: ', paste0(collapse = ', ', '"', av_ver, '"'), '):')
+                names(checkMyDeps), '`, (available are: ', paste0(collapse = ', ', '"', av_ver, '"'), '):')
             checkMyDeps <- stats::setNames('999999.99.99', names(checkMyDeps))
         }
     }

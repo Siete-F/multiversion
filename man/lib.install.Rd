@@ -47,10 +47,12 @@ the installed package(s) is moved to the lib_location automatically.}
 \item{install_temporarily}{If FALSE, the installed packages are moved
 to the R_MV_library, specified by the \code{lib_location} argument, automatically.
 Otherwise it is necessary to run \code{\link{lib.convert}()} manually after
-the installation into the temporary folder finished.}
+the installation into the temporary folder finished. When multiple tarballs
+are provided, this is set to \code{FALSE} with no warning.}
 
 \item{allow_overwrite_on_convert}{Can be used if you are experimenting and
-you would like to overwrite the installed (tarball) package. See details below.}
+you would like to overwrite the installed (tarball) package.
+Only makes sense with \code{install_temporarily} on \code{FALSE}. See details below.}
 
 \item{quiet}{Will affect \code{install.packages(..., quiet = quiet)}.}
 
@@ -63,7 +65,9 @@ name/'version condition' specifications. See section
 \item{tarball}{The complete path to the tarball file that you would like to install.}
 
 \item{dependencies}{Provide the dependencies like a package version
-combination: \code{c(dplyr = '>= 0.5', data.table = '', R6 = '0.1.1')}}
+combination: \code{c(dplyr = '>= 0.5', data.table = '', R6 = '0.1.1')}.
+Note that all dependencies must refer to packages on CRAN. Otherwise install
+the dependency manually somewhere and use \code{lib.convert} to include it.}
 }
 \description{
 This family of functions can help with installing packages without

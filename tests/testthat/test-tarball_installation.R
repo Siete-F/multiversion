@@ -93,15 +93,14 @@ with_safe_package_tester({
             type = 'message')
 
         expect_match(msg[2], "Succesfully copied files:")
-        expect_match(msg[3], "package.a:22  $")  # only package.a should be converted
+        expect_match(msg[3], "package.a: 24$")  # only package.a should be converted
         expect_match(msg[5], "Failed copying files.*")
         expect_equal(msg[6], "")  # no files should have failed.
 
         # empty 'packages_to_convert'
-        expect_message(lib.convert(
+        expect_silent(lib.convert(
                 source_lib = lib.location_install_dir(lib.location()),
-                destination_mv_lib = temp_test_lib, packages_to_convert = c()),
-                'Nothing to convert.')
+                destination_mv_lib = temp_test_lib, packages_to_convert = c()))
 
         # success - (try) to convert all (two) packages, but 'package.a' is already there.
         msg <- capture.output(lib.convert(
@@ -110,9 +109,9 @@ with_safe_package_tester({
             type = 'message')
 
         expect_match(msg[2], "Succesfully copied files:")
-        expect_match(msg[3], "testit:22  $")  # testit should be found and converted.
+        expect_match(msg[3], "testit: 22$")  # testit should be found and converted.
         expect_match(msg[5], "Failed copying files.*")
-        expect_match(msg[6], "package.a:22  $")
+        expect_match(msg[6], "package.a: 24$")
 
         # success - convert all two packages and overwrite.
         msg <- capture.output(lib.convert(
@@ -121,7 +120,7 @@ with_safe_package_tester({
             type = 'message')
 
         expect_match(msg[2], "Succesfully copied files:")
-        expect_match(msg[3], "package.a:22  testit   :22  $")  # testit should be found and converted.
+        expect_match(msg[3], "package.a: 24, testit: 22$")  # testit should be found and converted.
         expect_match(msg[5], "Failed copying files.*")
         expect_equal(msg[6], "")
 

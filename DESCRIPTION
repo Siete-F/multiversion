@@ -1,7 +1,7 @@
 Package: multiversion
 Type: Package
-Title: Version controlled package manager
-Version: 0.3.1
+Title: Version Controlled Package Manager
+Version: 0.3.2
 Authors@R: person(c('Siete', 'C.'), 'Frouws', , 'scfrouws@gmail.com', role = c('aut', 'cre'))
 Description: Supports installing of multiple versions of a package and loading
     of specific versions and their dependencies. The only package that you need
@@ -9,8 +9,7 @@ Description: Supports installing of multiple versions of a package and loading
     management. Migrate your ordinary library today!!
 License: LGPL-2
 Encoding: UTF-8
-LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Suggests: 
     testthat (>= 3.0.0),
     waldo,

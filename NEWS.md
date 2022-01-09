@@ -1,8 +1,18 @@
-Committing package 3.0.1 to CRAN.
+### Version 3.0.2 (submitting to CRAN).
 
 **`R CMD check` passed with only the one expected Note!!!**
 
 See `comments.md`.
+
+Updates:
+- Only a few minor changes were required for the package to pass for R4.1.2.
+- There are no functional changes, except for `lib.install_tarball` which can now install multiple tarballs at once.
+- (Added `show_n_files` internal function due to the changed behaviour of `summary` which was used. Required one test to be updated.)
+- (Internal function `unique_highest_package_versions` was broken due to differences that were introduced to the `which.max` function. Fixed it.)
+
+### Version 3.0.1 (submitting to CRAN)
+
+*`R CMD check` passed with only the one expected Note!!!*
 
 Updates:
 

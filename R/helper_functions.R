@@ -358,6 +358,7 @@ lib.set_libPaths <- function(packNameVersion, lib_location, additional_lib_paths
             packVersion <- packVersionList[numeric_version(packVersionList) == max(numeric_version(packVersionList))]
             packNameVersion <- c(packNameVersion, stats::setNames(packVersion, packageName))
         }
+        packNameVersion <- c(packNameVersion, lib.location_install_dir(lib_location, do_create = FALSE))
     }
 
     # non existing paths are silently ignored by `.libPaths()`
@@ -452,7 +453,9 @@ unique_highest_package_versions <- function(packNameVersion, return_as_df = FALS
                           version  = packNameVersion,
                           ordering = seq_len(length(packNameVersion)))
 
-    nameVerU <- do.call(rbind, lapply(split(nameVer, nameVer$names), function(x) {return(x[which.max(x$version),])}))
+    nameVerU <- do.call(rbind, lapply(split(nameVer, nameVer$names), function(x) {
+        return(x[which.max(numeric_version(x$version) == max(numeric_version(x$version))),])
+    }))
     nameVerU <- nameVerU[order(nameVerU$ordering),]
     nameVerU <- nameVerU[,-3]
 
