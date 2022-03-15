@@ -1,4 +1,4 @@
-test_lib <- normalizePath(paste0(test_path('..', 'test_library_R'), R.version$major), '/', mustWork = TRUE)
+test_lib <- get('test_lib_path', envir = .test_env)
 
 test_that("Test lib.execute_using_packagelist", {
     on.exit(unlink('./execution.log'), add = TRUE)

@@ -1,5 +1,21 @@
+.test_env <- new.env(parent = emptyenv())
+
+.test_env$test_lib_path <- normalizePath(paste0('./test_library'), mustWork = FALSE)
+cat('temp_dir is located here: ', .test_env$test_lib_path, '\n')
+
+# .test_env$test_lib_path <- if (interactive()) {
+#     # For interactive testing, use './tests/test_library'
+#     paste0(normalizePath(ifelse(file.exists('../testthat.R'), '..', 'tests'), mustWork = TRUE), '/test_library')
+# } else {
+#     # For non-interactive (CRAN) use `paste0(tempdir(), '/test_library')`
+#     normalizePath(paste0(tempdir(), '/test_library'), mustWork = FALSE)
+# }
+
+
 
 #' Set lib.location to test_library
+#'
+#' @importFrom utils unzip download.file
 #'
 .set_test_lib_location <- function() {
     # Reset the value after finishing in the parent function
@@ -8,121 +24,62 @@
             list(substitute(Sys.setenv(R_MV_LIBRARY_LOCATION = old)),
                  add = TRUE), envir = parent.frame())
 
-    lib <- paste0('test_library_R', R.version$major)
-    suppressMessages(lib.location(
-        paste0(ifelse(dir.exists(paste0('../', lib)),
-               '../', 'tests/'), lib)
-        ))
+    test_lib_path <- get('test_lib_path', envir = .test_env)
+
+    if (!dir.exists(test_lib_path)) {
+
+        # Defining paths:
+        temp_zip_file <- paste0(dirname(test_lib_path), '/tmp/test_lib.zip')
+        temp_tarball_dir <- paste0(dirname(test_lib_path), '/tmp/test_lib_tarballs')
+        test_install_tarball_file <- paste0(dirname(test_lib_path), '/test_library_tarballs/package.a_0.4.0.tar.gz')
+
+        # creating directories:
+        dir.create(temp_tarball_dir, recursive = TRUE)
+        dir.create(dirname(test_install_tarball_file))
+
+        # Downloading files. One zip with the test lib tarballs and one seperate tarball which is used for a test installation.
+        cat('Downloading the test lib zip file...\n')
+        if (!file.exists(temp_zip_file)) {
+            utils::download.file('https://github.com/Siete-F/multiversion/raw/test_lib_tarballs_0.3.4/tests/test_library.zip',
+                                 destfile = temp_zip_file)
+        }
+        cat('Downloading the install test tarball...\n')
+        if (!file.exists(test_install_tarball_file)) {
+            utils::download.file('https://github.com/Siete-F/multiversion/raw/test_lib_tarballs_0.3.4/tests/package_for_install_testing/package.a_0.4.0.tar.gz',
+                                 destfile = test_install_tarball_file)
+        }
+        cat('Unzipping and installing test library...\n')
+        cat('tarballs are unzipped to: ', temp_tarball_dir, '\n')
+        cat('zip file should be here: ', temp_zip_file, '\n')
+        utils::unzip(normalizePath(temp_zip_file, mustWork = TRUE), exdir = temp_tarball_dir)
+        on.exit(unlink(dirname(temp_tarball_dir), recursive = TRUE, force = TRUE), add = TRUE)
+
+        dir.create(test_lib_path, recursive = T)
+
+        lib.execute_using_packagelist(func_handle = lib.install_tarball,
+                                      tarball = normalizePath(paste0(temp_tarball_dir, '/', c(
+                                          "package.e_1.5.0.tar.gz",  "package.e_1.7.0.tar.gz",
+                                          "package.f_1.0.0.tar.gz",  "package.f_2.0.0.tar.gz",
+                                          "package.c_15.2-9.tar.gz", "package.c_15.2.8.tar.gz",
+                                          "package.d_1.0.tar.gz",    "package.d_2.0.0.tar.gz",
+                                          "package.b_1.0.0.tar.gz",  "package.a_0.1.0.tar.gz",
+                                          "package.a_0.2.0.tar.gz",  "package.a_0.3.0.tar.gz"
+                                      )), mustWork = TRUE),
+                                      lib_location = test_lib_path,
+                                      .lib_location = test_lib_path, .run_quietly = FALSE)
+        Sys.sleep(120)
+
+        # Place two 'override dependency' files
+        writeChar('package.c (6.0.0)',     paste0(test_lib_path, '/package.d/1.0/vc_override_dependencies.txt'), eos = NULL)
+        writeChar('package.c (>= 99.0.0)', paste0(test_lib_path, '/package.d/2.0.0/vc_override_dependencies.txt'), eos = NULL)
+    # } else {
+        # cat('The test lib already exists: ', test_lib_path, '\n')
+    }
+
+    # Setting the library location for the duration of a test
+    suppressMessages(lib.location(test_lib_path))
 }
 
-
-# # Test functions to help testing in seperate processes. -------------------
-#
-#
-# tst_env <- new.env(parent = emptyenv())
-# tst_env$desc = ''
-# tst_env$tests = list()
-#
-#
-# #' Functions to help with testing inside seperate processes.
-# #'
-# #' The functions can be used in the following way:\cr\cr
-# #' \enumerate{
-# #' \item{Use \code{.initialize_test(desc = 'My first test')} to setup for a new test and create a clean slate.}
-# #' \item{Then use the different helper functions \code{expect_...} to perform your tests just like you would do with \code{testthat::expect_...} functions.}
-# #' \item{To give back the test outcomes, since it is a separate process, you must use \code{test_outcomes <- .get_tests()}.}
-# #' \item{Finally, when all the tests are done and the results are passed back, perform: \code{.run_test_batch(test_outcomes)}.}
-# #' }
-# #'
-# #' @name test_helpers
-# #'
-# NULL
-#
-# #' @rdname test_helpers
-# #'
-# .initialize_test <- function(desc) {
-#     stopifnot(is.character(desc), length(desc) == 1)
-#     assign('desc',  desc,   envir = tst_env)
-#     assign('tests', list(), envir = tst_env)
-# }
-#
-# #' @rdname test_helpers
-# #'
-# .add_test <- function(type, A, B) {
-#     call <- as.character(sys.call(-1))
-#
-#     assign('tests', c(get('tests', tst_env), list(list(
-#         type = type, a = A, b = B,
-#         # The reference (value of B) is already printed by testthat,
-#         # so there is no need to include the original value of that one.
-#         # call[2] refers to the code that produced the first input argument of the .exp... function.
-#         call = call[2]))), envir = tst_env)
-# }
-#
-# #' @rdname test_helpers
-# #'
-# expect_error <- function(expr, exp_msg) {
-#     err_msg <- ''
-#     tryCatch({expr}, error = function(err) {
-#         err_msg <<- err$message
-#     })
-#     .add_test('error', err_msg, exp_msg)
-# }
-#
-# #' @rdname test_helpers
-# #'
-# expect_match <- function(expr, regex) {
-#     .add_test(type = 'match', A = expr, B = regex)
-# }
-#
-# #' @rdname test_helpers
-# #'
-# expect_equal <- function(expr, ref) {
-#     .add_test('equal', expr, ref)
-# }
-#
-# #' @rdname test_helpers
-# #'
-# expect_false <- function(expr) {
-#     .add_test('false', expr, FALSE)
-# }
-#
-# #' @rdname test_helpers
-# #'
-# expect_true <- function(expr) {
-#     .add_test('true', expr, TRUE)
-# }
-#
-# #' @rdname test_helpers
-# #'
-# .get_tests <- function() {
-#     as.list(tst_env)
-# }
-#
-# #' @rdname test_helpers
-# #'
-# .run_test_batch <- function(test_outcomes = .get_tests()) {
-#     testthat::test_that(test_outcomes$desc, {
-#         for (test in test_outcomes$tests) {
-#
-#             # 'test' is a list with the fields 'type', 'a', 'b' and 'call'.
-#             # Where 'type' can contain 'match', 'error', 'true', 'false' or 'equal'.
-#             if (test$type == 'equal') {
-#                 with(test, expect_equal(a, b, label = call))
-#
-#             } else if (test$type == 'true') {
-#                 expect_true(test$a, label = test$call)
-#
-#             } else if (test$type == 'false') {
-#                 expect_false(test$a, label = test$call)
-#
-#             } else if (test$type %in% c('match', 'error')) {
-#
-#                 with(test, expect_match(a, b, label = call))
-#             }
-#         }
-#     })
-# }
 
 #' Create a safe environment in which certain expressions can be tested
 #'

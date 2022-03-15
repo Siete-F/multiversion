@@ -124,5 +124,5 @@ test_that("lib.installed_packages", {
     msg <- capture.output(lib.installed_packages(), type = 'message')
 
     expect_true(all(grepl('package.[abcdef] : [0-9.-]{3,6} .*', msg)))
-    expect_true(all(c('a', 'b', 'c','d','e', 'f') %in% sapply(msg, substr, 23, 23, USE.NAMES = F)))
+    expect_true(all(c('a', 'b', 'c', 'd', 'e', 'f') %in% sapply(msg, substr, 23, 23, USE.NAMES = F)))
 })

@@ -17,7 +17,11 @@
 # This can be used to make some loading operations more concrete or fix specific incorrect dependency specifications. To monitor changes, it is recommended to maintain the complete library under git controll. Due to the little overhead, this is quite doable.
 
 
-To recreate and install the packages for testing, please run the `./tests/packages_for_testing/tarball_all_packages.bat`.
+To recreate and install the packages for testing, please run:
+`./tests/packages_for_testing/tarball_all_packages.bat`
+
+Zip the data using:
+tmp <- setwd('tests/packages_for_testing/');utils::zip('../test_library.zip', list.files('.', pattern = '.*\\.tar\\.gz', full.names = TRUE));setwd(tmp)
 
 Then run:
 ```
@@ -25,7 +29,8 @@ lib.install_tarball(paste0('tests/packages_for_testing/',
                            c("package.e_1.5.0.tar.gz", "package.e_1.7.0.tar.gz",  "package.f_1.0.0.tar.gz",
                              "package.f_2.0.0.tar.gz", "package.c_15.2-9.tar.gz", "package.c_15.2.8.tar.gz",
                              "package.d_1.0.tar.gz",   "package.d_2.0.0.tar.gz",  "package.b_1.0.0.tar.gz",
-                             "package.a_0.1.0.tar.gz",  "package.a_0.2.0.tar.gz",  "package.a_0.3.0.tar.gz"
+                             "package.a_0.1.0.tar.gz", "package.a_0.2.0.tar.gz",  "package.a_0.3.0.tar.gz"
                            )),
                     lib_location = './tests/test_library/')
 ```
+Or leave this up to `test_function` .set_test_lib_location.

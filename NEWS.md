@@ -1,4 +1,14 @@
-### Version 3.0.2 (submitting to CRAN).
+### Version 0.3.3 (submitting to CRAN).
+
+**`R CMD check` passed with no ERROR, WARNING or NOTE!!!**
+
+For CRAN, had to update the location where the tarballs are stored. Now they are
+downloaded from the github repository so that the tests will keep working.
+Downloading happens from a tagged commit in this repository so that we can change 
+the tag that is referenced here in `R/test_functions.R` when we would like to download new data.
+
+
+### Version 0.3.2 (submitting to CRAN).
 
 **`R CMD check` passed with only the one expected Note!!!**
 
@@ -7,10 +17,10 @@ See `comments.md`.
 Updates:
 - Only a few minor changes were required for the package to pass for R4.1.2.
 - There are no functional changes, except for `lib.install_tarball` which can now install multiple tarballs at once.
-- (Added `show_n_files` internal function due to the changed behaviour of `summary` which was used. Required one test to be updated.)
+- (Added `show_n_files` internal function due to the changed behavior of `summary` which was used. Required one test to be updated.)
 - (Internal function `unique_highest_package_versions` was broken due to differences that were introduced to the `which.max` function. Fixed it.)
 
-### Version 3.0.1 (submitting to CRAN)
+### Version 0.3.1 (submitting to CRAN)
 
 *`R CMD check` passed with only the one expected Note!!!*
 

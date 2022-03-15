@@ -1,3 +1,21 @@
+
+# 15 Mar, 2022 - 0.3.3
+
+## R CMD check results
+There were no ERRORS, WARNINGS or NOTES.
+
+Tests mainly consist of package loading and package installation tests.
+But source packages may not be included in the test folders. Therefore it 
+downloads the required dummy packages to perform it's tests.
+
+This required a bit more code, so test coverage dropped to 73%
+Without the test related code, it is  75.3
+
+## Downstream dependencies
+There are no donwstream dependencies yet.
+
+# 9 Jan, 2022 - 0.3.2
+
 ## R CMD check results
 There were no ERRORs or WARNINGs. 
 

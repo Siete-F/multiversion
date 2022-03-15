@@ -7,3 +7,7 @@ NEWS.md
 cran-comments.md
 README.md
 ^[^/\\]+\.tar\.gz$
+^tests[/\\]testthat[/\\](_snaps|TEMP_install_location)
+^(tests[/\\])?tmp[/\\].*
+^(tests[/\\])?test_library[/\\].*
+^(tests[/\\])?test_library_tarballs[/\\].*
