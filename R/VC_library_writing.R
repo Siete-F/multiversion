@@ -555,7 +555,8 @@ lib.convert <- function(source_lib          = lib.location_install_dir(destinati
         for (x in unique(nms)) {
             msg <- c(msg, paste0(x, ': ', sum(nms == x)))
         }
-        paste0(collapse = ', ', msg)
+        msg <- paste0(collapse = ', ', msg)
+        ifelse(msg == '', 'None', msg)
     }
     message('\nSuccesfully copied files:')
     message(show_n_files(packageNames[ succes]))
