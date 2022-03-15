@@ -7,7 +7,6 @@ with_safe_package_tester({
 
     test_that(desc = "simply load package.a", {
         stopifnot(!'package:package.a' %in% search())
-        .set_test_lib_location()
 
         # load package a
         msg <- capture.output(lib.load(package.a), type = 'message')
@@ -33,11 +32,14 @@ with_safe_package_tester({
 with_safe_package_tester({
 
     test_that(desc = "Load package.a with manual path provided", {
-        stopifnot(!'package:package.a' %in% search())
-        var <- 'R_MV_LIBRARY_LOCATION'
-        lib_loc <- withr::with_envvar(setNames('', var), {.set_test_lib_location(); Sys.getenv(var)})
 
-        # load package a
-        expect_silent(lib.load(package.a, lib_location = lib_loc, quietly = TRUE))
+        stopifnot(!'package:package.a' %in% search())
+
+        var <- 'R_MV_LIBRARY_LOCATION'
+        lib_loc <- Sys.getenv(var)
+        withr::with_envvar(setNames('', var), {
+            # load package a
+            expect_silent(lib.load(package.a, lib_location = lib_loc, quietly = TRUE))
+        })
     })
 })

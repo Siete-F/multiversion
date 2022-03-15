@@ -4,7 +4,6 @@
 with_safe_package_tester({
 
     test_that(desc = '.libPaths must remain unchanged by default', {
-        .set_test_lib_location()
 
         old_paths <- .libPaths()
         lib.load(package.b, quietly = TRUE)
@@ -16,7 +15,6 @@ with_safe_package_tester({
 with_safe_package_tester({
 
     test_that(desc = '.libPaths must remain unchanged in dryrun to', {
-        .set_test_lib_location()
 
         old_paths <- .libPaths()
         lib.load(package.b, quietly = TRUE, dry.run = TRUE)
@@ -28,7 +26,6 @@ with_safe_package_tester({
 with_safe_package_tester({
 
     test_that(desc = '.libPaths are updated with appendLibPaths', {
-        .set_test_lib_location()
 
         old_paths <- .libPaths()
         lib.load(package.b, quietly = TRUE, appendLibPaths = TRUE, dry.run = TRUE)
@@ -45,7 +42,6 @@ with_safe_package_tester({
 with_safe_package_tester({
 
     test_that(desc = "package.e must be updated when loading package.a 0.3.0 (e == 1.5) then package.f (e > 1.6.0)", {
-        .set_test_lib_location()
 
         old_paths <- .libPaths()
         lib.load(package.a = '0.3.0', appendLibPaths = TRUE, quietly = TRUE)

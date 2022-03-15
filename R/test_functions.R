@@ -110,6 +110,7 @@ with_safe_package_tester <- function(expr, also_clean_install_dir = FALSE) {
     })
 
     # This sets the environment variable 'R_MV_LIBRARY_LOCATION' to the test_library, and reverts it when finished here.
+    # When this is called for the first time, it will obtain the test packages to test the loading behavior.
     .set_test_lib_location()
 
     # Define your clean slate:
@@ -121,7 +122,7 @@ with_safe_package_tester <- function(expr, also_clean_install_dir = FALSE) {
     # It seems that testthat wants to find other packages like 'waldo' (for comparison) during execution
     # Therefore we cannot set the .libPaths to only '.Library'
     .libPaths(c(dirname(system.file(package = 'testthat')), .Library))
-
+    # , dirname(system.file(package = 'waldo'))
     force(expr)
 }
 

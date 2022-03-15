@@ -3,7 +3,6 @@
 with_safe_package_tester({
 
     test_that(desc = "load package.b, check if package.c is only in namespace", {
-        .set_test_lib_location()
 
         stopifnot(!'package:package.b' %in% search())
         stopifnot(!'package:package.c' %in% search())
@@ -31,7 +30,6 @@ with_safe_package_tester({
 with_safe_package_tester({
 
     test_that(desc = "latently loading package.c version 15.2.9 will fix the version", {
-        .set_test_lib_location()
 
         stopifnot(!'package:package.b' %in% search())
         stopifnot(!'package:package.c' %in% search())
@@ -57,7 +55,6 @@ with_safe_package_tester({
 with_safe_package_tester({
 
     test_that(desc = "Silence is obeyed", {
-        .set_test_lib_location()
 
         # load package a
         msg <- capture.output(lib.load(package.b, quietly = TRUE, verbose = FALSE), type = 'message')

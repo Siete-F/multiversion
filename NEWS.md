@@ -1,3 +1,13 @@
+### Version 0.3.4 (submitting to CRAN).
+
+**`R CMD check` passed with no ERROR, WARNING or NOTE!!!**
+
+package waldo could not be found by only a single test:
+`expect_equal(package.e::what_version_are_you(), '1.7.0')`
+Rewrote it a bit, but made no further changes.
+
+Removed `.set_test_lib_location` references within `with_safe_package_tester` constructs. These were not necessary.
+
 ### Version 0.3.3 (submitting to CRAN).
 
 **`R CMD check` passed with no ERROR, WARNING or NOTE!!!**

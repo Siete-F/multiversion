@@ -8,10 +8,9 @@ with_safe_package_tester({
 
     test_that(desc = "package.e must be updated when loading package.a 0.3.0 (e == 1.5) then package.f (e > 1.6.0)", {
 
-        .set_test_lib_location()
-
         stopifnot(!'package:package.a' %in% search())
         stopifnot(!'package:package.f' %in% search())
+        stopifnot(requireNamespace('waldo', quietly = TRUE))
 
         # load package.a, where package.f will overwrite the dependency on 'e'
         msg <- capture.output(lib.load(package.a = '0.3.0', pick.last = FALSE), type = 'message')
@@ -20,7 +19,8 @@ with_safe_package_tester({
         expect_match(msg[[3]], '1.0.0 .*package.f')
         expect_match(msg[[4]], '1.7.0 .*package.e')
 
-        expect_equal(package.e::what_version_are_you(), '1.7.0')
+        ver <- package.e::what_version_are_you()
+        expect_equal(ver, '1.7.0')
         expect_true('package:package.a' %in% search())
 
         # These are not loaded but attached.

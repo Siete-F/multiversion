@@ -6,7 +6,7 @@
 with_safe_package_tester({
 
     test_that(desc = 'load package.b, pick.last = TRUE', {
-        .set_test_lib_location()
+
         stopifnot(!'package:package.b' %in% search())
         stopifnot(!'package:package.c' %in% search())
 
@@ -42,7 +42,7 @@ with_safe_package_tester({
 with_safe_package_tester({
 
     test_that(desc = 'load package.b, pick.last = FALSE', {
-        .set_test_lib_location()
+
         stopifnot(!'package:package.b' %in% search())
         stopifnot(!'package:package.c' %in% search())
 
@@ -78,7 +78,7 @@ with_safe_package_tester({
 with_safe_package_tester({
 
     test_that(desc = 'load package.b, pick.last = FALSE then TRUE', {
-        .set_test_lib_location()
+
         stopifnot(!'package:package.b' %in% search())
         stopifnot(!'package:package.c' %in% search())
 
