@@ -7,6 +7,7 @@ downloaded from the github repository so that the tests will keep working.
 Downloading happens from a tagged commit in this repository so that we can change 
 the tag that is referenced here in `R/test_functions.R` when we would like to download new data.
 
+Removed the printing of "Failed copying files:" when all copying wend fine. It sounds a bit too alarming.
 
 ### Version 0.3.2 (submitting to CRAN).
 

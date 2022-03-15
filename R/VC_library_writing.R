@@ -560,9 +560,12 @@ lib.convert <- function(source_lib          = lib.location_install_dir(destinati
     }
     message('\nSuccesfully copied files:')
     message(show_n_files(packageNames[ succes]))
-    message('\nFailed copying files (might be already installed or `TEMP_install_location`',
-            ' was not cleaned up, can be done by running `lib.clean_install_dir()`):')
-    message(show_n_files(packageNames[!succes]))
+    if (length(packageNames[!succes]) > 0) {
+        message('\nFailed to copy:')
+        message(show_n_files(packageNames[!succes]))
+        message('(might be already installed, i.e. `TEMP_install_location`',
+                ' was not cleaned up. This can be done by running `lib.clean_install_dir()`)')
+    }
     message('')
 }
 

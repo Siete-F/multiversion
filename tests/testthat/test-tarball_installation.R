@@ -92,10 +92,11 @@ with_safe_package_tester({
             destination_mv_lib = temp_test_lib, packages_to_convert = 'package.a'),
             type = 'message')
 
+        expect_equal(msg[1], "")
         expect_match(msg[2], "Succesfully copied files:")
         expect_match(msg[3], "package.a: [0-9]+$")  # only package.a should be converted
-        expect_match(msg[5], "Failed copying files.*")
-        expect_equal(msg[6], "None")  # no files should have failed.
+        expect_equal(msg[4], "")
+        expect_length(msg, 4)
 
         # empty 'packages_to_convert'
         expect_silent(lib.convert(
@@ -110,8 +111,9 @@ with_safe_package_tester({
 
         expect_match(msg[2], "Succesfully copied files:")
         expect_match(msg[3], "testit: [0-9]+$")  # testit should be found and converted.
-        expect_match(msg[5], "Failed copying files.*")
+        expect_match(msg[5], "Failed to copy:")
         expect_match(msg[6], "package\\.a: [0-9]+$")
+        expect_match(msg[7], "might be already installed")
 
         # success - convert all two packages and overwrite.
         msg <- capture.output(lib.convert(
@@ -119,10 +121,12 @@ with_safe_package_tester({
             destination_mv_lib = temp_test_lib, force_overwrite = TRUE),
             type = 'message')
 
+        expect_equal(msg[1], "")
         expect_match(msg[2], "Succesfully copied files:")
         expect_match(msg[3], "package\\.a: [0-9]+, testit: [0-9]+$")  # testit should be found and converted.
-        expect_match(msg[5], "Failed copying files.*")
-        expect_equal(msg[6], "None")
+        expect_equal(msg[4], "")
+        expect_length(msg, 4)
+
 
         # LOAD
         msg <- capture.output(lib.load(package.a = '0.4.0',
