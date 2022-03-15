@@ -121,8 +121,8 @@ with_safe_package_tester <- function(expr, also_clean_install_dir = FALSE) {
 
     # It seems that testthat wants to find other packages like 'waldo' (for comparison) during execution
     # Therefore we cannot set the .libPaths to only '.Library'
-    .libPaths(c(dirname(system.file(package = 'testthat')), .Library))
-    # , dirname(system.file(package = 'waldo'))
+    .libPaths(c(dirname(system.file(package = 'testthat')), dirname(system.file(package = 'waldo')), .Library))
+
     force(expr)
 }
 
