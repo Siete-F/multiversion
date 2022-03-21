@@ -9,6 +9,10 @@ lib.git_show_untracked(lib_location = lib.location())
 \arguments{
 \item{lib_location}{By default the default library path obtained with \code{lib.location()}.}
 }
+\value{
+No return value, is called for the printed feedback. Will show which packages inside the library are not yet tracked by git (when that is desired).
+  It is recommended to track packages with git so that
+}
 \description{
 List all un-tracked directories (libraries) within the multiversion library. The returned un-tracked directories are cleaned up
 and printed so that only the unique combinations of each library and it's version is shown once.

@@ -8,15 +8,15 @@ test_that("lib.dependencies", {
 
     .set_test_lib_location()
 
-    a <- lib.dependencies('package.a', do_print = F)
+    a <- lib.dependencies('package.a', do_print = FALSE)
     expect_equal(a$`0.1.0`, structure(character(), .Names = character()))
     expect_equal(a$`0.2.0`, structure(c('', ''), .Names = c('package.e',  'package.f')))
     expect_equal(a$`0.3.0`, structure(c('>= 1.5', ''), .Names = c('package.e',  'package.f')))
 
-    b <- lib.dependencies('package.b', do_print = F)
+    b <- lib.dependencies('package.b', do_print = FALSE)
     expect_equal(b$`1.0.0`, c(package.c = ''))
 
-    c <- lib.dependencies('package.c', do_print = F)
+    c <- lib.dependencies('package.c', do_print = FALSE)
     expect_equal(names(c), c('15.2.8', '15.2.9'))
     expect_equal(c$`15.2.8`, structure(character(), .Names = character()))
     expect_equal(c$`15.2.9`, structure(character(), .Names = character()))
@@ -81,7 +81,7 @@ testthat::test_that("chooseVersion behaviour with major version differences", {
     expect_equal(val, '15.2.8')
 
 
-    # Check behaviour when no warning is necessary. It should differ when a version within the requested major is available when pick.last = TRUE
+    # Check behavior when no warning is necessary. It should differ when a version within the requested major is available when pick.last = TRUE
     expect_equal(withr::with_options(list('mv_prefer_within_major_version' = 'false'), {
         chooseVersion('>= 14.9.9', c("14.10.9", "15.2.8", "15.2.9"), 'a_package', pick.last = TRUE)
     }),
@@ -98,7 +98,7 @@ test_that("lib.location works", {
 
     expect_error(withr::with_envvar(list('R_MV_LIBRARY_LOCATION' = ''), {lib.location()},
                                     action = 'replace'),
-                 'No environment variable has been set for me to find the R_MV_library location')
+                 'No environment variable has been set for me to find the multiversion library location')
 
     if (interactive()) {
         expect_message(withr::with_envvar(list('R_MV_LIBRARY_LOCATION' = ''), {lib.location(getwd())},
@@ -124,5 +124,5 @@ test_that("lib.installed_packages", {
     msg <- capture.output(lib.installed_packages(), type = 'message')
 
     expect_true(all(grepl('package.[abcdef] : [0-9.-]{3,6} .*', msg)))
-    expect_true(all(c('a', 'b', 'c', 'd', 'e', 'f') %in% sapply(msg, substr, 23, 23, USE.NAMES = F)))
+    expect_true(all(c('a', 'b', 'c', 'd', 'e', 'f') %in% sapply(msg, substr, 23, 23, USE.NAMES = FALSE)))
 })

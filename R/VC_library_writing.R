@@ -93,6 +93,8 @@
 #' temporary library (\code{\link{lib.location_install_dir}()}) can be done using:
 #' \code{\link{lib.load}(..., also_load_from_temp_lib = TRUE)}.
 #'
+#' @return Nothing is returned, this function is called for it's side-effect of installing a package in the multiversion library.
+#'
 #' @name lib.install
 NULL
 
@@ -110,81 +112,7 @@ lib.install <- function(package_names = NULL, lib_location = lib.location(), ins
         return(invisible())
     }
 
-    # If executing using Rscript, this block is run and calls an R script which will run all except this block.
-    # if (execute_with_Rscript) {
-    #     temp_install_dir <- lib.location_install_dir()
-    #     curr_packs <- list.dirs(temp_install_dir, full.names = F, recursive = F)
-    #
-    #     Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
-    #
-    #     if (grepl('Could not find files for the given pattern(s)', Rscript_dir)) {
-    #         stop('Please make sure `where Rscript` results in one or more valid paths. First one is used.')
-    #     }
-    #
-    #     multiversion_location <- lib.my_location()
-    #     script_location <- normPath(paste0(multiversion_location, '/exec/lib.install_script.R'))
-    #
-    #     status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location, lib_location, paste(collapse = ',', package_names), multiversion_location, as.character(allow_overwrite_on_convert), as.character(verbose)))
-    #
-    #     new_packs <- list.dirs(temp_install_dir, full.names = F, recursive = F)
-    #     added_packages <- setdiff(new_packs, curr_packs)
-    #
-    #     message(sprintf('>> Installation attempt finished with status %s, added were: %s <<\n', as.character(status), paste(collapse = ', ', added_packages)))
-    #     if (!install_temporarily & status == 0) {
-    #         lib.convert(lib_location        = lib_location,
-    #                     force_overwrite     = allow_overwrite_on_convert,
-    #                     packages_to_convert = added_packages)
-    #     }
-    #     return(invisible())
-    # }
-
     install.location <- normPath(lib.location_install_dir(lib_location))
-
-    # loaded packages
-    # nms <- names(sessionInfo()$otherPkgs)
-    # currentlyLoaded <- detachAll(packageList = nms[!nms %in% c('RVClibrary', 'multiversion')])
-
-    # The following should only be executed once.
-    # if (sum(grepl('^lib.install', sapply(sys.calls(), function(x) {x[[1]]}))) <= 1) {
-    #     if (!nzchar(Sys.which('make'))) {
-    #         stop(paste('Please make sure the `make.exe` application of `Rtools` can be',
-    #                    '\nfound so that packages can be compiled from source if necessary!',
-    #                    '\nAdd e.g. `C:/Rtools/bin` to the PATH env var if you have the program already installed',
-    #                    '\nor download Rtools (and check `Add paths` during install, and restart R) from "https://cran.r-project.org/bin/windows/Rtools/".'))
-    #     }
-    #     # Just took some
-    #     if (any(!nzchar(Sys.which(c('aspell', 'basename', 'cat', 'cp'))))) {
-    #         stop(sprintf(paste('%sAdd e.g. `C:/Rtools/bin` to the PATH env var if you have Rtools already installed',
-    #                            '\nor download Rtools (and check `Add paths` during install, and restart R) from "https://cran.r-project.org/bin/windows/Rtools/".'),
-    #                      ifelse(nzchar(Sys.getenv('MAKE')), '',
-    #                             'The MAKE variable is specified, but this is not sufficient for an Rscript instance to compile from source properly. ')))
-    #     }
-    #     if (!grepl('\\$\\(WIN\\)', Sys.getenv('BINPREF'))) {
-    #         stop(sprintf(paste0('Please make sure you also have the BINPREF environment variable set properly.',
-    #                             '\nCurrent value: "%s", expected value should be like: "C:/Rtools/mingw_$(WIN)/bin/",',
-    #                             '\nwhere "$(WIN)" is set by R to either "32" or "64" depending on the target.',
-    #                             '\nIf your PATH and BINPREF variables are set correctly, we should be ready',
-    #                             '\nfor compiling from source (being able to install the latest pacakges).'), Sys.getenv('BINPREF')))
-    #     }
-    #
-    #     if (interactive()) {
-    #         on.exit({
-    #             message('\nResetting your loaded packages.')
-    #             invisible(lib.load(loadPackages = currentlyLoaded, lib_location = lib_location, quietly = TRUE))
-    #         }, add = TRUE)
-    #     }
-    #     prev_setting <- getOption("install.packages.compile.from.source")
-    #     options(install.packages.compile.from.source = "always")
-    #
-    #     # library paths
-    #     currentLibs <- .libPaths()
-    #     .libPaths(.Library)
-    #
-    #     on.exit({
-    #         options(install.packages.compile.from.source = prev_setting)
-    #         .libPaths(currentLibs)
-    #     }, add = TRUE)
-    # }
 
     currentLibs <- lib.set_libPaths('all', lib_location, additional_lib_paths = install.location)
     on.exit(.libPaths(currentLibs), add = TRUE, after = FALSE)
@@ -193,39 +121,6 @@ lib.install <- function(package_names = NULL, lib_location = lib.location(), ins
     # loop through packages to install
     for (iPackage in package_names) {
 
-        # dependsOn <- lib.dependencies_online(iPackage, cran_url = cran_url)
-        #
-        # # try loading dependencies, so that they're skipped during installation.
-        # successfulLoads <- lib.testload(dependsOn, lib_location, pick.last = TRUE, msg_str = paste0('"', iPackage, '" his dependencies'), verbose = verbose)
-        #
-        # failedLoads <- !names(dependsOn) %in% names(successfulLoads) & !lib.is_basepackage(names(dependsOn))
-        # failedLoads <- names(dependsOn)[failedLoads]
-        #
-        # if (length(failedLoads) > 0) {
-        #     message(sprintf('\n - We will install for package "%s" the missing dependencies: %s.\n',
-        #                     iPackage, paste0(collapse = ',', '"', failedLoads, '"')))
-        #
-        #     lib.install(package_names = failedLoads, lib_location = lib_location, install_temporarily = TRUE, execute_with_Rscript = execute_with_Rscript, verbose = verbose)
-        #
-        #     # When dependencies have been installed, try loading them again to create a more complete list of available
-        #     successfulLoads <- lib.testload(dependsOn, lib_location, pick.last = TRUE, verbose = verbose)
-        # }
-        #
-        #
-        # # If all dependencies were already there, check if the package is already installed.
-        # # When overwriting this package (or installing the latest version) we are not interested in knowing if the package already exists.
-        # if (!allow_overwrite_on_convert && all(names(dependsOn) %in% names(successfulLoads) | lib.is_basepackage(names(dependsOn)))) {
-        #     finalPackSucces <- lib.testload(stats::setNames('', iPackage), lib_location, pick.last = TRUE, verbose = verbose, msg_str = '')
-        #
-        #     if (iPackage %in% names(finalPackSucces)) {
-        #         message(sprintf('\n - The "%s" package seems to be already installed...\n', iPackage))
-        #         next
-        #     }
-        # }
-        #
-        # # add the successfully loaded packages to the .libPaths, so the installer knows that they are there.
-        # lib.set_libPaths(successfulLoads, lib_location, additional_lib_paths = install.location)
-        #
         message('INSTALLING: ', iPackage)
         # because the dependencies are on the libPath, only the not present dependencies will be installed.
         # keeping them loaded would raise a popup of Rstudio.
@@ -359,22 +254,6 @@ lib.install_tarball <- function(tarball, dependencies = c(), lib_location = lib.
     }
 
     stopifnot(file.exists(tarball))
-    # if (execute_with_Rscript) {
-    #     Rscript_dir <- normPath(system('where Rscript', intern = T)[1])
-    #     if (grepl('Could not find files for the given pattern(s)', Rscript_dir)) {
-    #         stop('Please make sure `where Rscript` results in one or more valid paths. First one is used.')
-    #     }
-    #     script_location <- system.file(package = 'multiversion', 'lib.install_tarball_script.R')
-    #
-    #     status <- system(sprintf('"%s" --vanilla "%s" "%s" "%s" "%s" "%s"', Rscript_dir, script_location,
-    #                              lib_location, packagePath, lib.packs_vec2str(dependencies, do_return = TRUE),
-    #                              dirname(dirname(script_location))))
-    #
-    #     if (!install_temporarily & status == 0) {
-    #         lib.convert(source_lib = lib_location, force_overwrite = allow_overwrite_on_convert)
-    #     }
-    #     return(invisible())
-    # }
 
     install.location <- lib.location_install_dir(lib_location)
 
@@ -392,42 +271,6 @@ lib.install_tarball <- function(tarball, dependencies = c(), lib_location = lib.
 
     currentLibs <- lib.set_libPaths('all', lib_location, additional_lib_paths = install.location)
     on.exit(.libPaths(currentLibs), add = TRUE, after = FALSE)
-
-    # successfulLoads <- lib.testload(dependencies, lib_location, msg_str = paste0('"', basename(packagePath), '" his dependencies'))
-    # missingdependencies <- names(dependencies)[!(names(dependencies) %in% names(successfulLoads))]
-
-    # Install all not yet existing dependencies:
-    # if (length(missingdependencies) > 0) {
-    #     message('\nI will install missing dependencies and try again...\n')
-    #     lib.install(missingdependencies, lib_location = lib_location, install_temporarily = install_temporarily)
-    #     successfulLoads <- lib.testload(dependencies, lib_location, msg_str = paste0('"', basename(packagePath), '" his dependencies (second try)'))
-    #
-    #     if (all(names(dependencies) %in% names(successfulLoads))) {
-    #         message('\nNow we succeeded, continuing... \n')
-    #     }
-    # }
-
-    # Check again if all wend well, if not all dependencies are there, reset and abort.
-    # isSuccesfull <- names(dependencies) %in% names(successfulLoads)
-
-    # if (!all(isSuccesfull | lib.is_basepackage(names(dependencies)))) {
-    #     stop(paste0('\nThe following dependencies were missing and failed installation:', paste(paste0('\n- "', names(dependencies)[!isSuccesfull], '"'), collapse = ''), '\n\n'))
-    # }
-
-    # nms <- names(sessionInfo()$otherPkgs)
-    # currentlyLoaded <- detachAll(packageList = nms[!nms %in% c('RVClibrary', 'multiversion')])
-
-    # message('') # (applying a newline)
-
-    # if (interactive() && length(sys.calls()) == 1) {
-    #     on.exit({
-    #         message('\nResetting your loaded packages...\n');
-    #         lib.load(loadPackages = currentlyLoaded, lib_location = lib_location, quietly = TRUE)
-    #     }, add = TRUE, after = FALSE)
-    # }
-
-    # If all dependencies could be found/installed: add all recursive dependency libraries to the search path.
-    # lib.set_libPaths(successfulLoads, lib_location, additional_lib_paths = install.location)
 
     # Install the tarball!
     utils::install.packages(tarball, lib = install.location, type = "source", repos = NULL)
@@ -506,6 +349,10 @@ lib.install_tarball <- function(tarball, dependencies = c(), lib_location = lib.
 #'
 #'
 #' @importFrom utils packageDescription
+#' @return No return value, it is called for it's side-effect. Will convert a set
+#'   of packages from a normal package library structure to a multiversion library version.
+#'   By default, from the temporary multiversion installation directory to the final multiversion library.
+#'
 #' @export
 #'
 lib.convert <- function(source_lib          = lib.location_install_dir(destination_mv_lib),
@@ -532,7 +379,7 @@ lib.convert <- function(source_lib          = lib.location_install_dir(destinati
         }
     }
 
-    libContent   <- list.files(paste0(source_lib, '/', packages_to_convert), all.files = T, recursive = T, no.. = T, full.names = T)
+    libContent   <- list.files(paste0(source_lib, '/', packages_to_convert), all.files = TRUE, recursive = TRUE, no.. = TRUE, full.names = TRUE)
     packageNames <- gsub(paste0(source_lib, '/([^/]+)/.*'), '\\1', libContent)
 
     # Generally the same as 'packages_to_convert'
@@ -586,13 +433,17 @@ lib.convert <- function(source_lib          = lib.location_install_dir(destinati
 #'  everything (or all mentioned in \code{packageList}) is unloaded.
 #' @param packageList A character vector with the packages to detach/unload.
 #' Defaults to all packages (\code{names(sessionInfo()$otherPkgs}).
-#' When package X depends on package Y, make sure you first specify X then Y.
-#' @param dryRun If TRUE, lists all packages that will be cleaned up.
+#' When package X depends on package Y, make sure you first specify Y then X.
+#' @param dry_run If TRUE, lists all packages that will be cleaned up.
+#'
+#' @return When dry_run is FALSE, will returns the list of packages that it tried
+#' to detach. When not requested, will return them invisibly. In general, this
+#' function is called for it's side effect to unload all or some loaded packages.
 #'
 #' @importFrom utils sessionInfo
 #' @export
 #'
-detachAll <- function(reload_multiversion = FALSE, packageList = 'all', dryRun = FALSE) {
+detachAll <- function(reload_multiversion = FALSE, packageList = 'all', dry_run = FALSE) {
     do_all <- FALSE
     if (!missing(packageList) && length(packageList) == 0) {
         return()
@@ -606,13 +457,13 @@ detachAll <- function(reload_multiversion = FALSE, packageList = 'all', dryRun =
     if (missing(packageList) && is.null(packageList)) {
         message('No packages are loaded, nothing to detach.')
 
-    } else if (!dryRun) {
+    } else if (!dry_run) {
         in_search <- paste0('package:', packageList) %in% search()
         lapply(sprintf('package:%s', packageList[in_search]), detach, character.only = TRUE, unload = TRUE)
     }
 
     # also unload all namespaces (not always stable!)
-    if (!dryRun) {
+    if (!dry_run) {
 
         if (do_all) {
             loadedNS <- rev(names(utils::sessionInfo()$loadedOnly))
@@ -658,66 +509,8 @@ detachAll <- function(reload_multiversion = FALSE, packageList = 'all', dryRun =
         message('Note that the package "multiversion" is also detached:',
                 '\n>  library(multiversion, lib.loc = Sys.getenv("R_LIBS_USER"))')}
 
-    return(if(dryRun) {currentPackageAndVersions} else {invisible(currentPackageAndVersions)})
+    return(if(dry_run) {currentPackageAndVersions} else {invisible(currentPackageAndVersions)})
 }
-
-
-# ------------- [install.packages] helper functions --------------
-
-# # Test load package list.
-# #
-# # Internally used for 'test loading' a list of dependencies when installing a package.
-# # Returns a list of successful load operations.
-# #
-# # @param packages A named character vector of package/version names. None are really loaded, `lib.load` is used with the `dry.run` turned on.
-# # @param lib_location The folder containing a structure where we will try to find our required packages in.
-# # By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} for this directory.
-# # @param pick.last Changes the way a decision is made. In the scenario where a dependency of \code{>} or \code{>=} is defined, multiple versions may be available to choose from. By default, the lowest compliant version is chosen. Setting this to TRUE will choose the highest version.
-# # @param verbose If TRUE, the default, will show all \code{lib.load} messages.
-# # @param msg_str Can be either logical FALSE, or a character string which will be (the %s) part of the printed string ' - Trying to load %s: ...'.
-# # Defaults to 'packages', making the sentence: ' - Trying to load packages: lattice, RColorBrewer, grid'
-# #
-# lib.testload <- function(packages, lib_location = lib.location(), pick.last = FALSE, verbose = TRUE, msg_str = 'packages') {
-#     # tries to load packages and returns a vector with all successful load attempts ('yet to be installed' packages)
-#
-#     # Handle 'verbose' options
-#     execute <- if (is.logical(verbose) && verbose) {
-#         function(x) {x}
-#     } else {
-#         verbose <- FALSE  # Any value is allowed to get here, so I force a FALSE for further code to work.
-#         function(x) {invisible(capture.output(x)); return(x)}
-#     }
-#
-#     basePacks <- lib.is_basepackage(packages)
-#     loadedPackages <- packages[basePacks]
-#     packages       <- packages[!basePacks]
-#
-#     # Return directly when no 'dependencies' or packages are requested to load.
-#     if (length(packages) == 0) {return(loadedPackages)}
-#
-#     if ((!verbose && missing(msg_str)) || is.character(msg_str) && length(msg_str) == 1) {
-#         message(sprintf('\n - Trying to load %s: %s', msg_str, lib.packs_vec2str(packages, do_return = TRUE)))
-#     }
-#
-#     for (iDependency in seq_along(packages)) {
-#         iDependency <- packages[iDependency]
-#
-#         # TryCatch returns empty when error is caught.
-#         newlyLoaded <-  tryCatch({
-#             suppressWarnings(execute(lib.load(loadPackages = iDependency, lib_location = lib_location, dry.run = TRUE, also_load_from_temp_lib = TRUE,
-#                                               skipDependencies = names(loadedPackages), pick.last = pick.last, quietly = !verbose)))
-#         }, error = function(e) {
-#             if (verbose) {
-#                 # `message` appends a linefeed itself.
-#                 message(sprintf('When loading package "%s": %s', names(iDependency), gsub('\n$', '', gsub('Error ', '', e))))
-#             }
-#         })
-#
-#         loadedPackages <- append(loadedPackages, newlyLoaded)
-#     }
-#
-#     return(loadedPackages)
-# }
 
 
 # ---------------- additional functions -----------------
@@ -743,9 +536,12 @@ detachAll <- function(reload_multiversion = FALSE, packageList = 'all', dryRun =
 #' @examples
 #' \dontrun{
 #'     lib.dependencies(dplyr)
-#'     lib.dependencies('devtools', character.only = T)
-#'     devtools_deps <- lib.dependencies(devtools, do_print = F)
+#'     lib.dependencies('devtools', character.only = TRUE)
+#'     devtools_deps <- lib.dependencies(devtools, do_print = FALSE)
 #' }
+#'
+#' @return When do_print is TRUE, will print use \code{message} to show the
+#' provided package(s) his dependencies. Also returns the dependencies invisibly.
 #'
 #' @importFrom utils packageDescription
 #' @export
@@ -785,12 +581,12 @@ lib.dependencies <- function(packageName, do_print = TRUE, character.only = FALS
         listed_dependencies[[packVersion]] <- dependingPackages
 
         if (do_print) {
-            message(sprintf('%23s : %-8s ', packageName, packVersion), appendLF = F)
-            message(ifelse(file.exists(overrideFile), '(shadowed)| ', '          | '), appendLF = F)
+            message(sprintf('%23s : %-8s ', packageName, packVersion), appendLF = FALSE)
+            message(ifelse(file.exists(overrideFile), '(shadowed)| ', '          | '), appendLF = FALSE)
             lib.packs_vec2str(dependingPackages[1:3])
             if (length(dependingPackages) > 3) {
                 for (index in 2: ceiling(length(dependingPackages)/3)) {
-                    message(strrep(' ', 43), '... ', appendLF = F); lib.packs_vec2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
+                    message(strrep(' ', 43), '... ', appendLF = FALSE); lib.packs_vec2str(dependingPackages[(((index-1)*3):(index*3-1))+1])
                 }
             }
         }
@@ -805,12 +601,16 @@ lib.dependencies <- function(packageName, do_print = TRUE, character.only = FALS
 #'
 #' Used to print a set of package names and their version criteria in a way that
 #'  \code{lib.packs_str2vec()} can parse it again to a package vector.
-#' This way we can list the dependencies of a function easily and support better commandline interaction.
+#' This way we can list the dependencies of a function easily and support command line interaction for example.
 #'
 #' @param x A named character vector with package names/versions.
 #' \code{c(dplyr = '>= 1.5.0', data.table = '')}
 #' @param do_return If FALSE (the default) the package sting is printed, if TRUE,
 #'  it is returned as a character string and not printed.
+#'
+#' @return When do_return = TRUE, returns a character string that describes a
+#'   vector with packages and their version specifications like \code{"dplyr (>= 1.5.0), data.table"}.
+#'   When FALSE, it prints this string and returns nothing.
 #'
 #' @export
 #'
@@ -949,12 +749,12 @@ lib.dependsOnMe <- function(..., checkMyDeps = NULL, lib_location = lib.location
 
             if (valid) {
                 return_array <- c(return_array, paste0(packageName, ':', packVersion))
-                msg(sprintf('%23s : %-8s ', packageName, packVersion), appendLF = F)
-                msg(ifelse(file.exists(overrideFile), '(shadowed)| ', '          | '), appendLF = F)
+                msg(sprintf('%23s : %-8s ', packageName, packVersion), appendLF = FALSE)
+                msg(ifelse(file.exists(overrideFile), '(shadowed)| ', '          | '), appendLF = FALSE)
                 lib.packs_vec2str(dependingPackages[1:3], do_return = dont_print)
                 if (length(dependingPackages) > 3) {
                     for (index in 2: ceiling(length(dependingPackages)/3)) {
-                        msg(strrep(' ', 45), '... ', appendLF = F)
+                        msg(strrep(' ', 45), '... ', appendLF = FALSE)
                         lib.packs_vec2str(dependingPackages[(((index-1)*3):(index*3-1))+1], do_return = dont_print)
                     }
                 }

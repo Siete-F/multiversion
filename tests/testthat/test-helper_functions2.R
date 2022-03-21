@@ -18,7 +18,7 @@ test_that("lib.location_install_dir", {
 test_that("normPath", {
     # I have to use tolower because the drive letter was returned in a different case on CRAN.
     expect_match(tolower(normPath('.')), tolower(gsub('\\\\', '/', getwd())))
-    expect_silent(normPath('.\\nonex1stendd1r'))  # no error, so mustWork = F.
+    expect_silent(normPath('.\\nonex1stendd1r'))  # no error, so mustWork = FALSE.
 })
 
 test_that("lib.printVerboseLibCall", {

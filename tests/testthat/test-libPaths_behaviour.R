@@ -14,10 +14,10 @@ with_safe_package_tester({
 
 with_safe_package_tester({
 
-    test_that(desc = '.libPaths must remain unchanged in dryrun to', {
+    test_that(desc = '.libPaths must remain unchanged in dry_run to', {
 
         old_paths <- .libPaths()
-        lib.load(package.b, quietly = TRUE, dry.run = TRUE)
+        lib.load(package.b, quietly = TRUE, dry_run = TRUE)
         expect_equal(old_paths, .libPaths())
 })
 })
@@ -28,7 +28,7 @@ with_safe_package_tester({
     test_that(desc = '.libPaths are updated with appendLibPaths', {
 
         old_paths <- .libPaths()
-        lib.load(package.b, quietly = TRUE, appendLibPaths = TRUE, dry.run = TRUE)
+        lib.load(package.b, quietly = TRUE, appendLibPaths = TRUE, dry_run = TRUE)
         new_paths <- .libPaths()
 
         # It should result in two NEW paths:

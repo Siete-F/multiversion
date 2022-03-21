@@ -6,6 +6,9 @@
 \usage{
 clean_download_catch()
 }
+\value{
+No return value, is called for it's side-effect of removing the \code{file.path(tempdir(), 'downloaded_packages')} folder.
+}
 \description{
 Clean the catch folder 'downloaded_packages' which lives in the temporary R session folder `tempdir()`.
 }

@@ -29,10 +29,10 @@
 # #'
 # lib.my_location <- function() {
 #
-#     MV_package_location <- find.package(package = 'multiversion', lib.loc = .libPaths(), quiet = T, verbose = F)
+#     MV_package_location <- find.package(package = 'multiversion', lib.loc = .libPaths(), quiet = TRUE, verbose = FALSE)
 #
 #     if (length(MV_package_location) == 0) {
-#         MV_package_location <- find.package(package = 'multiversion', lib.loc = NULL, quiet = T, verbose = F)
+#         MV_package_location <- find.package(package = 'multiversion', lib.loc = NULL, quiet = TRUE, verbose = FALSE)
 #     }
 #
 #     if (length(MV_package_location) == 0 || !file.exists(file.path(MV_package_location, 'DESCRIPTION'))) {
@@ -50,19 +50,22 @@
 #'
 #' @param lib_location By default the default library path obtained with \code{lib.location()}.
 #'
+#' @return No return value, is called for the printed feedback. Will show which packages inside the library are not yet tracked by git (when that is desired).
+#'   It is recommended to track packages with git so that
+#'
 #' @export
 #'
 lib.git_show_untracked <- function(lib_location = lib.location()) {
     if (!file.exists(lib_location)) {
         stop(sprintf('Please specify an existing directory for the `lib_location`. Provided was "%s".', lib_location))
     }
-    if (!suppressWarnings(grepl('^true$', system(sprintf('git -C "%s" rev-parse --is-inside-work-tree', lib_location), intern = T)))) {
+    if (!suppressWarnings(grepl('^true$', system(sprintf('git -C "%s" rev-parse --is-inside-work-tree', lib_location), intern = TRUE)))) {
         stop(sprintf('The provided directory "%s" is not a git repository.', lib_location))
     }
 
     temp_installed_libs <- dir(lib.location_install_dir(lib_location))
 
-    listed_files <- system(sprintf('git -C "%s" ls-files --others --exclude-standard', lib_location), intern = T)
+    listed_files <- system(sprintf('git -C "%s" ls-files --others --exclude-standard', lib_location), intern = TRUE)
     listed_files <- listed_files[grepl('DESCRIPTION', listed_files)]
     # Now remove from e.g. "htmlTable/1.13.1/htmlTable/DESCRIPTION" the "/htmlTable/DESCRIPTION" part to remain "htmlTable/1.13.1"
     added_dirs   <- gsub('/[^/]*/DESCRIPTION$', '', listed_files)
@@ -90,6 +93,10 @@ lib.git_show_untracked <- function(lib_location = lib.location()) {
 #' @param lib_location By default the default library path obtained with \code{lib.location()}.
 #' @param do_create When it doesn't exist yet, create the folder.
 #'
+#' @return The temporary folder location where packages are installed before they
+#'   are moved to their final location in the multiversion library. When \code{do_create == TRUE},
+#'   the folder will be created when it does not yet exist.
+#'
 #' @export
 #'
 lib.location_install_dir <- function(lib_location = lib.location(), do_create = TRUE) {
@@ -114,14 +121,19 @@ lib.location_install_dir <- function(lib_location = lib.location(), do_create = 
 #' @note It will build the most likely installation directory based on the
 #' \code{lib_location} you provide. See \code{\link{lib.location_install_dir}}. Which is \code{<your lib>/TEMP_install_location}.
 #'
+#' @return Clean up all un-tracked (not committed) installed libraries in the multiversion library.
+#'   Will additionally also clean up the TEMP_install_location directory (this is an 'ignored' directory).
+#'   Will ask for permission when being called in an interactive session.
+#'
 #' @importFrom utils menu
+#'
 #' @export
 #'
 lib.clean <- function(lib_location = lib.location(), clean_temp_lib = TRUE) {
     if (!file.exists(lib_location)) {
         stop(sprintf('Please specify an existing directory for the `lib_location`. Provided was "%s".', lib_location))
     }
-    if (!suppressWarnings(grepl('^true$', system(sprintf('git -C "%s" rev-parse --is-inside-work-tree', lib_location), intern = T)))) {
+    if (!suppressWarnings(grepl('^true$', system(sprintf('git -C "%s" rev-parse --is-inside-work-tree', lib_location), intern = TRUE)))) {
         stop(sprintf('The provided directory "%s" is not a git repository.', lib_location))
     }
 
@@ -137,7 +149,7 @@ lib.clean <- function(lib_location = lib.location(), clean_temp_lib = TRUE) {
     # You can remove un-tracked files with: git clean -f
     # You can remove un-tracked files and directories with: git clean -fd              <- this one is applied below.
     # You can remove ignored and un-tracked files and directories git clean -fdx.
-    system(sprintf('git -C "%s" clean -fd', lib_location), intern = T)
+    system(sprintf('git -C "%s" clean -fd', lib_location), intern = TRUE)
 
     if (clean_temp_lib) {
         # Additionally clear the temp_install directory:
@@ -155,7 +167,11 @@ lib.clean <- function(lib_location = lib.location(), clean_temp_lib = TRUE) {
 #'
 #' @param temp_install_location The folder that is emptied by this function.
 #' @param lib_location By default the library path returned by \code{lib.location()} is used.
-#' It is only used to build the temp_install.location when that argument is not provided.
+#'   It is only used to build the temp_install.location when that argument is not provided.
+#'
+#' @return No return value, it is called for it's side-effect of removing the
+#'   temporary installation folder (located in \code{<multiversion_lib>/TEMP_install_location}).
+#'   This must be called after every installation.
 #'
 #' @export
 #'
@@ -169,6 +185,7 @@ lib.clean_install_dir <- function(lib_location = lib.location(),
 #'
 #' Clean the catch folder 'downloaded_packages' which lives in the temporary R session folder `tempdir()`.
 #'
+#' @return No return value, is called for it's side-effect of removing the \code{file.path(tempdir(), 'downloaded_packages')} folder.
 #' @export
 #'
 clean_download_catch <- function() {
@@ -186,6 +203,11 @@ clean_download_catch <- function() {
 #' @param set_session_path (optional) If no environment variable has been set to indicate the library location,
 #' You can call this function and let it set the environment variable for this session only.
 #'
+#' @return When a path is provided, this will be stored as
+#'   the multiversion library location to use during this session (via the environment
+#'   variable "R_MV_LIBRARY_LOCATION"). In all cases, it will return the location of
+#'   the multiversion library. When it cannot be found, it will return an error indicating what to do.
+#'
 #' @export
 #'
 lib.location <- function(set_session_path) {
@@ -194,7 +216,7 @@ lib.location <- function(set_session_path) {
         if (!dir.exists(set_session_path)) {
             stop('The provided path does not exist. Please create an empty folder if the library needs to be created.')
         }
-        path <- normalizePath(set_session_path, '/', mustWork = T)
+        path <- normalizePath(set_session_path, '/', mustWork = TRUE)
         old <- Sys.getenv('R_MV_LIBRARY_LOCATION')
         Sys.setenv(R_MV_LIBRARY_LOCATION = path)
         # Only show this message once per change
@@ -209,9 +231,9 @@ lib.location <- function(set_session_path) {
     B <- Sys.getenv('R_MV_LIBRARY_LOCATION')
 
     if (!nzchar(A) && !nzchar(B)) {
-        stop(paste('No environment variable has been set for me to find the R_MV_library location.\n',
+        stop(paste('No environment variable has been set for me to find the multiversion library location.\n',
                    'Please fill the environment variable `R_MV_LIBRARY_LOCATION` with a path to an empty\n',
-                   'or already created library base folder, and restart R!!\nAlternatively provide it for\n',
+                   'or existing multiversion library folder, and restart R!!\nAlternatively provide it for\n',
                    'this session using `lib.location(YourPath)`.\n\n'))
     }
     lib_location <- ifelse(nzchar(A), A, B)
@@ -256,6 +278,7 @@ raw_input_parser = function(arguments, varnames_to_exclude) {
     arguments[noName]  <- ''
     arguments[isNum]   <- as.character(arguments[isNum])
     arguments[varName] <- NULL
+
     return(trimws(unlist(arguments, use.names = TRUE)))
 }
 
@@ -270,7 +293,9 @@ raw_input_parser = function(arguments, varnames_to_exclude) {
 #' Used by \code{\link{lib.dependencies_online}} to interpret the by CRAN provided dependencies,
 #' used to parse the 'vc_override_dependencies.txt' files and the dependencies mentioned in the 'DESCRIPTION' files of the installed packages.
 #'
-#' @param deps A string of format X to convert to a named character vector Y.
+#' @param deps A string of length one with the format shown in the description. This will be converted to a named character vector.
+#'
+#' @return Returns a character vector with the packages and their versions that it could derive from the single provided string.
 #'
 #' @export
 #'
@@ -278,6 +303,7 @@ lib.packs_str2vec <- function(deps) {
     if (is.null(deps) || length(deps) == 0 || is.na(deps)) {
         return(as.character())
     }
+    stopifnot(length(deps) == 1)
 
     deps <- gsub(trimws(deps), pattern = ',\\s?$|\n|^,\\s?', replacement = '') # remove newlines, starting and ending comma's
     deps <- trimws(strsplit(deps, ',')[[1]])     # split on comma's, remove start/end white spaces
@@ -322,7 +348,7 @@ strRemain <- function(patA, patB, str) {
 #' @param path The path which needs to be normalized. Will make \code{C:/PROGRA~1/R/R-33~1.1/library} into \code{C:/Program Files/R/R-3.3.1/library}.
 #'
 normPath <- function(path) {
-    return(gsub('\\\\', '/', normalizePath(path, '/', mustWork = F)))
+    return(gsub('\\\\', '/', normalizePath(path, '/', mustWork = FALSE)))
 }
 
 
@@ -330,7 +356,7 @@ normPath <- function(path) {
 #'
 #' Adds \code{.Library} and the paths of the specific versions of the provided
 #' packages that are specified (and likely loaded before) to the \code{.libPaths}.
-#' Note that this function will erase any current \code{.libPaths()} configuration.
+#' Note that this function will erase any current \code{.libPaths()} configuration silently.
 #'
 #' @param packNameVersion A named character vector with package names and their version indication (e.g. \code{c(dplyr = '>= 0.05', ggplot = '')}).
 #' Or the special string 'all', which will add the paths of all directories of the latest versions of every package in the R_MV_library.
@@ -373,41 +399,19 @@ lib.set_libPaths <- function(packNameVersion, lib_location, additional_lib_paths
 #'
 #' @param lib_location The folder which contains the multiversion library. All directories in \code{.libPaths()} containing this path will be kept.
 #' By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} to find this directory.
-#' @param dry.run If TRUE, will not change the paths but will print the paths that would remain after cleaning up the \code{.libPaths()} list.
+#' @param dry_run If TRUE, will not change the paths but will print the paths that would be removed by cleaning up the \code{.libPaths()} list.
+#'
+#' @return No return value, called for it's side effect of cleaning the \code{.libPaths} by removing any non-multiversion library locations.
 #'
 #' @export
 #'
-lib.clean_libPaths <- function(lib_location = lib.location(), dry.run = FALSE) {
+lib.clean_libPaths <- function(lib_location = lib.location(), dry_run = FALSE) {
     correct_paths <- grepl(normPath(lib_location), normPath(.libPaths())) | normPath(.libPaths()) == normPath(.Library)
-    if (dry.run) {
+    if (dry_run) {
         message(sprintf('The following paths will be excluded:\n - "%s"\n', paste(collapse = '"\n - "', normPath(.libPaths()[!correct_paths]))))
     } else {
         .libPaths(.libPaths()[correct_paths])
     }
-}
-
-
-#' Installs the incredible `devtools` package.
-#'
-#' Will install devtools and it's dependencies into the multiversion library provided by `lib.location()`.
-#' An alternative library location can optionally be specified.
-#'
-#' @param lib_location The library (can be an empty folder) to install Devtools in. Defaults to \code{lib.location()}
-#' @param force_install FALSE by default, if the package `devTools` is already installed, it will return silently.
-#'
-#' @export
-#'
-lib.devTools_install <- function(lib_location = lib.location(), force_install = FALSE) {
-    if (!force_install && length(lib.available_versions('devtools')) > 0) {
-        message('The package devtools seems to be already installed. Please set `force_install` to true if you would like to overwrite or update devtools.')
-        return()
-    }
-    if (length(packs <- list.dirs(lib_dir <- lib.location_install_dir(lib_location), FALSE, FALSE)) > 0) {
-        lib.git_show_untracked(lib_location)
-        stop(sprintf('These libraries are still present in the install directory "%s":\n%s.\nPlease run `lib.clean_install_dir()` to clean up if possible and run me again.', lib_dir, paste0(collapse = ', ', "'", packs, "'")))
-    }
-    lib.install('devtools', lib_location = lib_location, allow_overwrite_on_convert = TRUE)
-    lib.clean_install_dir(lib_location = lib_location)
 }
 
 
@@ -417,16 +421,19 @@ lib.devTools_install <- function(lib_location = lib.location(), force_install = 
 #' (like running tests) in child R instances will still work and know where to load their libraries from.
 #'
 #' @param lib_location The (version controlled) library to load devtools from.
-#' Use lib.devTools_install to install devtools, if you have not done so already.
+#' Use \code{lib.install('devtools', allow_overwrite_on_convert = TRUE)} to install devtools, if you have not done so already.
+#'
+#' @return No return value, called for it's side-effect of loading the devtools and
+#'   testthat packages. Also the library paths of both packages will be added to the \code{.libPaths()}
 #'
 #' @export
 #'
 lib.devtools_load <- function(lib_location = lib.location()) {
     lib.load(loadPackages = c(devtools = '', testthat = ''),
-             appendLibPaths = TRUE, pick.last = T, quietly = T, lib_location = lib_location)
+             appendLibPaths = TRUE, pick.last = TRUE, quietly = TRUE, lib_location = lib_location)
     if (numeric_version(lib.package_version_loaded('testthat')) >= '3.0.0') {
         lib.load(loadPackages = c(waldo = ''),
-                 appendLibPaths = TRUE, pick.last = T, quietly = T, lib_location = lib_location)
+                 appendLibPaths = TRUE, pick.last = TRUE, quietly = TRUE, lib_location = lib_location)
     }
 }
 
@@ -439,9 +446,11 @@ lib.devtools_load <- function(lib_location = lib.location()) {
 #' @param packNameVersion provide a package name list like so: \code{c(dplyr = '0.5.0', R6 = '', R6 = 0.5)}
 #' @param return_as_df {FALSE} if the output should remain a structured dataframe, or if it should return a named character vector.
 #'
-#' @examples
-#' multiversion:::unique_highest_package_versions(
-#'     c(pack.a = '0.1.0', pack.c = '5.2', package.b = '1.9',   pack.c = '99.99'))
+#' To get a feel with the function, you can try:
+#' \preformatted{
+#'   multiversion:::unique_highest_package_versions(
+#'       c(pack.a = '0.1.0', pack.c = '5.2', package.b = '1.9',   pack.c = '99.99'))
+#' }
 #'
 #' @importFrom stats setNames
 #'
@@ -494,7 +503,7 @@ lib.load_namespaces <- function(packages_to_load_in_ns, lib_location = lib.locat
     for (iPack in names(packages_to_load_in_ns)) {
         packVer <- packages_to_load_in_ns[iPack]
 
-        # Keep.source = T makes sure that (if source is included in install), the source is visible when debugging the package.
+        # Keep.source = TRUE makes sure that (if source is included in install), the source is visible when debugging the package.
         # (keep.source is potentially depricated)
         #
         tryCatch(
@@ -508,7 +517,7 @@ lib.load_namespaces <- function(packages_to_load_in_ns, lib_location = lib.locat
     }
 
     if (length(failed_to_load) > 0) {
-        stop('multiversion: The namespaces of the following packages could not be loaded: ', lib.packs_vec2str(failed_to_load, do_return = T),
+        stop('multiversion: The namespaces of the following packages could not be loaded: ', lib.packs_vec2str(failed_to_load, do_return = TRUE),
              '.\nPlease make sure this package is present, as it is a required dependency (of something, see printed messages).',
              ' Otherwise specify it explicitly in your lib.load call.')
     }
@@ -522,8 +531,6 @@ lib.load_namespaces <- function(packages_to_load_in_ns, lib_location = lib.locat
 #' @param packNameVersion A named character vector with package names and their version indication (e.g. `c(dplyr = '>= 0.4.0', ggplot = '')`).
 #' @param .forceToPrint For testing, I need to be able to overrule the 'interactive()' criteria for printing this example library call.
 #'
-#' @export
-#'
 lib.printVerboseLibCall <- function(packNameVersion, .forceToPrint = FALSE) {
     if (!.forceToPrint && (!interactive() || length(packNameVersion) == 0)) {
         return(invisible())
@@ -532,7 +539,7 @@ lib.printVerboseLibCall <- function(packNameVersion, .forceToPrint = FALSE) {
     nameVer <- unique_highest_package_versions(packNameVersion, return_as_df = TRUE)
 
     p <- paste; p0 <- paste0
-    message('\nVerbose example call to the library (use `quetly = T` to supress this message):')
+    message('\nVerbose example call to the library (use `quetly = TRUE` to supress this message):')
     message('lib.load( ', p(collapse = ', ', p(sep = ' = ', nameVer$names, p0("'", nameVer$version, "'"))), ')\n')
 }
 
@@ -541,6 +548,8 @@ lib.printVerboseLibCall <- function(packNameVersion, .forceToPrint = FALSE) {
 #'
 #' @param packageNames A vector of package names which need to be detached. Silently ignores when the package is not loaded.
 #'
+#' @return No return value, this function is called for it's side-effect. Detaches
+#' a package if it can find it. Will also try to unload package DLLs that might be loaded using \code{library.dynam.unload}.
 #' @export
 #'
 detachIfExisting <- function(packageNames) {

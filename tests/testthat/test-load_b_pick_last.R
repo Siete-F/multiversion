@@ -46,7 +46,7 @@ with_safe_package_tester({
         stopifnot(!'package:package.b' %in% search())
         stopifnot(!'package:package.c' %in% search())
 
-        # load package b, with first version of package c (the default behaviour of pick.last = F)
+        # load package b, with first version of package c (the default behaviour of pick.last = FALSE)
         msg <- capture.output(lib.load(package.b), type = 'message')
         expect_match(msg[[1]], '\\+__[_ ]+Only [ ]*1.0.0.*package.b')
         expect_match(msg[[2]], '\\\\__[_ ]+Version [ ]*15.2.8  is picked.*package.c')

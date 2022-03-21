@@ -11,6 +11,11 @@ lib.location_install_dir(lib_location = lib.location(), do_create = TRUE)
 
 \item{do_create}{When it doesn't exist yet, create the folder.}
 }
+\value{
+The temporary folder location where packages are installed before they
+  are moved to their final location in the multiversion library. When \code{do_create == TRUE},
+  the folder will be created when it does not yet exist.
+}
 \description{
 Indicates the default directory for initially installing a package before it is 'converted' to the final multiversion library structure (see: \code{lib.convert()}).
 This folder can be cleaned up using \code{cleanTempInstallFolder()} after installing the package succeeded.

@@ -1,6 +1,15 @@
-### Version 0.3.4 (submitting to CRAN).
+### Version 0.3.6 (submitting to CRAN with docs updated).
 
-**`R CMD check` passed with no ERROR, WARNING or NOTE!!!**
+- Was asked to update the documentation and remove examples for non-exported functions.
+- Also had to add `\value` for quite some man pages.
+- I renamed the 'dry.run' and 'dryRun' arguments to 'dry_run' to better fit the general argument naming conventions.
+- Removed `lib.devTools_install.Rd`. Less functions is better.
+
+### Version 0.3.5 (Passed CRAN checks!).
+
+Added 'waldo' library location also to the .libPaths when running the tests.
+
+### Version 0.3.4 (submitting to CRAN).
 
 package waldo could not be found by only a single test:
 `expect_equal(package.e::what_version_are_you(), '1.7.0')`

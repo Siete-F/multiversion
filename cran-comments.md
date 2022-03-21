@@ -1,4 +1,37 @@
 
+# 21 Mar, 2022 - 0.3.6
+
+## R CMD check results
+Locally, there are no ERRORS, WARNINGS or NOTES.
+
+- Added '\value' documentation fields for all exported functions.
+- Removed examples for un-exported function.
+- Wrote F as FALSE and T as TRUE
+
+## Downstream dependencies
+There are no donwstream dependencies yet.
+
+# 15 Mar, 2022 - 0.3.5
+
+## R CMD check results
+Locally, there are no ERRORS, WARNINGS or NOTES.
+
+The 'waldo' package can now be found again.
+
+## Downstream dependencies
+There are no donwstream dependencies yet.
+
+# 15 Mar, 2022 - 0.3.4
+
+## R CMD check results
+Locally, there are no ERRORS, WARNINGS or NOTES.
+
+The 'waldo' package could not be found.
+Tried some stuff
+
+## Downstream dependencies
+There are no donwstream dependencies yet.
+
 # 15 Mar, 2022 - 0.3.3
 
 ## R CMD check results

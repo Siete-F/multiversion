@@ -13,8 +13,13 @@ lib.packs_vec2str(x, do_return = FALSE)
 \item{do_return}{If FALSE (the default) the package sting is printed, if TRUE,
 it is returned as a character string and not printed.}
 }
+\value{
+When do_return = TRUE, returns a character string that describes a
+  vector with packages and their version specifications like \code{"dplyr (>= 1.5.0), data.table"}.
+  When FALSE, it prints this string and returns nothing.
+}
 \description{
 Used to print a set of package names and their version criteria in a way that
  \code{lib.packs_str2vec()} can parse it again to a package vector.
-This way we can list the dependencies of a function easily and support better commandline interaction.
+This way we can list the dependencies of a function easily and support command line interaction for example.
 }

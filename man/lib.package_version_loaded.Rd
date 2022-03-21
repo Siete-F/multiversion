@@ -11,6 +11,9 @@ lib.package_version_loaded(packageNames, exclude_not_loaded = TRUE)
 
 \item{exclude_not_loaded}{If true, the default, it will not try to find a 'loaded version' of a package that is not loaded.}
 }
+\value{
+A named character vector with the package name(s) and it's version that is loaded.
+}
 \description{
 This works for both packages within the R_MV_library (which are loaded) and
 for packages outside the library.

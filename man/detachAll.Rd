@@ -4,7 +4,7 @@
 \alias{detachAll}
 \title{Detach all loaded packages and namespaces.}
 \usage{
-detachAll(reload_multiversion = FALSE, packageList = "all", dryRun = FALSE)
+detachAll(reload_multiversion = FALSE, packageList = "all", dry_run = FALSE)
 }
 \arguments{
 \item{reload_multiversion}{If multiversion needs to be loaded again after
@@ -12,9 +12,14 @@ everything (or all mentioned in \code{packageList}) is unloaded.}
 
 \item{packageList}{A character vector with the packages to detach/unload.
 Defaults to all packages (\code{names(sessionInfo()$otherPkgs}).
-When package X depends on package Y, make sure you first specify X then Y.}
+When package X depends on package Y, make sure you first specify Y then X.}
 
-\item{dryRun}{If TRUE, lists all packages that will be cleaned up.}
+\item{dry_run}{If TRUE, lists all packages that will be cleaned up.}
+}
+\value{
+When dry_run is FALSE, will returns the list of packages that it tried
+to detach. When not requested, will return them invisibly. In general, this
+function is called for it's side effect to unload all or some loaded packages.
 }
 \description{
 Tries to detach all loaded packages and namespaces. Not always stable (within Rstudio).

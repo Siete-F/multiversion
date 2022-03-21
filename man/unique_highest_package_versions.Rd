@@ -9,14 +9,15 @@ unique_highest_package_versions(packNameVersion, return_as_df = FALSE)
 \arguments{
 \item{packNameVersion}{provide a package name list like so: \code{c(dplyr = '0.5.0', R6 = '', R6 = 0.5)}}
 
-\item{return_as_df}{{FALSE} if the output should remain a structured dataframe, or if it should return a named character vector.}
+\item{return_as_df}{{FALSE} if the output should remain a structured dataframe, or if it should return a named character vector.
+
+To get a feel with the function, you can try:
+\preformatted{
+  multiversion:::unique_highest_package_versions(
+      c(pack.a = '0.1.0', pack.c = '5.2', package.b = '1.9',   pack.c = '99.99'))
+}}
 }
 \description{
 Creates a vector with the unique set of with package name = versions and will keep
 the highest version when multiple versions of one package are defined.
-}
-\examples{
-multiversion:::unique_highest_package_versions(
-    c(pack.a = '0.1.0', pack.c = '5.2', package.b = '1.9',   pack.c = '99.99'))
-
 }

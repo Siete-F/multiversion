@@ -69,6 +69,9 @@ combination: \code{c(dplyr = '>= 0.5', data.table = '', R6 = '0.1.1')}.
 Note that all dependencies must refer to packages on CRAN. Otherwise install
 the dependency manually somewhere and use \code{lib.convert} to include it.}
 }
+\value{
+Nothing is returned, this function is called for it's side-effect of installing a package in the multiversion library.
+}
 \description{
 This family of functions can help with installing packages without
 the risk of installing every minor package improvement as soon as it is released.

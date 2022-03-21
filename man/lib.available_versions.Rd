@@ -12,6 +12,9 @@ lib.available_versions(packageName, lib_location = lib.location())
 
 \item{lib_location}{The folder containing the structure where this package his versions need to be checked.}
 }
+\value{
+A character vector with the different versions that are available for a specific package.
+}
 \description{
 Just checks the multiversion library for all available versions installed for a specific package.
 If no name is provided, an error is returned.

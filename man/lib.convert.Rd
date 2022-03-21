@@ -29,6 +29,11 @@ increased the version to a new one.}
 \item{packages_to_convert}{A character vector with the names of the packages
 that need to be converted to the R_MV_library. If missing or empty, all will be converted.}
 }
+\value{
+No return value, it is called for it's side-effect. Will convert a set
+  of packages from a normal package library structure to a multiversion library version.
+  By default, from the temporary multiversion installation directory to the final multiversion library.
+}
 \description{
 After this conversion is completed and you configure (temporarily by using \code{lib.location(...)}
 or for eternity by setting the equally named environment variable)

@@ -18,7 +18,7 @@ and will unload 'package.a' till 'package.f' when finishing the execution. \cr \
 \details{
 Before execution it will set the following values:
 \enumerate{
-\item{.libPaths - will be set to .Library only.}
-\item{\code{R_MV_LIBRARY_LOCATION} - will contain '../test_library/' or 'tests/test_library/' depending on the current directory}
+  \item{.libPaths - will be set to .Library only.}
+  \item{\code{R_MV_LIBRARY_LOCATION} - will contain '../test_library/' or 'tests/test_library/' depending on the current directory.}
 }
 }

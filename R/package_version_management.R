@@ -22,6 +22,7 @@
 #' @param packageName The name of the package for which all versions must be returned.
 #' @param lib_location The folder containing the structure where this package his versions need to be checked.
 #'
+#' @return A character vector with the different versions that are available for a specific package.
 #' @export
 #'
 lib.available_versions <- function(packageName, lib_location = lib.location()) {
@@ -172,11 +173,13 @@ chooseVersion <- function(packVersion, versionList, packageName = '', pick.last 
 
 #' check if version indication is compliant.
 #'
-#' Returns TRUE if the 'condition' complies with the already available 'version'.
+#' Returns TRUE if the 'condition' complies with the provided 'version'.
 #' This function is vectorized.
 #'
 #' @param condition A version indication like `>= 4.5.1` or `2.3.4` or `> 1.2.3` or `''` (empty) or `NA`.
 #' @param version A version number like `1.2.3`, or a vector of version strings (will be converted to `numeric_version('1.2.3') during comparison).
+#'
+#' @return A logical indicating if the version is considered compatible.
 #'
 #' @export
 #'
@@ -273,13 +276,10 @@ lib.decide_version <- function(packVersion, lib_location, pick.last = FALSE, pri
 #'
 #' @param packageName The package name to check.
 #'
+#' @return Returns logical indicating if the provided package name is a base package or not.
 #' @export
 #'
 lib.is_basepackage <- function(packageName) {
-    # Featuring direct call like: `lib.is_basepackage(stats)`
-    # This can't be used interactively, when providing a variable with a name it would use the var name as name.
-    # packageName = as.character(substitute(packageName))
-
     basePackages <- list.dirs(.Library, full.names = FALSE, recursive = FALSE)
     return(packageName %in% c(basePackages, 'R'))
 }
@@ -295,6 +295,9 @@ lib.is_basepackage <- function(packageName) {
 #'
 #' @importFrom stats setNames
 #' @importFrom utils sessionInfo
+#'
+#' @return A named character vector with the package name(s) and it's version that is loaded.
+#'
 #' @export
 #'
 lib.package_version_loaded <- function(packageNames, exclude_not_loaded = TRUE) {
@@ -322,6 +325,9 @@ lib.package_version_loaded <- function(packageNames, exclude_not_loaded = TRUE) 
 #'
 #' @importFrom stats na.omit
 #' @importFrom utils available.packages
+#'
+#' @return Returns a named character with the packages and their version conditions
+#'   which the given package depends on.
 #' @export
 #'
 lib.dependencies_online <- function(packageName, cran_url = 'https://cran.rstudio.com/'){

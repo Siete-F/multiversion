@@ -63,7 +63,7 @@ to keep a log of a detached process. By including the following
 See the example below for a complete example.
 When you do this, it somehow swallows the first character of every \code{stderr}
 that is directly returned (also from \code{message} calls) when
-\code{run_quietly = F}, but the log file seems intact.
+\code{run_quietly = FALSE}, but the log file seems intact.
 }
 \section{Example}{
 

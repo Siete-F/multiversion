@@ -15,6 +15,11 @@ It is only used to build the temp_install.location when that argument is not pro
 
 \item{temp_install_location}{The folder that is emptied by this function.}
 }
+\value{
+No return value, it is called for it's side-effect of removing the
+  temporary installation folder (located in \code{<multiversion_lib>/TEMP_install_location}).
+  This must be called after every installation.
+}
 \description{
 The temporary installation folder (indicated by \code{lib.location_install_dir()}) is used to install the package before moving ('converting') it to the final location.
 This function removes this temporary folder. Make sure that all installed packages that are desired to keep are converted.

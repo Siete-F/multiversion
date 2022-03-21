@@ -25,6 +25,10 @@ provided as character vector. Otherwise, direct unquoted package names are suppo
 this function observes the dependencies. By default, it checks the environment
 variable \code{R_MV_LIBRARY_LOCATION} for this directory.}
 }
+\value{
+When do_print is TRUE, will print use \code{message} to show the
+provided package(s) his dependencies. Also returns the dependencies invisibly.
+}
 \description{
 Provide a package name (can be without quotes) to show its dependencies.
 To list all dependencies of the complete library, use the inverse function
@@ -35,8 +39,8 @@ So \code{lib.dependencies(package.a)} will work.
 \examples{
 \dontrun{
     lib.dependencies(dplyr)
-    lib.dependencies('devtools', character.only = T)
-    devtools_deps <- lib.dependencies(devtools, do_print = F)
+    lib.dependencies('devtools', character.only = TRUE)
+    devtools_deps <- lib.dependencies(devtools, do_print = FALSE)
 }
 
 }

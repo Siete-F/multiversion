@@ -10,6 +10,12 @@ lib.location(set_session_path)
 \item{set_session_path}{(optional) If no environment variable has been set to indicate the library location,
 You can call this function and let it set the environment variable for this session only.}
 }
+\value{
+When a path is provided, this will be stored as
+  the multiversion library location to use during this session (via the environment
+  variable "R_MV_LIBRARY_LOCATION"). In all cases, it will return the location of
+  the multiversion library. When it cannot be found, it will return an error indicating what to do.
+}
 \description{
 This function will look for the environment variable \code{R_MV_LIBRARY_LOCATION} indicating the R_MV_library location.
 Alternatively you can provide a path for this session only, using \code{\link{lib.location}(yourPath)}.

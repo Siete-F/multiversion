@@ -11,7 +11,10 @@ lib.check_compatibility(condition, version)
 
 \item{version}{A version number like `1.2.3`, or a vector of version strings (will be converted to `numeric_version('1.2.3') during comparison).}
 }
+\value{
+A logical indicating if the version is considered compatible.
+}
 \description{
-Returns TRUE if the 'condition' complies with the already available 'version'.
+Returns TRUE if the 'condition' complies with the provided 'version'.
 This function is vectorized.
 }

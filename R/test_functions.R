@@ -3,15 +3,6 @@
 .test_env$test_lib_path <- normalizePath(paste0('./test_library'), mustWork = FALSE)
 cat('temp_dir is located here: ', .test_env$test_lib_path, '\n')
 
-# .test_env$test_lib_path <- if (interactive()) {
-#     # For interactive testing, use './tests/test_library'
-#     paste0(normalizePath(ifelse(file.exists('../testthat.R'), '..', 'tests'), mustWork = TRUE), '/test_library')
-# } else {
-#     # For non-interactive (CRAN) use `paste0(tempdir(), '/test_library')`
-#     normalizePath(paste0(tempdir(), '/test_library'), mustWork = FALSE)
-# }
-
-
 
 #' Set lib.location to test_library
 #'
@@ -54,7 +45,7 @@ cat('temp_dir is located here: ', .test_env$test_lib_path, '\n')
         utils::unzip(normalizePath(temp_zip_file, mustWork = TRUE), exdir = temp_tarball_dir)
         on.exit(unlink(dirname(temp_tarball_dir), recursive = TRUE, force = TRUE), add = TRUE)
 
-        dir.create(test_lib_path, recursive = T)
+        dir.create(test_lib_path, recursive = TRUE)
 
         lib.execute_using_packagelist(func_handle = lib.install_tarball,
                                       tarball = normalizePath(paste0(temp_tarball_dir, '/', c(
@@ -88,8 +79,8 @@ cat('temp_dir is located here: ', .test_env$test_lib_path, '\n')
 #'
 #' Before execution it will set the following values:
 #' \enumerate{
-#' \item{.libPaths - will be set to .Library only.}
-#' \item{\code{R_MV_LIBRARY_LOCATION} - will contain '../test_library/' or 'tests/test_library/' depending on the current directory}
+#'   \item{.libPaths - will be set to .Library only.}
+#'   \item{\code{R_MV_LIBRARY_LOCATION} - will contain '../test_library/' or 'tests/test_library/' depending on the current directory.}
 #' }
 #'
 #' @param expr The expression that needs to be evaluated in this protected environment.
@@ -122,7 +113,8 @@ with_safe_package_tester <- function(expr, also_clean_install_dir = FALSE) {
     # It seems that testthat wants to find other packages like 'waldo' (for comparison) during execution
     # Therefore we cannot set the .libPaths to only '.Library'
     .libPaths(c(dirname(system.file(package = 'testthat')), dirname(system.file(package = 'waldo')), .Library))
+    # Both the library of testthat and waldo must be mentioned here because they are
+    # different on the CRAN submission platform apparently.
 
     force(expr)
 }
-

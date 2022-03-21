@@ -4,13 +4,16 @@
 \alias{lib.clean_libPaths}
 \title{Exclude not relevant search paths.}
 \usage{
-lib.clean_libPaths(lib_location = lib.location(), dry.run = FALSE)
+lib.clean_libPaths(lib_location = lib.location(), dry_run = FALSE)
 }
 \arguments{
 \item{lib_location}{The folder which contains the multiversion library. All directories in \code{.libPaths()} containing this path will be kept.
 By default, it checks the environment variable \code{R_MV_LIBRARY_LOCATION} to find this directory.}
 
-\item{dry.run}{If TRUE, will not change the paths but will print the paths that would remain after cleaning up the \code{.libPaths()} list.}
+\item{dry_run}{If TRUE, will not change the paths but will print the paths that would be removed by cleaning up the \code{.libPaths()} list.}
+}
+\value{
+No return value, called for it's side effect of cleaning the \code{.libPaths} by removing any non-multiversion library locations.
 }
 \description{
 Excludes all \code{.libPaths} other then those needed for lib.load().

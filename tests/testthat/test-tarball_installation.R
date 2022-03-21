@@ -5,7 +5,7 @@ empty_char <- structure(character())
 test_dirs <- function() {
     # Due to 'with_safe_package_tester' which in turn calls '.set_test_lib_location',
     # this 'lib.location_install_dir' will refer to './tests/test_library'
-    list.dirs(lib.location_install_dir(), full.names = F, recursive = F)
+    list.dirs(lib.location_install_dir(), full.names = FALSE, recursive = FALSE)
 }
 
 with_safe_package_tester({

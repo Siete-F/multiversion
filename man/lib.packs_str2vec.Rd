@@ -7,7 +7,10 @@
 lib.packs_str2vec(deps)
 }
 \arguments{
-\item{deps}{A string of format X to convert to a named character vector Y.}
+\item{deps}{A string of length one with the format shown in the description. This will be converted to a named character vector.}
+}
+\value{
+Returns a character vector with the packages and their versions that it could derive from the single provided string.
 }
 \description{
 Parses a string shaped like: \cr

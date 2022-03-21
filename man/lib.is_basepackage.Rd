@@ -9,6 +9,9 @@ lib.is_basepackage(packageName)
 \arguments{
 \item{packageName}{The package name to check.}
 }
+\value{
+Returns logical indicating if the provided package name is a base package or not.
+}
 \description{
 To check if the package is a base package, we look it up among all packages
 in the \code{.Library} directory (\code{list.dirs(.Library, full.names = FALSE, recursive = FALSE)}).

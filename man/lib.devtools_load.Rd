@@ -8,7 +8,11 @@ lib.devtools_load(lib_location = lib.location())
 }
 \arguments{
 \item{lib_location}{The (version controlled) library to load devtools from.
-Use lib.devTools_install to install devtools, if you have not done so already.}
+Use \code{lib.install('devtools', allow_overwrite_on_convert = TRUE)} to install devtools, if you have not done so already.}
+}
+\value{
+No return value, called for it's side-effect of loading the devtools and
+  testthat packages. Also the library paths of both packages will be added to the \code{.libPaths()}
 }
 \description{
 During the library call, \code{appendLibPaths} is TRUE, making sure that some devtools functionality

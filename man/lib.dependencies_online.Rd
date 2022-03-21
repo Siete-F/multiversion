@@ -11,6 +11,10 @@ lib.dependencies_online(packageName, cran_url = "https://cran.rstudio.com/")
 
 \item{cran_url}{Defaults to 'https://cran.rstudio.com/'.}
 }
+\value{
+Returns a named character with the packages and their version conditions
+  which the given package depends on.
+}
 \description{
 Returns a \code{c(name = '<version spec>')} array which can be used for \code{lib.load()},
 \code{lib.install_if_not_compatible()} or \code{lib.dependsOnMe()}.

@@ -21,5 +21,5 @@ The old \code{.libPaths()} content is returned invisibly.
 \description{
 Adds \code{.Library} and the paths of the specific versions of the provided
 packages that are specified (and likely loaded before) to the \code{.libPaths}.
-Note that this function will erase any current \code{.libPaths()} configuration.
+Note that this function will erase any current \code{.libPaths()} configuration silently.
 }

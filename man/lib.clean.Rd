@@ -11,6 +11,11 @@ lib.clean(lib_location = lib.location(), clean_temp_lib = TRUE)
 
 \item{clean_temp_lib}{If true, will also run \code{lib.clean_install_dir()}.}
 }
+\value{
+Clean up all un-tracked (not committed) installed libraries in the multiversion library.
+  Will additionally also clean up the TEMP_install_location directory (this is an 'ignored' directory).
+  Will ask for permission when being called in an interactive session.
+}
 \description{
 Clean up all un-tracked (not committed) installed libraries in the multiversion library.
 Will additionally also clean up the TEMP_install_location directory (this is an 'ignored' directory).

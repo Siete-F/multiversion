@@ -1,7 +1,7 @@
 Package: multiversion
 Type: Package
 Title: Version Controlled Package Manager
-Version: 0.3.5
+Version: 0.3.6
 Authors@R: person(c('Siete', 'C.'), 'Frouws', , 'scfrouws@gmail.com', role = c('aut', 'cre'))
 Description: Supports installing of multiple versions of a package and loading
     of specific versions and their dependencies. The only package that you need

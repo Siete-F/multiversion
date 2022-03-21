@@ -9,6 +9,10 @@ detachIfExisting(packageNames)
 \arguments{
 \item{packageNames}{A vector of package names which need to be detached. Silently ignores when the package is not loaded.}
 }
+\value{
+No return value, this function is called for it's side-effect. Detaches
+a package if it can find it. Will also try to unload package DLLs that might be loaded using \code{library.dynam.unload}.
+}
 \description{
 Detach package if it exists.
 }
